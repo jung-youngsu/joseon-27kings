@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HTML → JSON 추출기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600;700;900&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0807;
+  --bg2: #14110d;
+  --bg3: #1c1813;
+  --bg4: #241f18;
+  --gold: #c9a84c;
+  --gold2: #e8c97a;
+  --gold-dim: rgba(201,168,76,0.4);
+  --gold-faint: rgba(201,168,76,0.1);
+  --border: rgba(201,168,76,0.18);
+  --text: #f0ead8;
+  --text2: #b0a080;
+  --text3: #6a5c45;
+  --red: #c87060;
+  --green: #80a060;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.layout { display: grid; grid-template-columns: 380px 1fr; height: 100vh; overflow: hidden; }
+.sidebar {
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  padding: 32px 28px;
+  overflow-y: auto;
+}
+.main {
+  padding: 32px 40px;
+  overflow-y: auto;
+}
+
+.title {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+.subtitle {
+  font-size: 12px;
+  color: var(--text3);
+  margin-bottom: 28px;
+  line-height: 1.8;
+}
+
+/* ── 단계 ── */
+.step {
+  margin-bottom: 28px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+.step:last-child { border-bottom: none; }
+.step-title {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  color: var(--gold);
+  margin-bottom: 12px;
+  font-weight: 700;
+}
+.step-desc {
+  font-size: 12px;
+  color: var(--text3);
+  margin-bottom: 14px;
+  line-height: 1.7;
+}
+
+.drop-zone {
+  background: var(--bg3);
+  border: 1px dashed var(--gold-dim);
+  padding: 28px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 12px;
+  color: var(--text2);
+}
+.drop-zone:hover, .drop-zone.dragover {
+  border-color: var(--gold);
+  background: var(--bg4);
+}
+.drop-zone.loaded {
+  border-style: solid;
+  border-color: var(--green);
+  color: var(--green);
+}
+
+button {
+  font-family: 'Noto Sans KR', sans-serif;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 16px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.05em;
+}
+button:hover { border-color: var(--gold); color: var(--gold); }
+button.primary {
+  background: var(--gold);
+  color: var(--bg);
+  border-color: var(--gold);
+  font-weight: 500;
+}
+button.primary:hover { background: var(--gold2); border-color: var(--gold2); color: var(--bg); }
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+
+/* ── 메인 결과 ── */
+.result-empty {
+  text-align: center;
+  color: var(--text3);
+  padding: 80px 20px;
+  font-size: 13px;
+  font-family: 'Noto Serif KR', serif;
+  font-style: italic;
+}
+.result-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.stat-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  padding: 14px 16px;
+}
+.stat-num {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 26px;
+  color: var(--gold);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.stat-label {
+  font-size: 10px;
+  color: var(--text3);
+  letter-spacing: 0.15em;
+  margin-top: 2px;
+}
+
+.tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.tab {
+  padding: 9px 18px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text3);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  letter-spacing: 0.1em;
+  transition: all 0.15s;
+}
+.tab:hover { color: var(--text2); }
+.tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+.text-list {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  max-height: 600px;
+  overflow-y: auto;
+}
+.text-item {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 16px;
+  align-items: start;
+  transition: background 0.1s;
+}
+.text-item:hover { background: var(--bg3); }
+.text-item:last-child { border-bottom: none; }
+.text-key {
+  font-family: 'SF Mono', Monaco, 'Consolas', monospace;
+  font-size: 10px;
+  color: var(--gold);
+  letter-spacing: 0.05em;
+  padding-top: 2px;
+}
+.text-val {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 13px;
+  line-height: 1.8;
+  word-break: keep-all;
+  color: var(--text);
+}
+
+.json-output {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 18px;
+  font-family: 'SF Mono', Monaco, 'Consolas', monospace;
+  font-size: 12px;
+  color: var(--text);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--bg4);
+  border: 1px solid var(--gold);
+  padding: 10px 22px;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  opacity: 0;
+  transition: all 0.3s;
+  z-index: 1000;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+.kw-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.kw {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  padding: 4px 10px;
+  font-size: 11px;
+  color: var(--text2);
+  cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+.kw:hover { border-color: var(--gold); color: var(--gold); }
+.kw.active { background: var(--gold); color: var(--bg); border-color: var(--gold); }
+
+.help-box {
+  background: var(--bg3);
+  border-left: 2px solid var(--gold);
+  padding: 12px 16px;
+  font-size: 11px;
+  color: var(--text2);
+  line-height: 1.7;
+  margin-top: 14px;
+}
+.help-box code {
+  background: var(--bg);
+  padding: 1px 6px;
+  font-family: 'SF Mono', Monaco, monospace;
+  font-size: 10px;
+  color: var(--gold);
+}
+
+input[type="text"] {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 10px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 12px;
+}
+input[type="text"]:focus { border-color: var(--gold); outline: none; }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+<!-- ═══════ 사이드바 ═══════ -->
+<div class="sidebar">
+  <div class="title">HTML → JSON 추출기</div>
+  <div class="subtitle">기존 게임 HTML에서 모든 텍스트를 뽑아내 에디터에서 다듬을 수 있는 형태로 변환합니다.</div>
+
+  <div class="step">
+    <div class="step-title">① HTML 불러오기</div>
+    <div class="step-desc">이성계편 등 기존 게임 HTML 파일을 드롭하세요.</div>
+    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+      <div id="drop-text">파일을 드래그하거나 클릭</div>
+    </div>
+    <input type="file" id="file-input" accept=".html,.htm" style="display:none;">
+  </div>
+
+  <div class="step">
+    <div class="step-title">② 추출 옵션</div>
+    <div class="step-desc">어떤 패턴의 텍스트를 뽑을지 고르세요. 한국어가 포함된 텍스트만 자동 필터됩니다.</div>
+    <div class="kw-list" id="extract-options">
+      <div class="kw active" data-opt="strings">JS 문자열</div>
+      <div class="kw active" data-opt="text">HTML 본문</div>
+      <div class="kw" data-opt="placeholder">placeholder/title</div>
+    </div>
+    <div class="help-box">
+      <strong>JS 문자열</strong>: 따옴표 안의 한국어 텍스트<br>
+      <strong>HTML 본문</strong>: &lt;div&gt; 안의 표시 텍스트<br>
+      <strong>placeholder/title</strong>: 입력칸 안내문구 등
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title">③ 키 이름 패턴</div>
+    <div class="step-desc">텍스트마다 붙일 ID 패턴을 정합니다.</div>
+    <input type="text" id="key-prefix" placeholder="예: ep01_taejo" value="text">
+    <div class="help-box">
+      예) <code>text_001</code>, <code>text_002</code>, ...<br>
+      위에 <code>ep01_taejo</code>를 넣으면 <code>ep01_taejo_001</code> 식으로 생성됨
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-title">④ 추출 실행</div>
+    <button class="primary" id="extract-btn" onclick="runExtract()" disabled>텍스트 추출하기</button>
+  </div>
+
+  <div class="step">
+    <div class="step-title">⑤ 결과 다운로드</div>
+    <div class="btn-row">
+      <button id="dl-json" onclick="downloadJSON()" disabled>texts.json</button>
+      <button id="dl-replaced" onclick="downloadReplaced()" disabled>치환된 HTML</button>
+    </div>
+    <div class="help-box" style="margin-top:14px;">
+      <strong>texts.json</strong>: 텍스트 사전 (이걸 수정해서 단어 다듬기)<br>
+      <strong>치환된 HTML</strong>: 원본 HTML에서 텍스트 자리에 ID만 남긴 버전
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ 메인 ═══════ -->
+<div class="main">
+  <div id="result-empty" class="result-empty">
+    좌측에서 HTML 파일을 불러와<br>추출 결과가 여기에 표시됩니다.
+  </div>
+
+  <div id="result-area" style="display:none;">
+    <div class="result-stats">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-total">0</div>
+        <div class="stat-label">추출된 텍스트</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-chars">0</div>
+        <div class="stat-label">총 글자 수</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-avg">0</div>
+        <div class="stat-label">평균 길이</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-long">0</div>
+        <div class="stat-label">긴 문장 (50+자)</div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="list" onclick="switchTab('list')">텍스트 목록</div>
+      <div class="tab" data-tab="json" onclick="switchTab('json')">JSON 출력</div>
+      <div class="tab" data-tab="replaced" onclick="switchTab('replaced')">치환된 HTML</div>
+    </div>
+
+    <div class="tab-content active" id="tab-list">
+      <div class="text-list" id="text-list"></div>
+    </div>
+    <div class="tab-content" id="tab-json">
+      <pre class="json-output" id="json-output"></pre>
+    </div>
+    <div class="tab-content" id="tab-replaced">
+      <pre class="json-output" id="replaced-output"></pre>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let originalHTML = '';
+let originalFileName = '';
+let extracted = {};      // { key: text }
+let replacements = [];   // [ { original, key, key_with_braces, position } ]
+
+/* ════════════ 파일 불러오기 ════════════ */
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+
+['dragover','dragenter'].forEach(evt =>
+  dropZone.addEventListener(evt, e => { e.preventDefault(); dropZone.classList.add('dragover'); }));
+['dragleave','dragend'].forEach(evt =>
+  dropZone.addEventListener(evt, e => dropZone.classList.remove('dragover')));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) loadFile(file);
+});
+fileInput.addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (file) loadFile(file);
+});
+
+function loadFile(file) {
+  const r = new FileReader();
+  r.onload = e => {
+    originalHTML = e.target.result;
+    originalFileName = file.name.replace(/\.html?$/, '');
+    document.getElementById('drop-text').textContent =
+      '✓ ' + file.name + ' (' + (originalHTML.length / 1024).toFixed(1) + 'KB)';
+    dropZone.classList.add('loaded');
+    document.getElementById('extract-btn').disabled = false;
+    toast('파일 불러옴');
+  };
+  r.readAsText(file, 'UTF-8');
+}
+
+/* ════════════ 추출 옵션 ════════════ */
+document.querySelectorAll('#extract-options .kw').forEach(kw => {
+  kw.addEventListener('click', () => kw.classList.toggle('active'));
+});
+
+/* ════════════ 추출 로직 ════════════ */
+function runExtract() {
+  if (!originalHTML) return;
+
+  const useStrings     = document.querySelector('[data-opt="strings"]').classList.contains('active');
+  const useText        = document.querySelector('[data-opt="text"]').classList.contains('active');
+  const usePlaceholder = document.querySelector('[data-opt="placeholder"]').classList.contains('active');
+
+  const prefix = (document.getElementById('key-prefix').value || 'text').replace(/[^a-zA-Z0-9_]/g, '_');
+
+  extracted = {};
+  replacements = [];
+  let counter = 1;
+
+  // 한국어 포함 여부 체크 (의미있는 텍스트 필터)
+  const hasKorean = s => /[\uAC00-\uD7AF]/.test(s);
+  const isMeaningful = s => {
+    if (!s || s.trim().length === 0) return false;
+    if (!hasKorean(s)) return false;
+    if (s.trim().length < 2) return false;
+    return true;
+  };
+
+  // 추출 결과 후보 (위치 기준 정렬)
+  const candidates = [];
+
+  if (useStrings) {
+    // JS 문자열 안의 한국어
+    // "..." 또는 '...' (백틱 포함)
+    const stringRegex = /(['"`])((?:\\.|(?!\1).)*?)\1/g;
+    let m;
+    while ((m = stringRegex.exec(originalHTML)) !== null) {
+      const text = m[2];
+      if (isMeaningful(text)) {
+        candidates.push({
+          full: m[0],          // "..." 전체
+          text: text,           // 알맹이
+          quote: m[1],
+          start: m.index,
+          end: m.index + m[0].length,
+          source: 'string'
+        });
+      }
+    }
+  }
+
+  if (useText) {
+    // HTML 태그 사이의 텍스트 노드
+    // > ... < 패턴
+    const textNodeRegex = />([^<]+)</g;
+    let m;
+    while ((m = textNodeRegex.exec(originalHTML)) !== null) {
+      const text = m[1].trim();
+      if (isMeaningful(text)) {
+        // <script>, <style> 안은 제외 (앞 1000자에서 태그 검사)
+        const before = originalHTML.substring(Math.max(0, m.index - 200), m.index);
+        if (/<(script|style)[^>]*>(?:(?!<\/(script|style)>)[\s\S])*$/i.test(before)) continue;
+        candidates.push({
+          full: m[0],
+          text: text,
+          start: m.index + 1,
+          end: m.index + 1 + m[1].length,
+          source: 'html'
+        });
+      }
+    }
+  }
+
+  if (usePlaceholder) {
+    // placeholder="..." title="..." alt="..."
+    const attrRegex = /(placeholder|title|alt)\s*=\s*(['"])((?:\\.|(?!\2).)*?)\2/g;
+    let m;
+    while ((m = attrRegex.exec(originalHTML)) !== null) {
+      const text = m[3];
+      if (isMeaningful(text)) {
+        candidates.push({
+          full: m[0],
+          text: text,
+          start: m.index + m[0].indexOf(m[2]) + 1,
+          end: m.index + m[0].length - 1,
+          source: 'attr'
+        });
+      }
+    }
+  }
+
+  // 위치 기준 정렬
+  candidates.sort((a, b) => a.start - b.start);
+
+  // 키 부여 (중복 텍스트도 별도 키)
+  candidates.forEach(c => {
+    const key = `${prefix}_${String(counter).padStart(3, '0')}`;
+    counter++;
+    extracted[key] = c.text;
+    replacements.push({
+      key: key,
+      text: c.text,
+      start: c.start,
+      end: c.end,
+      source: c.source
+    });
+  });
+
+  renderResults();
+  toast(`${replacements.length}개 텍스트 추출됨`);
+
+  document.getElementById('dl-json').disabled = false;
+  document.getElementById('dl-replaced').disabled = false;
+}
+
+/* ════════════ 결과 렌더링 ════════════ */
+function renderResults() {
+  const total = replacements.length;
+  if (total === 0) {
+    toast('추출된 텍스트가 없습니다');
+    return;
+  }
+
+  document.getElementById('result-empty').style.display = 'none';
+  document.getElementById('result-area').style.display = 'block';
+
+  const totalChars = replacements.reduce((s, r) => s + r.text.length, 0);
+  const longCount = replacements.filter(r => r.text.length >= 50).length;
+
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-chars').textContent = totalChars.toLocaleString();
+  document.getElementById('stat-avg').textContent = Math.round(totalChars / total);
+  document.getElementById('stat-long').textContent = longCount;
+
+  // 텍스트 목록
+  const list = document.getElementById('text-list');
+  list.innerHTML = '';
+  replacements.forEach(r => {
+    const item = document.createElement('div');
+    item.className = 'text-item';
+    item.innerHTML = `
+      <div class="text-key">${escape(r.key)}</div>
+      <div class="text-val">${escape(r.text)}</div>
+    `;
+    list.appendChild(item);
+  });
+
+  // JSON 출력
+  document.getElementById('json-output').textContent = JSON.stringify(extracted, null, 2);
+
+  // 치환된 HTML 출력
+  document.getElementById('replaced-output').textContent = buildReplacedHTML();
+}
+
+function buildReplacedHTML() {
+  // 끝부터 치환 (앞에서 치환하면 뒷부분 인덱스 어긋남)
+  let html = originalHTML;
+  const sorted = [...replacements].sort((a, b) => b.start - a.start);
+  sorted.forEach(r => {
+    const placeholder = `{{${r.key}}}`;
+    html = html.substring(0, r.start) + placeholder + html.substring(r.end);
+  });
+  return html;
+}
+
+function escape(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* ════════════ 탭 ════════════ */
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t =>
+    t.classList.toggle('active', t.dataset.tab === name));
+  document.querySelectorAll('.tab-content').forEach(c =>
+    c.classList.toggle('active', c.id === 'tab-' + name));
+}
+
+/* ════════════ 다운로드 ════════════ */
+function downloadJSON() {
+  const json = JSON.stringify(extracted, null, 2);
+  download(`${originalFileName}-texts.json`, json, 'application/json');
+}
+
+function downloadReplaced() {
+  const replaced = buildReplacedHTML();
+  download(`${originalFileName}-replaced.html`, replaced, 'text/html');
+}
+
+function download(filename, content, mime) {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('다운로드: ' + filename);
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2000);
+}
+</script>
+
+</body>
+</html>

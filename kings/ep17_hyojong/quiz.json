@@ -1,0 +1,27 @@
+{
+  "ep": 17,
+  "slug": "hyojong",
+  "title": "효종 퀴즈",
+  "questions": [
+    { "id": 1, "q": "", "choices": ["", "", "", ""], "answer": 0, "explain": "" },
+    { "id": 2, "q": "", "choices": ["", "", "", ""], "answer": 0, "explain": "" },
+    { "id": 3, "q": "", "choices": ["", "", "", ""], "answer": 0, "explain": "" },
+    { "id": 4, "q": "", "choices": ["", "", "", ""], "answer": 0, "explain": "" },
+    { "id": 5, "q": "", "choices": ["", "", "", ""], "answer": 0, "explain": "" },
+    { "id": 6, "q": "", "choices": ["", "", "", ""], "answer": 0, "explain": "" },
+    { "id": 7, "q": "", "choices": ["", "", "", ""], "answer": 0, "explain": "" },
+    { "id": 8, "q": "", "choices": ["", "", "", ""], "answer": 0, "explain": "" },
+    { "id": 9, "q": "", "choices": ["", "", "", ""], "answer": 0, "explain": "" },
+    { "id": 10, "q": "", "choices": ["", "", "", ""], "answer": 0, "explain": "" },
+    { "id": 11, "q": "", "choices": ["", "", "", ""], "answer": 0, "explain": "" },
+    { "id": 12, "q": "", "choices": ["", "", "", ""], "answer": 0, "explain": "" },
+    { "id": 13, "q": "", "choices": ["", "", "", ""], "answer": 0, "explain": "" },
+    { "id": 14, "q": "", "choices": ["", "", "", ""], "answer": 0, "explain": "" },
+    { "id": 15, "q": "", "choices": ["", "", "", ""], "answer": 0, "explain": "" },
+    { "id": 16, "q": "", "choices": ["", "", "", ""], "answer": 0, "explain": "" },
+    { "id": 17, "q": "", "choices": ["", "", "", ""], "answer": 0, "explain": "" },
+    { "id": 18, "q": "", "choices": ["", "", "", ""], "answer": 0, "explain": "" },
+    { "id": 19, "q": "", "choices": ["", "", "", ""], "answer": 0, "explain": "" },
+    { "id": 20, "q": "", "choices": ["", "", "", ""], "answer": 0, "explain": "" }
+  ]
+}
