@@ -236,6 +236,285 @@ body {
   background: var(--border2);
   margin: 28px 0;
 }
+
+/* ═══ 새 퀴즈 — 한 문제씩 카드 + 타이머 + 리더보드 ═════════════ */
+@keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+
+.quiz-intro, .quiz-result {
+  padding: 36px 22px;
+  text-align: center;
+}
+.quiz-intro-tag, .quiz-result-tag {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: var(--accent3);
+  margin-bottom: 14px;
+}
+.quiz-intro-title {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 18px;
+}
+.quiz-intro-rules {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 2.1;
+  margin: 0 auto 22px;
+  max-width: 340px;
+}
+.quiz-intro-rules strong { color: var(--accent3); font-weight: 600; }
+.quiz-mybest {
+  display: inline-block;
+  padding: 9px 18px;
+  background: var(--bg2);
+  border: 1px solid var(--accent2);
+  border-radius: 4px;
+  font-family: 'Noto Serif KR', serif;
+  font-size: 13px;
+  color: var(--accent3);
+  margin-bottom: 22px;
+}
+.quiz-start-btn {
+  padding: 14px 38px;
+  background: var(--accent2);
+  color: var(--bg);
+  border: none;
+  border-radius: 24px;
+  font-family: 'Noto Serif KR', serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  margin: 6px;
+  transition: all .2s;
+}
+.quiz-start-btn:hover { background: var(--accent3); }
+.quiz-back-btn {
+  padding: 10px 22px;
+  background: transparent;
+  color: var(--text3);
+  border: 1px solid var(--border2);
+  border-radius: 22px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+  margin: 6px;
+}
+.quiz-back-btn:hover { color: var(--accent3); border-color: var(--accent3); }
+
+/* 카드 */
+.quiz-card {
+  padding: 28px 22px;
+}
+.quiz-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.quiz-progress {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 11px;
+  color: var(--text3);
+  letter-spacing: 1px;
+}
+.quiz-timer {
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  color: var(--accent3);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.quiz-card-prog {
+  height: 2px;
+  background: var(--border2);
+  margin-bottom: 26px;
+  border-radius: 1px;
+  overflow: hidden;
+}
+.quiz-card-prog-fill {
+  height: 100%;
+  background: var(--accent2);
+  transition: width .4s ease;
+}
+.quiz-card-q {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 17px;
+  color: var(--text);
+  line-height: 1.8;
+  margin-bottom: 22px;
+  min-height: 60px;
+}
+.quiz-card-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.quiz-card-ch {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  text-align: left;
+  font-family: 'Noto Serif KR', serif;
+  font-size: 14px;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all .15s;
+}
+.quiz-card-ch:hover:not(:disabled) {
+  background: var(--bg3);
+  border-color: var(--border2);
+  color: var(--text);
+}
+.quiz-card-ch:disabled { cursor: not-allowed; opacity: 0.6; }
+.quiz-card-ch-num {
+  font-weight: 700;
+  color: var(--text3);
+  flex-shrink: 0;
+  width: 18px;
+}
+.quiz-card-ch-text { flex: 1; line-height: 1.6; }
+.quiz-card-ch.correct {
+  border-color: #70a85a;
+  background: rgba(112,168,90,0.10);
+  color: #b0d090;
+  opacity: 1 !important;
+}
+.quiz-card-ch.correct .quiz-card-ch-num { color: #b0d090; }
+.quiz-card-ch.wrong {
+  border-color: #c87060;
+  background: rgba(200,112,96,0.08);
+  color: #d09080;
+  animation: shake .35s ease;
+  opacity: 1 !important;
+}
+.quiz-card-ch.wrong .quiz-card-ch-num { color: #d09080; }
+.quiz-lock-msg {
+  display: none;
+  padding: 11px 14px;
+  background: var(--bg2);
+  border-left: 2px solid #c87060;
+  font-family: 'Noto Serif KR', serif;
+  font-size: 13px;
+  color: #d09080;
+  line-height: 1.8;
+  text-align: center;
+  margin-top: 10px;
+}
+.quiz-lock-msg.on { display: block; }
+
+/* 결과 */
+.quiz-result-time {
+  font-family: 'Courier New', monospace;
+  font-size: 52px;
+  font-weight: 700;
+  color: var(--accent3);
+  line-height: 1;
+  margin-bottom: 10px;
+  letter-spacing: 1px;
+}
+.quiz-result-score {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 16px;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+.quiz-result-newbest {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #b0d090;
+  margin-bottom: 6px;
+}
+.quiz-result-rank {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 13px;
+  color: var(--text2);
+  margin-bottom: 18px;
+}
+.quiz-result-anon {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 12px;
+  color: var(--text3);
+  margin-bottom: 18px;
+}
+
+/* 리더보드 */
+.quiz-lb {
+  margin-top: 28px;
+  padding: 16px 14px 4px;
+  text-align: left;
+  border-top: 1px solid var(--border);
+}
+.quiz-lb-title {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent3);
+  margin-bottom: 12px;
+  letter-spacing: 1.5px;
+  text-align: center;
+}
+.quiz-lb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 13px;
+}
+.quiz-lb-table th {
+  padding: 8px 6px;
+  text-align: left;
+  font-weight: 500;
+  color: var(--text3);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  border-bottom: 1px solid var(--border2);
+}
+.quiz-lb-table td {
+  padding: 9px 6px;
+  color: var(--text2);
+  border-bottom: 1px solid var(--border);
+}
+.quiz-lb-table .lb-rank {
+  width: 36px;
+  color: var(--text3);
+  font-weight: 700;
+  font-family: 'Courier New', monospace;
+}
+.quiz-lb-table .lb-time {
+  width: 80px;
+  text-align: right;
+  font-family: 'Courier New', monospace;
+  color: var(--accent3);
+}
+.quiz-lb-table tr.me {
+  background: rgba(224,176,96,0.10);
+}
+.quiz-lb-table tr.me .lb-rank,
+.quiz-lb-table tr.me .lb-name,
+.quiz-lb-table tr.me .lb-time {
+  color: var(--accent3);
+  font-weight: 700;
+}
+.quiz-lb-empty {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 13px;
+  color: var(--text3);
+  padding: 16px;
+  text-align: center;
+  border: 1px dashed var(--border2);
+  border-radius: 4px;
+}
 </style>
 </head>
 <body>
@@ -304,10 +583,18 @@ body {
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ═══════════════════════════════════════════════════════════════
    에피소드 프레임 로직
 ═══════════════════════════════════════════════════════════════ */
+
+// Supabase 클라이언트 (퀴즈 기록·리더보드용; 비로그인이어도 클라이언트는 살아 있음)
+const SUPA_URL = 'https://qwsjofkabllbnbsgndun.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3c2pvZmthYmxsYm5ic2duZHVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNDc1NTYsImV4cCI6MjA5MTcyMzU1Nn0.2ryUWHRVqNuJ2ylHYr9tvgFwGK_EsVM7KMeuOpgLnks';
+if (window.supabase) {
+  window.sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+}
 
 // URL에서 ep 번호 읽기
 function getEpFromURL() {
@@ -374,61 +661,313 @@ async function loadMarkdownIfExists(url, targetId) {
   }
 }
 
-// 퀴즈 JSON 있으면 표시
+// ═══ 퀴즈 — 한 문제씩 카드 + 카운트업 + 리더보드 ═══════════════
+//   상태: 카드/락/타이머/best 기록/리더보드 모두 한 곳에서 관리
+const quizState = {
+  data: null,
+  idx: 0,
+  correct: 0,
+  startTime: 0,
+  timerInterval: null,
+  lockInterval: null,
+  locked: false,
+  leaderboard: [],   // [{user_id, elapsed, nickname?}]
+  myUserId: null,
+  myNickname: null,
+};
+
 async function loadQuizIfExists(url) {
   try {
     const res = await fetch(url);
     if (!res.ok) return;
     const data = await res.json();
     if (!data.questions || !data.questions.length) return;
-
-    // 빈 문제만 있는지 검사
     const hasContent = data.questions.some(q => q.q && q.q.trim());
     if (!hasContent) return;
 
-    renderQuiz(data);
+    quizState.data = data;
+    await loadUserAndLeaderboard();
+    renderQuizIntro();
   } catch (e) {
     // 무시
   }
 }
 
-function renderQuiz(data) {
+// 사용자 식별 + 같은 EP의 리더보드 로드 (Supabase 없으면 비활성)
+async function loadUserAndLeaderboard() {
+  if (window.sb) {
+    try {
+      const { data: { session } } = await window.sb.auth.getSession();
+      if (session) {
+        quizState.myUserId = session.user.id;
+        quizState.myNickname = session.user.user_metadata?.nickname
+          || session.user.email?.split('@')[0]
+          || '나';
+      }
+    } catch (e) {}
+  }
+  await fetchLeaderboard();
+}
+
+async function fetchLeaderboard() {
+  if (!window.sb || !quizState.data) {
+    quizState.leaderboard = [];
+    return;
+  }
+  try {
+    const { data: rows, error } = await window.sb
+      .from('quiz_records')
+      .select('user_id, elapsed')
+      .eq('episode', quizState.data.ep)
+      .eq('perfect', true)
+      .order('elapsed', { ascending: true })
+      .limit(50);
+    if (error) { quizState.leaderboard = []; return; }
+    // 한 사용자 한 row 가정이지만, 안전하게 user_id별 최단만 남김
+    const seen = new Set();
+    const dedup = [];
+    for (const r of (rows || [])) {
+      if (seen.has(r.user_id)) continue;
+      seen.add(r.user_id);
+      dedup.push(r);
+    }
+    quizState.leaderboard = dedup;
+  } catch (e) {
+    quizState.leaderboard = [];
+  }
+}
+
+function maskName(uid, idx) {
+  if (!uid) return `도전자 ${String(idx + 1).padStart(4, '0')}`;
+  return `도전자 ${uid.slice(0, 4).toUpperCase()}`;
+}
+
+function findMyEntry() {
+  if (!quizState.myUserId) return null;
+  const i = quizState.leaderboard.findIndex(r => r.user_id === quizState.myUserId);
+  if (i < 0) return null;
+  return { rank: i + 1, row: quizState.leaderboard[i] };
+}
+
+function renderLeaderboard() {
+  if (!quizState.leaderboard.length) {
+    return `
+      <div class="quiz-lb">
+        <div class="quiz-lb-title">🏆 리더보드</div>
+        <div class="quiz-lb-empty">아직 완주 기록이 없어요. 첫 1위가 되어보세요.</div>
+      </div>`;
+  }
+  const rows = quizState.leaderboard.slice(0, 10).map((r, i) => {
+    const isMe = r.user_id === quizState.myUserId;
+    const name = isMe ? (quizState.myNickname || '나') : maskName(r.user_id, i);
+    return `
+      <tr class="${isMe ? 'me' : ''}">
+        <td class="lb-rank">${i + 1}</td>
+        <td class="lb-name">${escapeHTML(name)}${isMe ? ' (나)' : ''}</td>
+        <td class="lb-time">${r.elapsed.toFixed(1)}초</td>
+      </tr>`;
+  }).join('');
+  return `
+    <div class="quiz-lb">
+      <div class="quiz-lb-title">🏆 리더보드 TOP 10</div>
+      <table class="quiz-lb-table">
+        <thead><tr><th>순위</th><th>도전자</th><th>시간</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+function renderQuizIntro() {
   const target = document.getElementById('quiz-content');
-  let html = '';
-
-  data.questions.forEach((q, idx) => {
-    if (!q.q || !q.q.trim()) return;
-    html += `
-      <div class="quiz-num">문제 ${idx + 1}</div>
-      <div class="quiz-q">${escapeHTML(q.q)}</div>
-      <div class="quiz-ch-list" data-q="${idx}">
-        ${q.choices.map((c, i) => `
-          <button class="quiz-ch" data-idx="${i}" data-correct="${i === q.answer}">${escapeHTML(c)}</button>
-        `).join('')}
+  if (!target || !quizState.data) return;
+  const data = quizState.data;
+  const my = findMyEntry();
+  target.innerHTML = `
+    <div class="quiz-intro">
+      <div class="quiz-intro-tag">${escapeHTML(data.title || '퀴즈')}</div>
+      <div class="quiz-intro-title">${data.questions.length}문제 도전</div>
+      <div class="quiz-intro-rules">
+        모든 문제를 맞히면 — 시간이 기록됩니다.<br>
+        오답을 누르면 <strong>3초간 다른 답을 선택할 수 없어요.</strong><br>
+        가장 짧은 시간에 완주한 사람이 <strong>1위</strong>.
       </div>
-      <div class="quiz-explain" id="quiz-exp-${idx}">${escapeHTML(q.explain || '')}</div>
-      ${idx < data.questions.length - 1 ? '<div class="quiz-divider"></div>' : ''}
-    `;
-  });
+      ${my ? `<div class="quiz-mybest">내 최고 기록 ${my.row.elapsed.toFixed(1)}초 · 현재 ${my.rank}위</div>` : ''}
+      <div><button class="quiz-start-btn" onclick="startQuiz()">▶ 도전 시작</button></div>
+      ${renderLeaderboard()}
+    </div>`;
+}
 
-  target.innerHTML = html;
+function startQuiz() {
+  quizState.idx = 0;
+  quizState.correct = 0;
+  quizState.startTime = Date.now();
+  quizState.locked = false;
+  clearInterval(quizState.lockInterval);
+  startQuizTimer();
+  renderQuizQuestion();
+}
 
-  // 클릭 이벤트
-  target.querySelectorAll('.quiz-ch-list').forEach(list => {
-    list.querySelectorAll('.quiz-ch').forEach(btn => {
-      btn.onclick = () => {
-        const correct = btn.dataset.correct === 'true';
-        list.querySelectorAll('.quiz-ch').forEach(b => {
-          b.style.pointerEvents = 'none';
-          if (b.dataset.correct === 'true') b.classList.add('correct');
-          else b.classList.add('wrong');
-        });
-        if (correct) btn.classList.add('selected');
-        const qIdx = list.dataset.q;
-        document.getElementById(`quiz-exp-${qIdx}`).classList.add('show');
-      };
-    });
+function startQuizTimer() {
+  clearInterval(quizState.timerInterval);
+  quizState.timerInterval = setInterval(() => {
+    const el = document.getElementById('quiz-timer');
+    if (el) {
+      const elapsed = (Date.now() - quizState.startTime) / 1000;
+      el.textContent = elapsed.toFixed(1) + '초';
+    }
+  }, 100);
+}
+
+function renderQuizQuestion() {
+  const target = document.getElementById('quiz-content');
+  if (!target) return;
+  const data = quizState.data;
+  const q = data.questions[quizState.idx];
+  const total = data.questions.length;
+  const progPct = (quizState.idx / total) * 100;
+  const nums = '①②③④⑤⑥⑦⑧⑨⑩';
+
+  target.innerHTML = `
+    <div class="quiz-card">
+      <div class="quiz-card-head">
+        <span class="quiz-progress">문제 ${quizState.idx + 1} / ${total}</span>
+        <span class="quiz-timer" id="quiz-timer">0.0초</span>
+      </div>
+      <div class="quiz-card-prog">
+        <div class="quiz-card-prog-fill" style="width:${progPct}%"></div>
+      </div>
+      <div class="quiz-card-q">${escapeHTML(q.q)}</div>
+      <div class="quiz-card-choices">
+        ${q.choices.map((c, i) => `
+          <button class="quiz-card-ch" data-idx="${i}" data-correct="${i === q.answer}">
+            <span class="quiz-card-ch-num">${nums[i] || (i+1)}</span>
+            <span class="quiz-card-ch-text">${escapeHTML(c)}</span>
+          </button>`).join('')}
+      </div>
+      <div class="quiz-lock-msg" id="quiz-lock-msg"></div>
+    </div>`;
+
+  target.querySelectorAll('.quiz-card-ch').forEach(btn => {
+    btn.onclick = () => handleQuizPick(btn);
   });
+}
+
+function handleQuizPick(btn) {
+  if (quizState.locked) return;
+  const isCorrect = btn.dataset.correct === 'true';
+  const allBtns = document.querySelectorAll('.quiz-card-ch');
+
+  if (isCorrect) {
+    btn.classList.add('correct');
+    quizState.correct++;
+    quizState.locked = true;
+    allBtns.forEach(b => b.disabled = true);
+    setTimeout(() => {
+      quizState.idx++;
+      quizState.locked = false;
+      if (quizState.idx >= quizState.data.questions.length) {
+        finishQuiz();
+      } else {
+        renderQuizQuestion();
+      }
+    }, 600);
+    return;
+  }
+
+  // 오답 — 3초 락
+  btn.classList.add('wrong');
+  quizState.locked = true;
+  allBtns.forEach(b => b.disabled = true);
+  const msgEl = document.getElementById('quiz-lock-msg');
+  let remaining = 3;
+  if (msgEl) {
+    msgEl.textContent = `오답입니다. ${remaining}초 후 다시 선택할 수 있어요.`;
+    msgEl.classList.add('on');
+  }
+  clearInterval(quizState.lockInterval);
+  quizState.lockInterval = setInterval(() => {
+    remaining--;
+    if (remaining > 0) {
+      if (msgEl) msgEl.textContent = `오답입니다. ${remaining}초 후 다시 선택할 수 있어요.`;
+    } else {
+      clearInterval(quizState.lockInterval);
+      if (msgEl) {
+        msgEl.classList.remove('on');
+        msgEl.textContent = '';
+      }
+      btn.classList.remove('wrong');
+      allBtns.forEach(b => { b.disabled = false; });
+      quizState.locked = false;
+    }
+  }, 1000);
+}
+
+async function finishQuiz() {
+  clearInterval(quizState.timerInterval);
+  const elapsed = parseFloat(((Date.now() - quizState.startTime) / 1000).toFixed(1));
+  // "정답 맞춰야 다음" 모델이라 끝까지 오면 perfect 보장
+  const perfect = (quizState.correct === quizState.data.questions.length);
+  let isNewBest = false;
+  if (perfect && window.sb && quizState.myUserId) {
+    isNewBest = await saveBestRecord(elapsed);
+    await fetchLeaderboard();
+  }
+  renderQuizResult(elapsed, isNewBest);
+}
+
+// 최고 기록만 갱신 (수동 upsert: select → 비교 → update/insert)
+async function saveBestRecord(elapsed) {
+  if (!window.sb || !quizState.myUserId) return false;
+  const ep = quizState.data.ep;
+  try {
+    const { data: existing } = await window.sb
+      .from('quiz_records')
+      .select('id, elapsed')
+      .eq('user_id', quizState.myUserId)
+      .eq('episode', ep)
+      .order('elapsed', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (!existing) {
+      await window.sb.from('quiz_records').insert({
+        user_id: quizState.myUserId,
+        episode: ep,
+        elapsed: elapsed,
+        perfect: true,
+        ep_given: 0
+      });
+      return true;
+    } else if (elapsed < existing.elapsed) {
+      await window.sb.from('quiz_records')
+        .update({ elapsed: elapsed })
+        .eq('id', existing.id);
+      return true;
+    }
+  } catch (e) {
+    console.warn('saveBestRecord failed', e);
+  }
+  return false;
+}
+
+function renderQuizResult(elapsed, isNewBest) {
+  const target = document.getElementById('quiz-content');
+  if (!target) return;
+  const my = findMyEntry();
+  target.innerHTML = `
+    <div class="quiz-result">
+      <div class="quiz-result-tag">완주!</div>
+      <div class="quiz-result-time">${elapsed.toFixed(1)}초</div>
+      <div class="quiz-result-score">${quizState.correct} / ${quizState.data.questions.length} 정답</div>
+      ${isNewBest ? '<div class="quiz-result-newbest">🎉 신기록!</div>' : ''}
+      ${my ? `<div class="quiz-result-rank">현재 ${my.rank}위 · 내 최고 ${my.row.elapsed.toFixed(1)}초</div>` : ''}
+      ${!quizState.myUserId ? '<div class="quiz-result-anon">로그인하면 기록이 저장됩니다.</div>' : ''}
+      <div>
+        <button class="quiz-start-btn" onclick="startQuiz()">↺ 다시 도전</button>
+        <button class="quiz-back-btn" onclick="renderQuizIntro()">← 시작 화면</button>
+      </div>
+      ${renderLeaderboard()}
+    </div>`;
 }
 
 // 매우 간단한 마크다운 → HTML
