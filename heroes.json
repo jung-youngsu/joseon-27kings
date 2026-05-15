@@ -1,0 +1,48 @@
+[
+  {
+    "num": 1,
+    "slug": "jeongdojeon",
+    "korName": "정도전",
+    "personalName": "삼봉(三峰)",
+    "era": "1342-1398",
+    "role": "조선의 설계자",
+    "tagline": "도면이 사람보다 오래 산다",
+    "theme": "cold-iron",
+    "status": "live",
+    "href": "kings/ep00_jeongdojeon/game.html",
+    "desc": "어린 시절 \"종의 자식\"이라 불렸던 한 사람.<br>그가 그린 도면이 — 600년의 한양·경복궁·법전이 됐다.<br>이름이 죽었던 자가 — 어떻게 잊혀지지 않게 됐는가."
+  },
+  {
+    "num": 2,
+    "slug": "yisunsin",
+    "korName": "이순신",
+    "personalName": "충무공(忠武公)",
+    "era": "1545-1598",
+    "role": "결단의 사람",
+    "tagline": "신에게는 아직 열두 척의 배가 있사옵니다",
+    "theme": "cold-iron",
+    "status": "live",
+    "href": "heroes/yisunsin/game.html",
+    "desc": "서른둘의 늦깎이 급제. 한 번의 패배로 파직. 모함으로 백의종군.<br>그리고 열두 척으로 삼백삼십 척을 막아냈다.<br>그 결단은 — 그날 내려진 것이 아니었다."
+  },
+  {
+    "num": 3,
+    "slug": "_tbd1",
+    "korName": "?",
+    "era": "",
+    "role": "",
+    "tagline": "곧 합류합니다",
+    "status": "soon",
+    "desc": "다음 인물을 준비 중입니다."
+  },
+  {
+    "num": 4,
+    "slug": "_tbd2",
+    "korName": "?",
+    "era": "",
+    "role": "",
+    "tagline": "곧 합류합니다",
+    "status": "soon",
+    "desc": "다음 인물을 준비 중입니다."
+  }
+]

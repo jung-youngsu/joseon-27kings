@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>역사를 바꾼 사람들 — 영웅편</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600;700;900&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#13100d;--ink-soft:#1e1a15;--ink-mid:#2a2318;
+  --gold:#c9a84c;--gold-light:#e8c97a;--gold-dim:#7a6330;
+  --text-primary:#f0ead8;--text-secondary:#b0a080;--text-muted:#7a6a50;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--ink);color:var(--text-primary);font-family:'Noto Serif KR',serif;overflow-x:hidden;min-height:100vh;}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:14px 28px;background:rgba(19,16,13,0.95);backdrop-filter:blur(6px);border-bottom:1px solid rgba(201,168,76,0.1);}
+.nav-back{font-family:'Noto Sans KR',sans-serif;font-size:13px;color:var(--text-muted);text-decoration:none;transition:color .2s;}
+.nav-back:hover{color:var(--gold);}
+.nav-brand{font-size:13px;font-weight:700;letter-spacing:.2em;color:var(--gold);}
+.nav-actions{display:flex;gap:8px;}
+.btn-sm{padding:7px 14px;font-family:'Noto Sans KR',sans-serif;font-size:12px;cursor:pointer;transition:all .2s;border-radius:1px;}
+.btn-ghost{background:transparent;color:var(--text-muted);border:1px solid var(--text-muted);}
+.btn-ghost:hover{color:var(--gold);border-color:var(--gold);}
+.btn-gold{background:var(--gold);color:var(--ink);border:none;font-weight:700;}
+.btn-gold:hover{background:var(--gold-light);}
+
+/* ── HERO ── */
+#hero{padding:96px 20px 36px;text-align:center;}
+.hero-tag{font-family:'Noto Sans KR',sans-serif;font-size:11px;letter-spacing:.3em;color:var(--gold-dim);margin-bottom:12px;}
+.hero-title{font-size:clamp(22px,5vw,32px);font-weight:900;letter-spacing:.1em;margin-bottom:10px;background:linear-gradient(135deg,var(--gold-light),var(--gold),var(--gold-dim));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero-sub{font-family:'Noto Sans KR',sans-serif;font-size:13px;color:var(--text-secondary);line-height:2;max-width:480px;margin:0 auto;}
+.hero-sub em{color:var(--gold);font-style:normal;font-weight:600;}
+
+/* ── CARD LIST ── */
+#cards{padding:24px 20px 60px;max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:14px;}
+
+.hero-card{
+  background:var(--ink-soft);
+  border:1px solid rgba(201,168,76,0.18);
+  border-radius:2px;
+  position:relative;
+  overflow:hidden;
+  transition:all .25s;
+}
+.hero-card.live{cursor:pointer;}
+.hero-card.live::before{content:'';position:absolute;left:0;top:0;width:3px;height:100%;background:var(--gold);transform:scaleY(0);transform-origin:top;transition:transform .35s;}
+.hero-card.live:hover::before{transform:scaleY(1);}
+.hero-card.live:hover{border-color:rgba(201,168,76,0.4);background:var(--ink-mid);}
+.hero-card.soon{opacity:.4;cursor:default;}
+
+.hero-card-head{
+  display:grid;grid-template-columns:60px 1fr auto;
+  align-items:center;gap:18px;padding:22px 24px;
+}
+.hero-card-num{
+  font-family:'Noto Sans KR',sans-serif;font-size:32px;font-weight:900;
+  color:var(--gold-dim);line-height:1;letter-spacing:-.02em;
+}
+.hero-card-body{min-width:0;}
+.hero-card-meta{
+  display:flex;gap:10px;align-items:center;
+  font-family:'Noto Sans KR',sans-serif;font-size:10px;
+  letter-spacing:.2em;color:var(--gold-dim);margin-bottom:6px;
+}
+.hero-card-era{color:var(--text-muted);}
+.hero-card-name{
+  font-size:clamp(18px,3vw,22px);font-weight:700;letter-spacing:.06em;
+  color:var(--text-primary);margin-bottom:4px;
+}
+.hero-card-role{
+  font-family:'Noto Sans KR',sans-serif;font-size:13px;
+  color:var(--gold);font-weight:500;
+}
+.hero-card-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;}
+.status-chip{font-family:'Noto Sans KR',sans-serif;font-size:11px;padding:4px 12px;letter-spacing:.1em;}
+.chip-live{background:rgba(30,77,30,0.35);color:#7fca7f;border:1px solid rgba(127,202,127,0.3);}
+.chip-soon{background:rgba(201,168,76,0.08);color:var(--gold-dim);border:1px solid rgba(201,168,76,0.15);}
+.hero-card-arrow{font-size:18px;color:var(--gold-dim);transition:all .25s;}
+.hero-card.open .hero-card-arrow{transform:rotate(90deg);color:var(--gold);}
+
+.hero-card-body-inner{
+  display:none;padding:0 24px 24px;
+  border-top:1px solid rgba(201,168,76,0.12);
+}
+.hero-card.open .hero-card-body-inner{display:block;animation:fi .35s ease;}
+@keyframes fi{from{opacity:0;}to{opacity:1;}}
+
+.hero-card-tagline{
+  font-family:'Noto Serif KR',serif;font-size:15px;font-weight:600;
+  color:var(--gold);line-height:1.7;margin:18px 0 14px;letter-spacing:.5px;
+}
+.hero-card-desc{
+  font-family:'Noto Sans KR',sans-serif;font-size:13px;
+  color:var(--text-secondary);line-height:1.95;margin-bottom:16px;
+}
+.hero-card-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;}
+.hero-chip{
+  font-family:'Noto Sans KR',sans-serif;font-size:11px;
+  padding:4px 10px;border:1px solid rgba(201,168,76,0.18);
+  color:var(--text-muted);
+}
+.hero-card-footer{
+  display:flex;justify-content:flex-end;padding-top:14px;
+  border-top:1px solid rgba(201,168,76,0.08);
+}
+.btn-action{
+  padding:10px 24px;border:none;background:var(--gold);color:var(--ink);
+  font-family:'Noto Serif KR',serif;font-size:13px;font-weight:700;
+  cursor:pointer;letter-spacing:.5px;
+}
+.btn-action:hover{background:var(--gold-light);}
+
+/* ── FOOTER ── */
+footer{padding:28px 20px;text-align:center;border-top:1px solid rgba(201,168,76,0.08);}
+.footer-text{font-family:'Noto Sans KR',sans-serif;font-size:12px;color:var(--text-muted);line-height:2;}
+.footer-text a{color:var(--gold-dim);text-decoration:none;}
+.footer-text a:hover{color:var(--gold);}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(8,6,4,0.93);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .3s;backdrop-filter:blur(8px);}
+.modal-overlay.active{opacity:1;pointer-events:all;}
+.modal{background:var(--ink-soft);border:1px solid rgba(201,168,76,0.2);width:100%;max-width:380px;padding:34px 26px;position:relative;}
+.modal-close{position:absolute;top:11px;right:14px;background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;}
+.modal-tabs{display:flex;border-bottom:1px solid rgba(201,168,76,0.12);margin-bottom:20px;}
+.modal-tab{flex:1;padding:9px;background:none;border:none;font-family:'Noto Sans KR',sans-serif;font-size:13px;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;margin-bottom:-1px;}
+.modal-tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+.modal-title{font-size:17px;font-weight:700;margin-bottom:4px;}
+.modal-sub{font-family:'Noto Sans KR',sans-serif;font-size:12px;color:var(--text-muted);margin-bottom:18px;}
+.form-group{margin-bottom:13px;}
+.form-label{display:block;font-family:'Noto Sans KR',sans-serif;font-size:11px;letter-spacing:.1em;color:var(--text-muted);margin-bottom:5px;}
+.form-input{width:100%;background:var(--ink);border:1px solid rgba(201,168,76,0.18);color:var(--text-primary);padding:10px 12px;font-family:'Noto Sans KR',sans-serif;font-size:13px;outline:none;}
+.form-input:focus{border-color:var(--gold);}
+.form-input::placeholder{color:var(--text-muted);}
+.btn-full{width:100%;padding:11px;background:var(--gold);color:var(--ink);border:none;font-family:'Noto Serif KR',serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:3px;}
+.btn-full:hover{background:var(--gold-light);}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--ink-mid);border:1px solid var(--gold-dim);color:var(--text-primary);font-family:'Noto Sans KR',sans-serif;font-size:13px;padding:9px 18px;z-index:300;opacity:0;transition:all .3s;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+@media(max-width:480px){
+  .hero-card-head{grid-template-columns:48px 1fr auto;gap:12px;padding:18px 16px;}
+  .hero-card-num{font-size:24px;}
+  .hero-card-body-inner{padding:0 16px 18px;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-back" href="index.html">← 메인으로</a>
+  <div class="nav-brand">역사를 바꾼 사람들</div>
+  <div class="nav-actions">
+    <button class="btn-sm btn-ghost" onclick="openModal('login')">로그인</button>
+    <button class="btn-sm btn-gold" onclick="openModal('signup')">회원가입</button>
+  </div>
+</nav>
+
+<section id="hero">
+  <div class="hero-tag">HEROES · 역사를 바꾼 사람들</div>
+  <h1 class="hero-title">역사를 바꾼 사람들</h1>
+  <p class="hero-sub">
+    왕이 아니어도 — 자기 자리에서 무언가를 만든 사람들.<br>
+    <em>당신이 그 사람이었다면, 같은 선택을 했겠습니까?</em>
+  </p>
+</section>
+
+<section id="cards"></section>
+
+<footer>
+  <div class="footer-text">
+    영웅편 · <a href="index.html">메인으로</a> &nbsp;|&nbsp; <a href="joseon-kings.html">조선의 왕 시리즈</a><br>
+    © 2025 IF YOU WERE. All rights reserved.
+  </div>
+</footer>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <div class="modal-tabs">
+      <button class="modal-tab active" id="tabLogin" onclick="switchTab('login')">로그인</button>
+      <button class="modal-tab" id="tabSignup" onclick="switchTab('signup')">회원가입</button>
+    </div>
+    <div id="formLogin">
+      <div class="modal-title">다시 오셨군요</div>
+      <div class="modal-sub">이메일과 비밀번호를 입력해주세요</div>
+      <div class="form-group"><label class="form-label">이메일</label><input class="form-input" id="login-email" type="email" placeholder="example@email.com"></div>
+      <div class="form-group"><label class="form-label">비밀번호</label><input class="form-input" id="login-pw" type="password" placeholder="••••••••"></div>
+      <div id="login-error" style="font-family:'Noto Sans KR',sans-serif;font-size:12px;color:#c06060;margin-bottom:8px;display:none;"></div>
+      <button class="btn-full" id="login-btn" onclick="doLogin()">로그인</button>
+    </div>
+    <div id="formSignup" style="display:none">
+      <div class="modal-title">역사 속으로</div>
+      <div class="modal-sub">가입 즉시 ✨ 환생포인트 10 지급</div>
+      <div class="form-group"><label class="form-label">닉네임</label><input class="form-input" id="signup-nick" type="text" placeholder="원하는 닉네임"></div>
+      <div class="form-group"><label class="form-label">이메일</label><input class="form-input" id="signup-email" type="email" placeholder="example@email.com"></div>
+      <div class="form-group"><label class="form-label">비밀번호</label><input class="form-input" id="signup-pw" type="password" placeholder="8자 이상"></div>
+      <div id="signup-error" style="font-family:'Noto Sans KR',sans-serif;font-size:12px;color:#c06060;margin-bottom:8px;display:none;"></div>
+      <button class="btn-full" id="signup-btn" onclick="doSignup()">✨ 가입하기</button>
+    </div>
+    <div id="formLoggedIn" style="display:none;padding:10px 0;">
+      <div class="modal-title" style="margin-bottom:4px;">내 정보</div>
+      <div id="loggedin-nick" class="modal-sub" style="margin-bottom:16px;"></div>
+      <div id="loggedin-ep" style="font-family:'Noto Sans KR',sans-serif;font-size:13px;color:var(--gold);margin-bottom:20px;text-align:center;"></div>
+      <button class="btn-full" onclick="doLogout()" style="background:transparent;border:1px solid rgba(201,168,76,0.3);color:var(--text-muted);">로그아웃</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPA_URL='https://qwsjofkabllbnbsgndun.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3c2pvZmthYmxsYm5ic2duZHVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNDc1NTYsImV4cCI6MjA5MTcyMzU1Nn0.2ryUWHRVqNuJ2ylHYr9tvgFwGK_EsVM7KMeuOpgLnks';
+const sb=supabase.createClient(SUPA_URL,SUPA_KEY);
+
+// ── 카드 리스트 빌드 ──────────────────────────────────────
+async function buildHeroes() {
+  try {
+    const res = await fetch('heroes.json');
+    const heroes = await res.json();
+    renderHeroes(heroes);
+  } catch (e) {
+    console.error('heroes.json 읽기 실패', e);
+    document.getElementById('cards').innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-muted);">인물 정보를 불러올 수 없습니다.</div>';
+  }
+}
+
+function renderHeroes(heroes) {
+  const root = document.getElementById('cards');
+  root.innerHTML = heroes.map(h => {
+    const numStr = 'No.' + String(h.num).padStart(2, '0');
+    if (h.status === 'soon') {
+      return `
+        <div class="hero-card soon">
+          <div class="hero-card-head">
+            <div class="hero-card-num">${numStr}</div>
+            <div class="hero-card-body">
+              <div class="hero-card-meta"><span>HEROES</span></div>
+              <div class="hero-card-name">${escapeHTML(h.korName || '?')}</div>
+              <div class="hero-card-role">${escapeHTML(h.tagline || '곧 합류합니다')}</div>
+            </div>
+            <div class="hero-card-right"><span class="status-chip chip-soon">준비 중</span></div>
+          </div>
+        </div>`;
+    }
+    return `
+      <div class="hero-card live" data-num="${h.num}" onclick="toggleHero(${h.num})">
+        <div class="hero-card-head">
+          <div class="hero-card-num">${numStr}</div>
+          <div class="hero-card-body">
+            <div class="hero-card-meta">
+              <span>HEROES</span>
+              <span class="hero-card-era">${escapeHTML(h.era || '')}</span>
+            </div>
+            <div class="hero-card-name">${escapeHTML(h.korName)}</div>
+            <div class="hero-card-role">${escapeHTML(h.role || '')}</div>
+          </div>
+          <div class="hero-card-right">
+            <span class="status-chip chip-live">공개 중</span>
+            <span class="hero-card-arrow">›</span>
+          </div>
+        </div>
+        <div class="hero-card-body-inner">
+          <div class="hero-card-tagline">${escapeHTML(h.tagline || '')}</div>
+          <div class="hero-card-desc">${h.desc || ''}</div>
+          <div class="hero-card-chips">
+            <span class="hero-chip">📱 역사 게임</span>
+            <span class="hero-chip">📖 학습자료</span>
+            ${h.personalName ? `<span class="hero-chip">${escapeHTML(h.personalName)}</span>` : ''}
+          </div>
+          <div class="hero-card-footer">
+            <button class="btn-action" onclick="event.stopPropagation();goPlay('${h.href}')">▶ 시작하기 →</button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function toggleHero(num) {
+  document.querySelectorAll('.hero-card.live').forEach(c => {
+    if (parseInt(c.dataset.num) === num) c.classList.toggle('open');
+    else c.classList.remove('open');
+  });
+}
+
+function goPlay(href) {
+  if (!href) return;
+  location.href = href;
+}
+
+function escapeHTML(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+buildHeroes();
+
+// ── 인증 ─────────────────────────────────────────────────
+sb.auth.onAuthStateChange((event, session) => {
+  if (session && session.user) updateNav(session.user);
+  else updateNavOut();
+});
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) updateNav(session.user);
+})();
+
+function updateNav(user) {
+  const nick = user.user_metadata?.nickname || user.email.split('@')[0];
+  const a = document.querySelector('.nav-actions');
+  if (a) a.innerHTML = `<span style="font-family:'Noto Sans KR',sans-serif;font-size:13px;color:var(--gold);margin-right:4px;">✨ ${nick}</span><button class="btn-sm btn-ghost" onclick="openModal('loggedin')">내 정보</button>`;
+}
+function updateNavOut() {
+  const a = document.querySelector('.nav-actions');
+  if (a) a.innerHTML = `<button class="btn-sm btn-ghost" onclick="openModal('login')">로그인</button><button class="btn-sm btn-gold" onclick="openModal('signup')">회원가입</button>`;
+}
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pw = document.getElementById('login-pw').value;
+  const errEl = document.getElementById('login-error');
+  const btn = document.getElementById('login-btn');
+  if (!email || !pw) { showErr(errEl, '이메일과 비밀번호를 입력해주세요.'); return; }
+  btn.textContent = '로그인 중...'; btn.disabled = true;
+  const { error } = await sb.auth.signInWithPassword({ email, password: pw });
+  if (error) {
+    showErr(errEl, '이메일 또는 비밀번호가 올바르지 않습니다.');
+    btn.textContent = '로그인'; btn.disabled = false;
+    return;
+  }
+  closeModal(); showToast('환영합니다!');
+  btn.textContent = '로그인'; btn.disabled = false;
+}
+
+async function doSignup() {
+  const nick = document.getElementById('signup-nick').value.trim();
+  const email = document.getElementById('signup-email').value.trim();
+  const pw = document.getElementById('signup-pw').value;
+  const errEl = document.getElementById('signup-error');
+  const btn = document.getElementById('signup-btn');
+  if (!nick) { showErr(errEl, '닉네임을 입력해주세요.'); return; }
+  if (!email) { showErr(errEl, '이메일을 입력해주세요.'); return; }
+  if (pw.length < 8) { showErr(errEl, '비밀번호는 8자 이상이어야 합니다.'); return; }
+  btn.textContent = '가입 중...'; btn.disabled = true;
+  const { error } = await sb.auth.signUp({ email, password: pw, options: { data: { nickname: nick } } });
+  if (error) {
+    showErr(errEl, error.message.includes('already') ? '이미 사용 중인 이메일입니다.' : '오류가 발생했습니다.');
+    btn.textContent = '✨ 가입하기'; btn.disabled = false;
+    return;
+  }
+  closeModal(); showToast('✨ 가입 완료! 환생포인트 10이 지급됐습니다.');
+  btn.textContent = '✨ 가입하기'; btn.disabled = false;
+}
+
+async function doLogout() { await sb.auth.signOut(); closeModal(); showToast('로그아웃됐습니다.'); }
+
+function openModal(tab) {
+  document.getElementById('modalOverlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+  if (tab === 'loggedin') showLoggedIn(); else switchTab(tab);
+}
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('active');
+  document.body.style.overflow = '';
+  const tabs = document.querySelector('.modal-tabs');
+  if (tabs) tabs.style.display = 'flex';
+}
+function handleOverlayClick(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
+function switchTab(tab) {
+  document.getElementById('formLogin').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('formSignup').style.display = tab === 'signup' ? 'block' : 'none';
+  document.getElementById('formLoggedIn').style.display = 'none';
+  const tabs = document.querySelector('.modal-tabs');
+  if (tabs) tabs.style.display = 'flex';
+  document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+  document.getElementById('tabSignup').classList.toggle('active', tab === 'signup');
+}
+async function showLoggedIn() {
+  document.getElementById('formLogin').style.display = 'none';
+  document.getElementById('formSignup').style.display = 'none';
+  document.getElementById('formLoggedIn').style.display = 'block';
+  const tabs = document.querySelector('.modal-tabs');
+  if (tabs) tabs.style.display = 'none';
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return;
+  const nick = user.user_metadata?.nickname || user.email.split('@')[0];
+  document.getElementById('loggedin-nick').textContent = nick + ' 님';
+  const { data: profile } = await sb.from('profiles').select('ep_balance, rebirth_tickets').eq('id', user.id).single();
+  if (profile) {
+    document.getElementById('loggedin-ep').textContent = '✨ EP ' + (profile.ep_balance || 0) + '   🎟 환생권 ' + (profile.rebirth_tickets || 0) + '장';
+  }
+}
+function showErr(el, msg) { el.textContent = msg; el.style.display = 'block'; }
+function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3500); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+</script>
+</body>
+</html>

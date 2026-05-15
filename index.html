@@ -521,11 +521,11 @@ const SERIES_LIST = [
   {
     num: '02',
     label: 'SERIES 02',
-    title: '다음 시리즈',
-    desc: '새로운 역사 속 인물이 찾아옵니다',
-    status: 'soon',
+    title: '역사를 바꾼 사람들',
+    desc: '자기 자리에서 무언가를 만든 사람들',
+    status: 'live',
     epCount: '',
-    href: '',
+    href: 'heroes.html',
   },
   {
     num: '03',
@@ -542,28 +542,36 @@ function buildSeriesList() {
   const list = document.getElementById('series-list');
   if (!list) return;
 
-  // kings.json을 읽어 조선의 왕 시리즈의 desc/epCount 자동 갱신
-  fetch('kings.json')
-    .then(r => r.json())
-    .then(kings => {
-      const liveKings = kings.filter(k => k.status === 'live');
-      const liveCount = liveKings.length;
-      const liveNames = liveKings
-        .map(k => k.personalName)
-        .join(' · ');
-
+  // kings.json + heroes.json을 함께 읽어 각 시리즈 desc/epCount 자동 갱신
+  Promise.all([
+    fetch('kings.json').then(r => r.json()).catch(() => []),
+    fetch('heroes.json').then(r => r.json()).catch(() => []),
+  ]).then(([kings, heroes]) => {
+    // 조선의 왕 시리즈
+    const liveKings = (kings || []).filter(k => k.status === 'live');
+    if (liveKings.length) {
+      const names = liveKings.map(k => k.personalName).join(' · ');
       const joseonSeries = SERIES_LIST.find(s => s.title === '조선의 왕 시리즈');
       if (joseonSeries) {
-        joseonSeries.desc = `${liveNames} — ${liveCount}편 완성<br>내가 그 왕이었다면, 어떤 선택을 했을까`;
-        joseonSeries.epCount = `${liveCount}편 완성`;
+        joseonSeries.desc = `${names} — ${liveKings.length}편 완성<br>내가 그 왕이었다면, 어떤 선택을 했을까`;
+        joseonSeries.epCount = `${liveKings.length}편 완성`;
       }
-      renderSeriesList(list);
-    })
-    .catch(err => {
-      // 실패해도 기본 데이터로 렌더링
-      console.warn('kings.json 읽기 실패:', err);
-      renderSeriesList(list);
-    });
+    }
+    // 영웅편 — 역사를 바꾼 사람들
+    const liveHeroes = (heroes || []).filter(h => h.status === 'live');
+    if (liveHeroes.length) {
+      const names = liveHeroes.map(h => h.korName).join(' · ');
+      const heroSeries = SERIES_LIST.find(s => s.title === '역사를 바꾼 사람들');
+      if (heroSeries) {
+        heroSeries.desc = `${names} — ${liveHeroes.length}편 공개<br>자기 자리에서 무언가를 만든 사람들`;
+        heroSeries.epCount = `${liveHeroes.length}편 공개`;
+      }
+    }
+    renderSeriesList(list);
+  }).catch(err => {
+    console.warn('시리즈 데이터 읽기 실패:', err);
+    renderSeriesList(list);
+  });
 }
 
 function renderSeriesList(list) {
