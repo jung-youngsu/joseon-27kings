@@ -92,10 +92,21 @@
       `<div class="op-line-stacked" data-i="${i}">${parseInline(l)}</div>`
     ).join('');
 
+    // s.portal: true 면 glyph 자리에 회전 포탈 (EP1 환생씬 흡수용)
+    const glyphOrPortalHTML = s.portal
+      ? `<div class="op-portal-wrap fade-target" data-step="1">
+           <div class="op-portal">
+             <div class="op-portal-ring-out"></div>
+             <div class="op-portal-ring-mid"></div>
+             ${s.glyph ? `<div class="op-glyph-in-portal">${escapeHTML(s.glyph)}</div>` : ''}
+           </div>
+         </div>`
+      : (s.glyph ? `<div class="op-glyph fade-target" data-step="1">${escapeHTML(s.glyph)}</div>` : '');
+
     el.innerHTML = `
       <div class="opening">
         ${s.question ? `<div class="op-question fade-target" data-step="0">${escapeHTML(s.question)}</div>` : ''}
-        ${s.glyph ? `<div class="op-glyph fade-target" data-step="1">${escapeHTML(s.glyph)}</div>` : ''}
+        ${glyphOrPortalHTML}
         ${s.series ? `<div class="op-series fade-target" data-step="2">${escapeHTML(s.series)}</div>` : ''}
         ${linesHTML ? `<div class="op-lines">${linesHTML}</div>` : ''}
         <button class="btn-p solid op-start fade-target" data-step="9" id="op-next">시작 →</button>
@@ -124,9 +135,11 @@
   }
 
   function renderNarration(el, s) {
+    // s.svg: raw SVG 문자열을 본문 위 아트워크로 삽입 (EP1 5막 실루엣용)
     el.innerHTML = `
       ${headerNav()}
       ${progressBar()}
+      ${s.svg ? `<div class="narr-art">${s.svg}</div>` : ''}
       <div class="narr-body">
         ${s.era ? `<div class="narr-era">${escapeHTML(s.era)}</div>` : ''}
         <div class="narr-text" id="narr-target"></div>
