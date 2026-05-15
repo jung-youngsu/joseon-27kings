@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>조선의 왕 시리즈 — 27대 왕 가계도</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600;700;900&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#13100d;--ink-soft:#1e1a15;--ink-mid:#2a2318;
+  --gold:#c9a84c;--gold-light:#e8c97a;--gold-dim:#7a6330;
+  --text-primary:#f0ead8;--text-secondary:#b0a080;--text-muted:#7a6a50;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--ink);color:var(--text-primary);font-family:'Noto Serif KR',serif;overflow-x:hidden;}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:14px 28px;background:rgba(19,16,13,0.95);backdrop-filter:blur(6px);border-bottom:1px solid rgba(201,168,76,0.1);}
+.nav-back{font-family:'Noto Sans KR',sans-serif;font-size:13px;color:var(--text-muted);text-decoration:none;transition:color .2s;}
+.nav-back:hover{color:var(--gold);}
+.nav-brand{font-size:13px;font-weight:700;letter-spacing:.2em;color:var(--gold);}
+.nav-actions{display:flex;gap:8px;}
+.btn-sm{padding:7px 14px;font-family:'Noto Sans KR',sans-serif;font-size:12px;cursor:pointer;transition:all .2s;border-radius:1px;}
+.btn-ghost{background:transparent;color:var(--text-muted);border:1px solid var(--text-muted);}
+.btn-ghost:hover{color:var(--gold);border-color:var(--gold);}
+.btn-gold{background:var(--gold);color:var(--ink);border:none;font-weight:700;}
+.btn-gold:hover{background:var(--gold-light);}
+#hero{padding:82px 20px 20px;text-align:center;}
+.hero-tag{font-family:'Noto Sans KR',sans-serif;font-size:11px;letter-spacing:.3em;color:var(--gold-dim);margin-bottom:12px;}
+.hero-title{font-size:clamp(19px,4vw,30px);font-weight:900;letter-spacing:.1em;margin-bottom:8px;}
+.hero-sub{font-family:'Noto Sans KR',sans-serif;font-size:12px;color:var(--text-secondary);line-height:1.8;}
+.legend{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;padding:16px 20px 8px;}
+.leg-i{display:flex;align-items:center;gap:6px;font-family:'Noto Sans KR',sans-serif;font-size:11px;color:var(--text-secondary);}
+.leg-box{width:20px;height:12px;border-radius:2px;}
+.lb-s{background:#c9a84c;border:1.5px solid #e8c97a;}
+.lb-n{background:#242018;border:1.5px solid #5a5040;}
+.lb-d{background:#2a1010;border:1.5px solid #9a3030;}
+.lb-b{background:#141828;border:1.5px dashed #3a4068;}
+#tree-section{padding:12px 0 0;}
+.scroll-hint{font-family:'Noto Sans KR',sans-serif;font-size:10px;color:var(--text-muted);text-align:center;margin-bottom:4px;letter-spacing:.1em;}
+.tree-scroll{overflow-x:auto;padding:0 16px 24px;}
+.tree-scroll::-webkit-scrollbar{height:3px;}
+.tree-scroll::-webkit-scrollbar-thumb{background:var(--gold-dim);border-radius:2px;}
+#tree-svg{display:block;margin:0 auto;}
+#detail-wrap{max-width:520px;margin:0 auto;padding:0 20px;}
+.detail-inner{background:var(--ink-soft);border:1px solid rgba(201,168,76,0.25);border-top:2px solid var(--gold);padding:24px 20px;margin-bottom:20px;}
+.d-tag{font-family:'Noto Sans KR',sans-serif;font-size:11px;letter-spacing:.2em;color:var(--gold-dim);margin-bottom:6px;}
+.d-king{font-size:22px;font-weight:900;margin-bottom:2px;}
+.d-name-r{font-family:'Noto Sans KR',sans-serif;font-size:11px;color:var(--text-muted);margin-bottom:6px;}
+.d-sub{font-size:13px;font-weight:600;color:var(--gold);margin-bottom:10px;}
+.d-desc{font-family:'Noto Sans KR',sans-serif;font-size:13px;color:var(--text-secondary);line-height:1.9;margin-bottom:16px;}
+.d-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;}
+.d-chip{font-family:'Noto Sans KR',sans-serif;font-size:11px;padding:4px 10px;border:1px solid rgba(201,168,76,0.2);color:var(--text-muted);}
+.d-footer{display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid rgba(201,168,76,0.1);}
+.d-price{font-family:'Noto Sans KR',sans-serif;font-size:17px;font-weight:700;color:var(--gold);}
+.btn-action{padding:9px 22px;border:none;background:var(--gold);color:var(--ink);font-family:'Noto Serif KR',serif;font-size:13px;font-weight:700;cursor:pointer;}
+.btn-action:hover{background:var(--gold-light);}
+
+footer{padding:28px 20px;text-align:center;border-top:1px solid rgba(201,168,76,0.08);}
+.footer-text{font-family:'Noto Sans KR',sans-serif;font-size:12px;color:var(--text-muted);line-height:2;}
+.modal-overlay{position:fixed;inset:0;background:rgba(8,6,4,0.93);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .3s;backdrop-filter:blur(8px);}
+.modal-overlay.active{opacity:1;pointer-events:all;}
+.modal{background:var(--ink-soft);border:1px solid rgba(201,168,76,0.2);width:100%;max-width:380px;padding:34px 26px;position:relative;}
+.modal-close{position:absolute;top:11px;right:14px;background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;}
+.modal-tabs{display:flex;border-bottom:1px solid rgba(201,168,76,0.12);margin-bottom:20px;}
+.modal-tab{flex:1;padding:9px;background:none;border:none;font-family:'Noto Sans KR',sans-serif;font-size:13px;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;margin-bottom:-1px;}
+.modal-tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+.modal-title{font-size:17px;font-weight:700;margin-bottom:4px;}
+.modal-sub{font-family:'Noto Sans KR',sans-serif;font-size:12px;color:var(--text-muted);margin-bottom:18px;}
+.form-group{margin-bottom:13px;}
+.form-label{display:block;font-family:'Noto Sans KR',sans-serif;font-size:11px;letter-spacing:.1em;color:var(--text-muted);margin-bottom:5px;}
+.form-input{width:100%;background:var(--ink);border:1px solid rgba(201,168,76,0.18);color:var(--text-primary);padding:10px 12px;font-family:'Noto Sans KR',sans-serif;font-size:13px;outline:none;}
+.form-input:focus{border-color:var(--gold);}
+.form-input::placeholder{color:var(--text-muted);}
+.btn-full{width:100%;padding:11px;background:var(--gold);color:var(--ink);border:none;font-family:'Noto Serif KR',serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:3px;}
+.btn-full:hover{background:var(--gold-light);}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--ink-mid);border:1px solid var(--gold-dim);color:var(--text-primary);font-family:'Noto Sans KR',sans-serif;font-size:13px;padding:9px 18px;z-index:300;opacity:0;transition:all .3s;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-back" href="index.html">← 메인으로</a>
+  <div class="nav-brand">조선의 왕 시리즈</div>
+  <div class="nav-actions">
+    <button class="btn-sm btn-ghost" onclick="openModal('login')">로그인</button>
+    <button class="btn-sm btn-gold" onclick="openModal('signup')">무료 체험</button>
+  </div>
+</nav>
+
+<section id="hero">
+  <div class="hero-tag">JOSEON DYNASTY · 1392 – 1910</div>
+  <h1 class="hero-title">조선 27대 왕 가계도</h1>
+  <p class="hero-sub">묘호 · 이름 · 재위 · 키워드로 읽는 519년<br>금색 왕을 누르면 시리즈 콘텐츠로 연결됩니다</p>
+</section>
+
+<div class="legend">
+  <div class="leg-i"><div class="leg-box lb-s"></div>시리즈 콘텐츠</div>
+  <div class="leg-i"><div class="leg-box lb-n"></div>역대 왕</div>
+  <div class="leg-i"><div class="leg-box lb-d"></div>폐위</div>
+  <div class="leg-i"><div class="leg-box lb-b"></div>방계 입계</div>
+  <div class="leg-i"><span style="font-family:monospace;font-size:12px;color:#a09060">- -</span>&nbsp;추존 경유</div>
+</div>
+
+<section id="tree-section">
+  <p class="scroll-hint">← 좌우 스크롤 →</p>
+  <div class="tree-scroll"><svg id="tree-svg"></svg></div>
+</section>
+
+<!-- 진행 현황 배너 (로그인 시 자동 표시) -->
+<div id="progress-banner" style="display:none;max-width:520px;margin:0 auto 8px;padding:0 20px;">
+  <div style="background:var(--ink-soft);border:1px solid rgba(201,168,76,0.2);border-left:3px solid var(--gold);padding:16px 18px;">
+    <div style="font-family:'Noto Sans KR',sans-serif;font-size:11px;letter-spacing:.15em;color:var(--gold-dim);margin-bottom:10px;">내 진행 현황</div>
+    <div id="progress-series" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <div id="progress-ep-info" style="font-family:'Noto Sans KR',sans-serif;font-size:12px;color:var(--text-muted);"></div>
+      <div id="progress-next-btn"></div>
+    </div>
+  </div>
+</div>
+
+<div id="detail-wrap"></div>
+
+
+
+<footer>
+  <div class="footer-text">
+    조선의 왕 시리즈 · <a href="index.html" style="color:var(--gold-dim);text-decoration:none;">메인으로</a><br>
+    © 2025 IF YOU WERE. All rights reserved.
+  </div>
+</footer>
+
+<div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <div class="modal-tabs">
+      <button class="modal-tab active" id="tabLogin" onclick="switchTab('login')">로그인</button>
+      <button class="modal-tab" id="tabSignup" onclick="switchTab('signup')">회원가입</button>
+    </div>
+    <div id="formLogin">
+      <div class="modal-title">다시 오셨군요</div>
+      <div class="modal-sub">이메일과 비밀번호를 입력해주세요</div>
+      <div class="form-group"><label class="form-label">이메일</label><input class="form-input" id="login-email" type="email" placeholder="example@email.com"></div>
+      <div class="form-group"><label class="form-label">비밀번호</label><input class="form-input" id="login-pw" type="password" placeholder="••••••••"></div>
+      <div id="login-error" style="font-family:'Noto Sans KR',sans-serif;font-size:12px;color:#c06060;margin-bottom:8px;display:none;"></div>
+      <button class="btn-full" id="login-btn" onclick="doLogin()">로그인</button>
+    </div>
+    <div id="formSignup" style="display:none">
+      <div class="modal-title">역사 속으로</div>
+      <div class="modal-sub">가입 즉시 이성계편 + ✨ 환생포인트 10 지급</div>
+      <div class="form-group"><label class="form-label">닉네임</label><input class="form-input" id="signup-nick" type="text" placeholder="왕의 이름을 입력하세요"></div>
+      <div class="form-group"><label class="form-label">이메일</label><input class="form-input" id="signup-email" type="email" placeholder="example@email.com"></div>
+      <div class="form-group"><label class="form-label">비밀번호</label><input class="form-input" id="signup-pw" type="password" placeholder="8자 이상"></div>
+      <div id="signup-error" style="font-family:'Noto Sans KR',sans-serif;font-size:12px;color:#c06060;margin-bottom:8px;display:none;"></div>
+      <button class="btn-full" id="signup-btn" onclick="doSignup()">✨ 무료 체험 시작하기</button>
+    </div>
+    <div id="formLoggedIn" style="display:none;padding:10px 0;">
+      <div class="modal-title" style="margin-bottom:4px;">내 정보</div>
+      <div id="loggedin-nick" class="modal-sub" style="margin-bottom:12px;"></div>
+      <div id="loggedin-stats" style="display:flex;gap:16px;justify-content:center;margin-bottom:16px;">
+        <div style="text-align:center;">
+          <div style="font-family:'Noto Sans KR',sans-serif;font-size:11px;color:var(--text-muted);margin-bottom:4px;">환생포인트</div>
+          <div id="loggedin-ep" style="font-family:'Noto Serif KR',serif;font-size:20px;font-weight:700;color:var(--gold);"></div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-family:'Noto Sans KR',sans-serif;font-size:11px;color:var(--text-muted);margin-bottom:4px;">환생권</div>
+          <div id="loggedin-tickets" style="font-family:'Noto Serif KR',serif;font-size:20px;font-weight:700;color:var(--gold);"></div>
+        </div>
+      </div>
+      <div style="font-family:'Noto Sans KR',sans-serif;font-size:11px;letter-spacing:.1em;color:var(--text-muted);margin-bottom:8px;">플레이 현황</div>
+      <div id="loggedin-progress" style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;"></div>
+      <button class="btn-full" onclick="doLogout()" style="background:transparent;border:1px solid rgba(201,168,76,0.3);color:var(--text-muted);">로그아웃</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPA_URL='https://qwsjofkabllbnbsgndun.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3c2pvZmthYmxsYm5ic2duZHVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNDc1NTYsImV4cCI6MjA5MTcyMzU1Nn0.2ryUWHRVqNuJ2ylHYr9tvgFwGK_EsVM7KMeuOpgLnks';
+const sb=supabase.createClient(SUPA_URL,SUPA_KEY);
+
+sb.auth.onAuthStateChange((event,session)=>{
+  if(session&&session.user){updateNav(session.user);showProgressBanner();}
+  else updateNavOut();
+});
+(async()=>{
+  const{data:{session}}=await sb.auth.getSession();
+  if(session){updateNav(session.user);showProgressBanner();}
+})();
+
+async function showProgressBanner(){
+  const{data:{session}}=await sb.auth.getSession();
+  if(!session)return;
+  const user=session.user;
+
+  const{data:profile}=await sb.from('profiles')
+    .select('ep_balance,rebirth_tickets').eq('id',user.id).single();
+  const{data:unlocked}=await sb.from('unlocked_episodes')
+    .select('episode').eq('user_id',user.id);
+  const{data:quizDone}=await sb.from('quiz_records')
+    .select('episode').eq('user_id',user.id);
+
+  const unlockedSet=new Set([1,...(unlocked||[]).map(r=>r.episode)]);
+  const quizSet=new Set((quizDone||[]).map(r=>r.episode));
+
+  const series=[
+    {ep:1, title:'태조 이성계',  file:'episode.html?ep=1'},
+    {ep:2, title:'정종 이방과',  file:'episode.html?ep=2'},
+    {ep:3, title:'태종 이방원',  file:'episode.html?ep=3'},
+    {ep:10,title:'연산군 이융',  file:'episode.html?ep=10'},
+    {ep:14,title:'선조 이연',    file:'episode.html?ep=14'},
+    {ep:22,title:'정조 이산',    file:'episode.html?ep=22'},
+  ];
+
+  const seriesEl=document.getElementById('progress-series');
+  seriesEl.innerHTML='';
+  let nextEp=null;
+
+  series.forEach(s=>{
+    const isUnlocked=unlockedSet.has(s.ep);
+    const quizCleared=quizSet.has(s.ep);
+    const canUnlock=(unlockedSet.has(s.ep-1)||s.ep===1)&&!isUnlocked;
+
+    let icon,color,status;
+    if(isUnlocked&&quizCleared){icon='✅';color='#70a850';status='완료';}
+    else if(isUnlocked){icon='▶';color='var(--gold)';status='진행 중';if(!nextEp)nextEp=s;}
+    else if(canUnlock){icon='🎟';color='#c0a060';status='오픈 가능';if(!nextEp)nextEp=s;}
+    else{icon='🔒';color='var(--text-muted)';status='잠김';}
+
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;justify-content:space-between;';
+    row.innerHTML=`
+      <div style="font-family:'Noto Sans KR',sans-serif;font-size:12px;color:var(--text-secondary);">
+        <span style="color:var(--text-muted);margin-right:6px;">${s.ep}화</span>${s.title}
+      </div>
+      <div style="font-family:'Noto Sans KR',sans-serif;font-size:11px;color:${color};">${icon} ${status}</div>`;
+    seriesEl.appendChild(row);
+  });
+
+  // EP + 환생권 정보
+  const tickets=profile?.rebirth_tickets||0;
+  const ep=profile?.ep_balance||0;
+  document.getElementById('progress-ep-info').textContent=
+    `✨ EP ${ep}  |  🎟 환생권 ${tickets}장`;
+
+  // 다음 편 바로가기 버튼
+  const nextBtn=document.getElementById('progress-next-btn');
+  if(nextEp){
+    if(nextEp.ep===1||unlockedSet.has(nextEp.ep)){
+      nextBtn.innerHTML=`<button class="btn-action" style="padding:7px 16px;font-size:12px;" onclick="location.href='${nextEp.file}'">▶ ${nextEp.ep}화 이어하기</button>`;
+    } else if(tickets>0){
+      nextBtn.innerHTML=`<button class="btn-action" style="padding:7px 16px;font-size:12px;" onclick="useTicket(${nextEp.ep},'${nextEp.file}')">🎟 ${nextEp.ep}화 오픈하기</button>`;
+    } else {
+      nextBtn.innerHTML=`<span style="font-family:'Noto Sans KR',sans-serif;font-size:11px;color:var(--text-muted);">퀴즈 완료로 EP 적립 후 오픈</span>`;
+    }
+  } else {
+    nextBtn.innerHTML=`<span style="font-family:'Noto Sans KR',sans-serif;font-size:12px;color:#70a850;">🎉 전편 완료!</span>`;
+  }
+
+  document.getElementById('progress-banner').style.display='block';
+}
+
+function updateNav(user){
+  const nick=user.user_metadata?.nickname||user.email.split('@')[0];
+  const a=document.querySelector('.nav-actions');
+  if(a)a.innerHTML=`<span style="font-family:'Noto Sans KR',sans-serif;font-size:13px;color:var(--gold);margin-right:4px;">✨ ${nick}</span><button class="btn-sm btn-ghost" onclick="openModal('loggedin')">내 정보</button>`;
+}
+function updateNavOut(){
+  const a=document.querySelector('.nav-actions');
+  if(a)a.innerHTML=`<button class="btn-sm btn-ghost" onclick="openModal('login')">로그인</button><button class="btn-sm btn-gold" onclick="openModal('signup')">회원가입</button>`;
+}
+
+async function doLogin(){
+  const email=document.getElementById('login-email').value.trim();
+  const pw=document.getElementById('login-pw').value;
+  const errEl=document.getElementById('login-error');
+  const btn=document.getElementById('login-btn');
+  if(!email||!pw){showErr(errEl,'이메일과 비밀번호를 입력해주세요.');return;}
+  btn.textContent='로그인 중...';btn.disabled=true;
+  const{error}=await sb.auth.signInWithPassword({email,password:pw});
+  if(error){showErr(errEl,'이메일 또는 비밀번호가 올바르지 않습니다.');btn.textContent='로그인';btn.disabled=false;return;}
+  closeModal();showToast('환영합니다!');btn.textContent='로그인';btn.disabled=false;
+}
+
+async function doSignup(){
+  const nick=document.getElementById('signup-nick').value.trim();
+  const email=document.getElementById('signup-email').value.trim();
+  const pw=document.getElementById('signup-pw').value;
+  const errEl=document.getElementById('signup-error');
+  const btn=document.getElementById('signup-btn');
+  if(!nick){showErr(errEl,'닉네임을 입력해주세요.');return;}
+  if(!email){showErr(errEl,'이메일을 입력해주세요.');return;}
+  if(pw.length<8){showErr(errEl,'비밀번호는 8자 이상이어야 합니다.');return;}
+  btn.textContent='가입 중...';btn.disabled=true;
+  const{error}=await sb.auth.signUp({email,password:pw,options:{data:{nickname:nick}}});
+  if(error){showErr(errEl,error.message.includes('already')?'이미 사용 중인 이메일입니다.':'오류가 발생했습니다.');btn.textContent='✨ 무료 체험 시작하기';btn.disabled=false;return;}
+  closeModal();showToast('✨ 가입 완료! 환생포인트 10이 지급됐습니다.');btn.textContent='✨ 무료 체험 시작하기';btn.disabled=false;
+}
+
+async function doLogout(){await sb.auth.signOut();closeModal();showToast('로그아웃됐습니다.');}
+
+function openModal(tab){
+  document.getElementById('modalOverlay').classList.add('active');
+  document.body.style.overflow='hidden';
+  if(tab==='loggedin')showLoggedIn();else switchTab(tab);
+}
+function closeModal(){document.getElementById('modalOverlay').classList.remove('active');document.body.style.overflow='';}
+function handleOverlayClick(e){if(e.target===document.getElementById('modalOverlay'))closeModal();}
+function switchTab(tab){
+  document.getElementById('formLogin').style.display=tab==='login'?'block':'none';
+  document.getElementById('formSignup').style.display=tab==='signup'?'block':'none';
+  document.getElementById('formLoggedIn').style.display='none';
+  document.getElementById('tabLogin').classList.toggle('active',tab==='login');
+  document.getElementById('tabSignup').classList.toggle('active',tab==='signup');
+}
+async function showLoggedIn(){
+  document.getElementById('formLogin').style.display='none';
+  document.getElementById('formSignup').style.display='none';
+  document.getElementById('formLoggedIn').style.display='block';
+  const tabs=document.querySelector('.modal-tabs');
+  if(tabs)tabs.style.display='none';
+
+  const{data:{user}}=await sb.auth.getUser();
+  if(!user)return;
+
+  const nick=user.user_metadata?.nickname||user.email.split('@')[0];
+  document.getElementById('loggedin-nick').textContent=nick+' 님';
+
+  // 프로필 로드
+  const{data:profile}=await sb.from('profiles')
+    .select('ep_balance,rebirth_tickets')
+    .eq('id',user.id).single();
+
+  // 오픈된 에피소드 로드
+  const{data:unlocked}=await sb.from('unlocked_episodes')
+    .select('episode').eq('user_id',user.id);
+  const unlockedSet=new Set([1,...(unlocked||[]).map(r=>r.episode)]);
+
+  // 퀴즈 완료 편 로드
+  const{data:quizDone}=await sb.from('quiz_records')
+    .select('episode').eq('user_id',user.id);
+  const quizSet=new Set((quizDone||[]).map(r=>r.episode));
+
+  if(profile){
+    document.getElementById('loggedin-ep').textContent=profile.ep_balance;
+    document.getElementById('loggedin-tickets').textContent=(profile.rebirth_tickets||0)+'장';
+  }
+
+  // 시리즈 순서 정의
+  const series=[
+    {ep:1, title:'태조 이성계',  theme:'의리의 왕'},
+    {ep:2, title:'정종 이방과',  theme:'연민의 왕'},
+    {ep:3, title:'태종 이방원',  theme:'결단의 왕'},
+    {ep:10,title:'연산군 이융',  theme:'분노의 왕'},
+    {ep:14,title:'선조 이연',    theme:'두려움의 왕'},
+    {ep:22,title:'정조 이산',    theme:'복수의 왕'},
+  ];
+
+  const prog=document.getElementById('loggedin-progress');
+  prog.innerHTML='';
+  series.forEach(s=>{
+    const isUnlocked=unlockedSet.has(s.ep);
+    const quizCleared=quizSet.has(s.ep);
+    const canUnlock=unlockedSet.has(s.ep-1)||s.ep===1;
+
+    let icon='🔒';let color='var(--text-muted)';let status='잠김';
+    if(isUnlocked&&quizCleared){icon='✅';color='#70a850';status='완료';}
+    else if(isUnlocked){icon='▶';color='var(--gold)';status='플레이 중';}
+    else if(canUnlock){icon='🎟';color='#c0a060';status='환생권으로 오픈 가능';}
+
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--ink);border:1px solid rgba(201,168,76,0.1);border-radius:4px;';
+    row.innerHTML=`
+      <div>
+        <span style="font-family:'Noto Sans KR',sans-serif;font-size:11px;color:var(--text-muted);">${s.ep}화</span>
+        <span style="font-family:'Noto Serif KR',serif;font-size:13px;color:var(--text-primary);margin-left:6px;">${s.title}</span>
+      </div>
+      <div style="font-family:'Noto Sans KR',sans-serif;font-size:11px;color:${color};">${icon} ${status}</div>`;
+    prog.appendChild(row);
+  });
+}
+function showErr(el,msg){el.textContent=msg;el.style.display='block';}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500);}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+</script>
+
+<script>
+const RH=76, NW=100, NH=58, PADY=52;
+const CL=110, CM=250, CR=390;
+const SVG_W = CR + NW/2 + 28;
+
+const KINGS=[
+  {row:1,  x:CM,title:'태조',  name:'이성계',reign:'1392–98',  kw:'조선 건국',
+   series:true,ep:1,theme:'의리의 왕',sub:'명분과 선택 사이',
+   desc:'고려의 장군에서 조선의 왕이 되기까지.<br>위화도 회군, 그 하나의 선택이 500년 왕조를 만들었다.<br>당신이라면 어떤 선택을 했겠는가?'},
+  {row:2,  x:CL,title:'정종',  name:'이방과',reign:'1398–1400',kw:'왕자의 난 수습',
+   series:true,ep:2,theme:'연민의 왕',sub:'물러나는 자의 지혜',
+   desc:'왕좌를 세 번 거절했지만 결국 앉혀진 사람.<br>그리고 2년 만에 — 스스로 내려온 사람.<br>가족을 모두 보고 듣고 — 살아남은 자의 이야기.<br><br><em>※ EP3 태종편(이방원)과 한 쌍입니다. 같은 마당, 같은 아버지, 다르게 본 형제의 이야기.</em>'},
+  {row:3,  x:CM,title:'태종',  name:'이방원',reign:'1400–18',  kw:'왕권 강화',
+   series:true,ep:3,theme:'결단의 왕',sub:'쥐는 자의 외로움',
+   desc:'다섯째 아들로 태어나 — 칼을 든 사람.<br>아버지를 왕으로 만들었고, 형제를 베어냈고, 자기 처남들까지 정리했다.<br>모든 것을 가졌고 — 모든 것을 잃었다.<br><br><em>※ EP2 정종편(이방과)과 한 쌍입니다. 같은 마당, 같은 아버지, 다르게 본 형제의 이야기.</em>'},
+  {row:4,  x:CM,title:'세종',  name:'이도',  reign:'1418–50',  kw:'한글 창제'},
+  {row:5,  x:CL,title:'문종',  name:'이향',  reign:'1450–52',  kw:'학문·문치'},
+  {row:6,  x:CL,title:'단종',  name:'이홍위',reign:'1452–55',  kw:'폐위·사사',deposed:true},
+  {row:7,  x:CM,title:'세조',  name:'이유',  reign:'1455–68',  kw:'계유정난'},
+  {row:8,  x:CL,title:'예종',  name:'이황',  reign:'1468–69',  kw:'단명 1년'},
+  {row:9,  x:CM,title:'성종',  name:'이혈',  reign:'1469–94',  kw:'경국대전'},
+  {row:10, x:CL,title:'연산군',name:'이융',  reign:'1494–1506',kw:'사화·폭정',deposed:true,
+   series:true,ep:10,theme:'분노의 왕',sub:'다섯 번의 기회',
+   desc:'어머니의 죽음, 신하들의 배신, 그리고 다섯 번의 선택.<br>역사는 그를 폭군이라 불렀다.<br>당신도 같은 길을 걸었을까?'},
+  {row:11, x:CM,title:'중종',  name:'이역',  reign:'1506–44',  kw:'반정 집권'},
+  {row:12, x:CL,title:'인종',  name:'이호',  reign:'1544–45',  kw:'8개월 재위'},
+  {row:13, x:CR,title:'명종',  name:'이환',  reign:'1545–67',  kw:'을사사화'},
+  {row:14, x:CM,title:'선조',  name:'이연',  reign:'1567–1608',kw:'임진왜란',
+   series:true,ep:14,theme:'두려움의 왕',sub:'두려움이 왕을 만든다',
+   desc:'임진왜란, 의주로의 피란, 이순신과의 갈등.<br>두려움은 그를 무너뜨렸는가, 아니면 살아남게 했는가?'},
+  {row:15, x:CR,title:'광해군',name:'이혼',  reign:'1608–23',  kw:'중립 외교',deposed:true},
+  {row:16, x:CM,title:'인조',  name:'이종',  reign:'1623–49',  kw:'병자호란'},
+  {row:17, x:CM,title:'효종',  name:'이호',  reign:'1649–59',  kw:'북벌론'},
+  {row:18, x:CM,title:'현종',  name:'이연',  reign:'1659–74',  kw:'예송 논쟁'},
+  {row:19, x:CM,title:'숙종',  name:'이순',  reign:'1674–1720',kw:'환국 정치'},
+  {row:20, x:CL,title:'경종',  name:'이윤',  reign:'1720–24',  kw:'단명 재위'},
+  {row:21, x:CM,title:'영조',  name:'이금',  reign:'1724–76',  kw:'탕평·52년'},
+  {row:22, x:CM,title:'정조',  name:'이산',  reign:'1776–1800',kw:'수원 화성',
+   series:true,ep:22,theme:'복수의 왕',sub:'힘이 생겼을 때 잊지 않았다',
+   desc:'아버지는 뒤주에서 죽었다. 그는 왕이 되기까지 기다렸다.<br>복수인가, 개혁인가.<br>힘을 가진 자가 내리는 선택의 무게.'},
+  {row:23, x:CM,title:'순조',  name:'이공',  reign:'1800–34',  kw:'세도 정치'},
+  {row:24, x:CM,title:'헌종',  name:'이환',  reign:'1834–49',  kw:'세도 정치'},
+  {row:25, x:CR,title:'철종',  name:'이원범',reign:'1849–63',  kw:'강화도령',side:true},
+  {row:26, x:CR,title:'고종',  name:'이형',  reign:'1863–1907',kw:'대한제국',side:true},
+  {row:27, x:CR,title:'순종',  name:'이척',  reign:'1907–10',  kw:'마지막 왕'},
+];
+
+const CONN=[
+  {p:1,c:2,t:'n'},{p:1,c:3,t:'n'},
+  {p:3,c:4,t:'n'},
+  {p:4,c:5,t:'n'},{p:4,c:7,t:'n'},
+  {p:5,c:6,t:'n'},
+  {p:7,c:8,t:'n'},{p:7,c:9,t:'v',via:'덕종 경유'},
+  {p:9,c:10,t:'n'},{p:9,c:11,t:'n'},
+  {p:11,c:12,t:'n'},{p:11,c:13,t:'n'},{p:11,c:14,t:'v',via:'덕흥군 경유'},
+  {p:14,c:15,t:'n'},{p:14,c:16,t:'v',via:'원종 경유'},
+  {p:16,c:17,t:'n'},{p:17,c:18,t:'n'},{p:18,c:19,t:'n'},
+  {p:19,c:20,t:'n'},{p:19,c:21,t:'n'},
+  {p:21,c:22,t:'v',via:'사도세자 경유'},
+  {p:22,c:23,t:'n'},{p:23,c:24,t:'v',via:'문조 경유'},
+  {p:24,c:25,t:'s'},{p:25,c:26,t:'s'},{p:26,c:27,t:'n'},
+];
+
+const ERAS=[
+  {label:'전기',start:1, end:9, color:'rgba(201,168,76,0.13)'},
+  {label:'중기',start:10,end:16,color:'rgba(200,80,30,0.11)'},
+  {label:'후기',start:17,end:24,color:'rgba(50,100,200,0.10)'},
+  {label:'말기',start:25,end:27,color:'rgba(160,30,30,0.13)'},
+];
+
+window.addEventListener('load',()=>{
+  const svg=document.getElementById('tree-svg');
+  const H=PADY+27*RH+80;
+  svg.setAttribute('viewBox',`0 0 ${SVG_W} ${H}`);
+  svg.setAttribute('width',SVG_W);
+  svg.setAttribute('height',H);
+  const NS='http://www.w3.org/2000/svg';
+  const el=t=>document.createElementNS(NS,t);
+  const ky=r=>PADY+(r-1)*RH;
+  const kmap={};
+  KINGS.forEach(k=>kmap[k.row]=k);
+
+  /* 시대 밴드 */
+  ERAS.forEach(era=>{
+    const y1=ky(era.start)-8, y2=ky(era.end)+NH+10;
+    const b=el('rect');
+    b.setAttribute('x',0);b.setAttribute('y',y1);
+    b.setAttribute('width',SVG_W);b.setAttribute('height',y2-y1);
+    b.setAttribute('fill',era.color);svg.appendChild(b);
+    const lt=el('text');
+    lt.setAttribute('x',SVG_W-10);lt.setAttribute('y',(y1+y2)/2+4);
+    lt.setAttribute('font-size','9');lt.setAttribute('font-family','Noto Sans KR,sans-serif');
+    lt.setAttribute('fill','rgba(201,168,76,0.55)');lt.setAttribute('writing-mode','vertical-rl');
+    lt.setAttribute('text-anchor','middle');lt.setAttribute('letter-spacing','3');
+    lt.textContent=era.label;svg.appendChild(lt);
+  });
+
+  /* 연결선 */
+  const byP={};
+  CONN.forEach(c=>{if(!byP[c.p])byP[c.p]=[];byP[c.p].push(c);});
+  Object.entries(byP).forEach(([pr,cs])=>{
+    const pk=kmap[parseInt(pr)];
+    const py=ky(pk.row);
+    const bY=py+NH+8;
+    const allX=[pk.x,...cs.map(c=>kmap[c.c].x)];
+    const minX=Math.min(...allX),maxX=Math.max(...allX);
+    const vp=el('line');
+    vp.setAttribute('x1',pk.x);vp.setAttribute('y1',py+NH);
+    vp.setAttribute('x2',pk.x);vp.setAttribute('y2',bY);
+    vp.setAttribute('stroke','#5a5040');vp.setAttribute('stroke-width','1.2');
+    svg.appendChild(vp);
+    if(minX<maxX){
+      const hb=el('line');
+      hb.setAttribute('x1',minX);hb.setAttribute('y1',bY);
+      hb.setAttribute('x2',maxX);hb.setAttribute('y2',bY);
+      hb.setAttribute('stroke','#5a5040');hb.setAttribute('stroke-width','1.2');
+      svg.appendChild(hb);
+    }
+    cs.forEach(c=>{
+      const ck=kmap[c.c];
+      const cy=ky(ck.row);
+      let stroke='#5a5040',sw='1.2',dash=null;
+      if(c.t==='v'){stroke='rgba(201,168,76,0.55)';dash='6,3';}
+      else if(c.t==='s'){stroke='#8a3030';dash='5,3';}
+      const vc=el('line');
+      vc.setAttribute('x1',ck.x);vc.setAttribute('y1',bY);
+      vc.setAttribute('x2',ck.x);vc.setAttribute('y2',cy);
+      vc.setAttribute('stroke',stroke);vc.setAttribute('stroke-width',sw);
+      if(dash)vc.setAttribute('stroke-dasharray',dash);
+      svg.appendChild(vc);
+      if(c.via){
+        const midY=Math.min(bY+20,(bY+cy)/2+5);
+        const vt=el('text');
+        vt.setAttribute('x',ck.x+4);vt.setAttribute('y',midY);
+        vt.setAttribute('font-size','7.5');vt.setAttribute('font-family','Noto Sans KR,sans-serif');
+        vt.setAttribute('fill','rgba(201,168,76,0.6)');
+        vt.textContent=c.via;svg.appendChild(vt);
+      }
+    });
+  });
+
+  /* 노드 */
+  KINGS.forEach(king=>{
+    const x=king.x,y=ky(king.row),lx=x-NW/2;
+    let fill,stroke,sw,dash,textCol,subCol;
+    if(king.series&&king.deposed){
+      fill='#2a1010';stroke='#c9a84c';sw='2';textCol='#e89090';subCol='#905050';
+    }else if(king.series){
+      fill='#c9a84c';stroke='#f0d890';sw='2';textCol='#0a0800';subCol='#3a2800';
+    }else if(king.deposed){
+      fill='#2a1010';stroke='#9a3030';sw='1.5';textCol='#d09090';subCol='#804040';
+    }else if(king.side){
+      fill='#141828';stroke='#3a4068';sw='1.2';textCol='#9090b8';subCol='#505070';dash='5,3';
+    }else{
+      fill='#242018';stroke='#5a5040';sw='1.2';textCol='#c8bca0';subCol='#7a6a50';
+    }
+
+    const g=el('g');
+    g.setAttribute('data-row',king.row);
+    if(king.series){g.style.cursor='pointer';g.addEventListener('click',()=>toggleDetail(king));}
+
+    const rect=el('rect');
+    rect.setAttribute('x',lx);rect.setAttribute('y',y);
+    rect.setAttribute('width',NW);rect.setAttribute('height',NH);
+    rect.setAttribute('rx','3');
+    rect.setAttribute('fill',fill);rect.setAttribute('stroke',stroke);
+    rect.setAttribute('stroke-width',sw);
+    if(dash)rect.setAttribute('stroke-dasharray',dash);
+    g.appendChild(rect);
+
+    /* 대수 */
+    addT(g,lx+6,y+11,king.row+'대','7.5',subCol,'start',false,el,'Noto Sans KR,sans-serif');
+
+    /* 묘호 */
+    const tsz=king.series?'14':'12';
+    addT(g,x,y+(king.series?24:25),king.title,tsz,textCol,'middle',true,el,'Noto Serif KR,serif');
+
+    if(king.series){
+      addT(g,x,y+35,king.theme,'8',subCol,'middle',false,el);
+      addT(g,x,y+45,king.name,'7.5',subCol,'middle',false,el);
+      addT(g,x,y+54,king.reign,'7',subCol,'middle',false,el);
+      const ht=el('text');
+      ht.setAttribute('x',lx+NW-6);ht.setAttribute('y',y+12);
+      ht.setAttribute('font-size','9');
+      ht.setAttribute('fill',king.deposed?'#c9a84c':'#0a0800');
+      ht.setAttribute('text-anchor','end');ht.textContent='✦';g.appendChild(ht);
+    }else{
+      addT(g,x,y+37,king.name,'8',subCol,'middle',false,el);
+      addT(g,x,y+48,king.kw,'7.5',subCol,'middle',false,el);
+      addT(g,x,y+56,king.reign,'7',subCol,'middle',false,el);
+    }
+
+    /* 폐위 뱃지 */
+    if(king.deposed&&!king.series){
+      const dr=el('rect');
+      dr.setAttribute('x',lx+NW-22);dr.setAttribute('y',y+2);
+      dr.setAttribute('width','20');dr.setAttribute('height','12');
+      dr.setAttribute('rx','2');dr.setAttribute('fill','#8a2828');g.appendChild(dr);
+      const dt=el('text');
+      dt.setAttribute('x',lx+NW-12);dt.setAttribute('y',y+11);
+      dt.setAttribute('font-size','7');dt.setAttribute('fill','#f0c0c0');
+      dt.setAttribute('font-family','Noto Sans KR,sans-serif');
+      dt.setAttribute('text-anchor','middle');dt.textContent='폐위';g.appendChild(dt);
+    }
+
+    /* 방계 뱃지 */
+    if(king.side){
+      const sr=el('rect');
+      sr.setAttribute('x',lx);sr.setAttribute('y',y+2);
+      sr.setAttribute('width','22');sr.setAttribute('height','12');
+      sr.setAttribute('rx','2');sr.setAttribute('fill','#1e2040');g.appendChild(sr);
+      const st=el('text');
+      st.setAttribute('x',lx+11);st.setAttribute('y',y+11);
+      st.setAttribute('font-size','7');st.setAttribute('fill','#8090c0');
+      st.setAttribute('font-family','Noto Sans KR,sans-serif');
+      st.setAttribute('text-anchor','middle');st.textContent='방계';g.appendChild(st);
+    }
+
+    svg.appendChild(g);
+  });
+
+  /* 하단 라벨 */
+  const bl=el('text');
+  bl.setAttribute('x',SVG_W/2);bl.setAttribute('y',PADY+27*RH+55);
+  bl.setAttribute('text-anchor','middle');bl.setAttribute('font-size','8.5');
+  bl.setAttribute('font-family','Noto Sans KR,sans-serif');
+  bl.setAttribute('fill','#5a5040');bl.setAttribute('letter-spacing','2');
+  bl.textContent='조선왕조 1392 – 1910 · 519년 · 27대';
+  svg.appendChild(bl);
+});
+
+function addT(g,x,y,txt,size,fill,anchor,bold,el,family){
+  const t=el('text');
+  t.setAttribute('x',x);t.setAttribute('y',y);
+  t.setAttribute('font-size',size||'10');
+  t.setAttribute('fill',fill||'#8a7a60');
+  t.setAttribute('text-anchor',anchor||'middle');
+  t.setAttribute('font-family',family||'Noto Sans KR,sans-serif');
+  if(bold)t.setAttribute('font-weight','700');
+  t.textContent=txt;g.appendChild(t);
+}
+
+let activeKing=null;
+let currentUser=null;
+let userProfile=null;
+let unlockedEps=[];
+
+// 로그인 상태 및 오픈 현황 로드
+async function loadUserState(){
+  const{data:{session}}=await sb.auth.getSession();
+  if(!session){currentUser=null;userProfile=null;unlockedEps=[1];return;}
+  currentUser=session.user;
+  const{data:profile}=await sb.from('profiles')
+    .select('ep_balance,rebirth_tickets')
+    .eq('id',currentUser.id).single();
+  userProfile=profile;
+  const{data:unlocked}=await sb.from('unlocked_episodes')
+    .select('episode').eq('user_id',currentUser.id);
+  unlockedEps=[1,...(unlocked||[]).map(r=>r.episode)];
+}
+
+async function toggleDetail(king){
+  await loadUserState();
+  const wrap=document.getElementById('detail-wrap');
+  if(activeKing&&activeKing.row===king.row){
+    wrap.innerHTML='';wrap.style.display='none';activeKing=null;return;
+  }
+  activeKing=king;
+  wrap.style.display='block';
+
+  const isUnlocked=unlockedEps.includes(king.ep);
+  const gameFiles={1:'episode.html?ep=1', 2:'episode.html?ep=2', 3:'episode.html?ep=3', 10:'episode.html?ep=10', 14:'episode.html?ep=14', 22:'episode.html?ep=22'};
+  const prevUnlocked=unlockedEps.includes(king.ep-1)||king.ep===1;
+  const tickets=userProfile?.rebirth_tickets||0;
+
+  let actionBtn='';
+  if(king.ep===1){
+    actionBtn=`<button class="btn-action" onclick="location.href='${gameFiles[king.ep]}'">바로 시작하기 →</button>`;
+  } else if(!currentUser){
+    actionBtn=`<button class="btn-action" onclick="openModal('signup')">로그인 후 이용</button>`;
+  } else if(isUnlocked){
+    actionBtn=`<button class="btn-action" onclick="location.href='${gameFiles[king.ep]}'">바로 시작하기 →</button>`;
+  } else if(prevUnlocked&&tickets>0){
+    actionBtn=`<button class="btn-action" onclick="useTicket(${king.ep},'${gameFiles[king.ep]}')">🎟 환생권 사용 (${tickets}장 보유)</button>`;
+  } else if(prevUnlocked&&tickets===0){
+    actionBtn=`<button class="btn-action" style="background:var(--ink-soft);color:var(--text-muted);cursor:default;border:1px solid rgba(201,168,76,0.2);">환생권 부족 (퀴즈 도전!)</button>`;
+  } else {
+    actionBtn=`<button class="btn-action" style="background:var(--ink-soft);color:var(--text-muted);cursor:default;border:1px solid rgba(201,168,76,0.2);">이전 편 먼저 플레이</button>`;
+  }
+
+  const epInfo=currentUser&&userProfile
+    ?`<div style="font-family:'Noto Sans KR',sans-serif;font-size:12px;color:var(--gold-dim);margin-bottom:12px;">✨ EP ${userProfile.ep_balance} &nbsp;|&nbsp; 🎟 환생권 ${tickets}장</div>`
+    :'';
+
+  const seriesOrder=`<div style="font-family:'Noto Sans KR',sans-serif;font-size:11px;color:var(--text-muted);margin-bottom:12px;line-height:2;">
+    시리즈 순서&nbsp;&nbsp;1화 태조 → 2화 정조 → 3화 연산군 → 4화 선조<br>
+    <span style="color:var(--gold);">현재 오픈 가능: ${
+      !currentUser ? '로그인 후 확인' :
+      !unlockedEps.includes(2) ? '2화 정조' :
+      !unlockedEps.includes(3) ? '3화 연산군' :
+      !unlockedEps.includes(4) ? '4화 선조' : '전편 완료 🎉'
+    }</span>
+  </div>`;
+
+  wrap.innerHTML=`
+    <div class="detail-inner">
+      <div class="d-tag">${king.ep}화</div>
+      <div class="d-king">${king.title}</div>
+      <div class="d-name-r">${king.name} · ${king.reign}</div>
+      <div class="d-sub">${king.theme} — ${king.sub}</div>
+      <div class="d-desc">${king.desc}</div>
+      ${seriesOrder}
+      ${epInfo}
+      <div class="d-chips">
+        <span class="d-chip">📱 역사 게임</span>
+        <span class="d-chip">📖 학습 소설</span>
+        <span class="d-chip">📋 소책자 PDF</span>
+        <span class="d-chip">❓ 퀴즈 20문제</span>
+      </div>
+      <div class="d-footer">
+        <div></div>
+        ${actionBtn}
+      </div>
+    </div>`;
+  setTimeout(()=>wrap.scrollIntoView({behavior:'smooth',block:'nearest'}),60);
+}
+
+async function useTicket(ep, gameFile){
+  if(!currentUser||!userProfile){showToast('로그인이 필요합니다.');return;}
+  if(userProfile.rebirth_tickets<=0){showToast('환생권이 없습니다.');return;}
+  if(!confirm('환생권 1장을 사용해 이 편을 여시겠습니까?')){return;}
+
+  // 환생권 차감 + 에피소드 오픈 기록
+  await sb.from('profiles')
+    .update({rebirth_tickets:userProfile.rebirth_tickets-1})
+    .eq('id',currentUser.id);
+  await sb.from('unlocked_episodes')
+    .insert({user_id:currentUser.id,episode:ep,method:'ticket'});
+
+  showToast('🎟 환생권 사용 완료! 이동합니다...');
+  setTimeout(()=>location.href=gameFile,1200);
+}
+
+</script>
+</body>
+</html>

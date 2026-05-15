@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IF YOU WERE — 역사체험 교육 게임</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600;700;900&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0f0d0a; --ink-soft:#1a1710; --ink-mid:#2d2820;
+  --gold:#c9a84c; --gold-light:#e8c97a; --gold-dim:#7a6330;
+  --gold-faint:rgba(201,168,76,0.08);
+  --text-primary:#f0ead8; --text-secondary:#a09070; --text-muted:#6b5f4a;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--ink);color:var(--text-primary);font-family:'Noto Serif KR',serif;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%,rgba(201,168,76,0.05) 0%,transparent 60%),
+    repeating-linear-gradient(0deg,transparent,transparent 59px,rgba(201,168,76,0.025) 59px,rgba(201,168,76,0.025) 60px),
+    repeating-linear-gradient(90deg,transparent,transparent 59px,rgba(201,168,76,0.025) 59px,rgba(201,168,76,0.025) 60px);
+  pointer-events:none;z-index:0;}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 40px;
+  background:linear-gradient(to bottom,rgba(15,13,10,0.97),transparent);
+  backdrop-filter:blur(6px);}
+.nav-brand{font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:700;letter-spacing:.25em;color:var(--gold);cursor:pointer;}
+.nav-links{display:flex;gap:28px;align-items:center;}
+.nav-link{font-family:'Noto Sans KR',sans-serif;font-size:13px;color:var(--text-muted);cursor:pointer;transition:color .2s;letter-spacing:.05em;}
+.nav-link:hover{color:var(--gold);}
+.nav-actions{display:flex;gap:10px;}
+.btn-ghost{padding:8px 18px;background:transparent;color:var(--text-muted);border:1px solid var(--text-muted);font-family:'Noto Sans KR',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;}
+.btn-ghost:hover{color:var(--gold);border-color:var(--gold);}
+.btn-gold{padding:8px 20px;background:var(--gold);color:var(--ink);border:none;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;}
+.btn-gold:hover{background:var(--gold-light);}
+
+/* ── HERO ── */
+#hero{position:relative;z-index:1;min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:120px 20px 80px;text-align:center;}
+.hero-deco{width:1px;height:56px;background:linear-gradient(to bottom,transparent,var(--gold-dim));
+  margin:0 auto 44px;opacity:0;animation:fadeInDown 1s .3s forwards;}
+.hero-eyebrow{font-family:'Noto Sans KR',sans-serif;font-size:11px;letter-spacing:.35em;
+  color:var(--gold-dim);margin-bottom:28px;opacity:0;animation:fadeIn 1s .5s forwards;}
+.hero-quote{max-width:520px;margin:0 auto 40px;
+  font-size:clamp(17px,3.5vw,24px);font-weight:300;line-height:2.1;
+  color:var(--text-primary);min-height:180px;}
+.cursor{display:inline-block;width:2px;height:1em;background:var(--gold);
+  vertical-align:text-bottom;animation:blink 1s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.hero-rule{width:40px;height:1px;background:var(--gold-dim);margin:0 auto 32px;
+  opacity:0;animation:fadeIn 1s .5s forwards;}
+.hero-title{font-size:clamp(32px,7vw,64px);font-weight:900;letter-spacing:.2em;
+  opacity:0;animation:fadeInUp 1s .5s forwards;margin-bottom:14px;
+  background:linear-gradient(135deg,var(--gold-light),var(--gold),var(--gold-dim));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero-sub{font-family:'Noto Sans KR',sans-serif;font-size:15px;font-weight:300;
+  color:var(--text-secondary);letter-spacing:.08em;line-height:1.9;
+  opacity:0;animation:fadeInUp 1s .7s forwards;margin-bottom:44px;max-width:380px;}
+.hero-cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;
+  opacity:0;animation:fadeInUp 1s .9s forwards;}
+.btn-primary{padding:15px 36px;background:var(--gold);color:var(--ink);border:none;
+  font-family:'Noto Serif KR',serif;font-size:15px;font-weight:700;letter-spacing:.1em;
+  cursor:pointer;transition:all .25s;
+  clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);}
+.btn-primary:hover{background:var(--gold-light);transform:translateY(-2px);}
+.btn-secondary{padding:15px 36px;background:transparent;color:var(--text-secondary);
+  border:1px solid var(--text-muted);font-family:'Noto Sans KR',sans-serif;
+  font-size:14px;cursor:pointer;transition:all .25s;}
+.btn-secondary:hover{color:var(--gold);border-color:var(--gold);}
+
+/* ── SECTION COMMON ── */
+.sec-tag{font-family:'Noto Sans KR',sans-serif;font-size:11px;letter-spacing:.3em;color:var(--gold-dim);margin-bottom:14px;}
+.sec-title{font-size:clamp(20px,3.5vw,30px);font-weight:700;letter-spacing:.1em;}
+.sec-head{text-align:center;margin-bottom:56px;}
+
+/* ── CATALOG ── */
+#catalog{position:relative;z-index:1;padding:100px 20px;max-width:900px;margin:0 auto;}
+
+.series-list{display:flex;flex-direction:column;gap:2px;}
+
+.series-card{
+  display:grid;grid-template-columns:72px 1fr auto;
+  align-items:center;gap:24px;padding:28px 32px;
+  background:var(--ink-soft);border:1px solid rgba(201,168,76,0.08);
+  text-decoration:none;color:inherit;
+  position:relative;overflow:hidden;transition:all .3s;}
+.series-card::before{content:'';position:absolute;left:0;top:0;
+  width:3px;height:0;background:var(--gold);transition:height .3s;}
+.series-card:hover::before,.series-card:focus::before{height:100%;}
+.series-card:hover{background:var(--ink-mid);border-color:rgba(201,168,76,0.2);transform:translateX(4px);}
+
+.series-card.coming{cursor:default;opacity:.45;pointer-events:none;}
+
+.card-num{font-family:'Noto Sans KR',sans-serif;font-size:38px;font-weight:900;
+  color:var(--gold-dim);line-height:1;letter-spacing:-.02em;}
+.card-body{}
+.card-series-label{font-family:'Noto Sans KR',sans-serif;font-size:11px;
+  letter-spacing:.2em;color:var(--gold-dim);margin-bottom:6px;}
+.card-title{font-size:clamp(16px,2.5vw,20px);font-weight:700;letter-spacing:.08em;margin-bottom:6px;}
+.card-desc{font-family:'Noto Sans KR',sans-serif;font-size:13px;color:var(--text-muted);line-height:1.75;}
+.card-right{text-align:right;flex-shrink:0;}
+.card-ep-count{font-family:'Noto Sans KR',sans-serif;font-size:12px;color:var(--text-muted);margin-bottom:8px;}
+.status-chip{font-family:'Noto Sans KR',sans-serif;font-size:11px;padding:4px 12px;letter-spacing:.1em;display:inline-block;}
+.chip-live{background:rgba(30,77,30,0.4);color:#7fca7f;border:1px solid rgba(127,202,127,0.3);}
+.chip-soon{background:var(--gold-faint);color:var(--gold-dim);border:1px solid rgba(201,168,76,0.15);}
+.card-arrow{font-size:18px;color:var(--gold-dim);margin-left:10px;transition:all .3s;flex-shrink:0;}
+.series-card:hover .card-arrow{transform:translateX(4px);color:var(--gold);}
+
+/* ── HOW IT WORKS ── */
+#how{position:relative;z-index:1;padding:80px 20px;background:var(--ink-soft);}
+.how-inner{max-width:800px;margin:0 auto;}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:2px;margin-top:52px;}
+.step{padding:32px 24px;background:var(--ink);border:1px solid rgba(201,168,76,0.08);position:relative;}
+.step-num{font-family:'Noto Sans KR',sans-serif;font-size:32px;font-weight:900;
+  color:var(--gold-dim);line-height:1;margin-bottom:16px;opacity:.6;}
+.step-title{font-size:15px;font-weight:700;letter-spacing:.06em;margin-bottom:8px;}
+.step-desc{font-family:'Noto Sans KR',sans-serif;font-size:13px;color:var(--text-muted);line-height:1.8;}
+
+/* ── EP 포인트 ── */
+#ep{position:relative;z-index:1;padding:80px 20px;max-width:700px;margin:0 auto;}
+.ep-box{border:1px solid rgba(201,168,76,0.2);padding:44px 36px;}
+.ep-title{font-size:clamp(18px,3vw,26px);font-weight:700;letter-spacing:.1em;margin-bottom:8px;}
+.ep-sub{font-family:'Noto Sans KR',sans-serif;font-size:13px;color:var(--text-secondary);margin-bottom:36px;line-height:1.8;}
+.ep-list{display:flex;flex-direction:column;gap:2px;}
+.ep-row{display:flex;align-items:center;justify-content:space-between;
+  padding:14px 18px;background:var(--ink-soft);border:1px solid rgba(201,168,76,0.06);}
+.ep-action{font-family:'Noto Sans KR',sans-serif;font-size:13px;color:var(--text-secondary);}
+.ep-reward{font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:700;color:var(--gold);}
+
+/* ── REVIEWS ── */
+#reviews{position:relative;z-index:1;padding:80px 20px;background:var(--ink-soft);}
+.reviews-inner{max-width:960px;margin:0 auto;}
+.reviews-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:2px;margin-top:52px;}
+.review-card{background:var(--ink);border:1px solid rgba(201,168,76,0.08);
+  padding:26px 22px;position:relative;transition:border-color .3s;}
+.review-card:hover{border-color:rgba(201,168,76,0.2);}
+.review-qmark{font-size:44px;line-height:1;color:var(--gold-dim);font-family:serif;
+  position:absolute;top:14px;left:18px;opacity:.35;}
+.review-text{font-size:13px;font-weight:300;line-height:1.95;
+  color:var(--text-secondary);margin-top:22px;margin-bottom:18px;font-style:italic;}
+.review-foot{display:flex;align-items:center;justify-content:space-between;
+  padding-top:14px;border-top:1px solid rgba(201,168,76,0.07);}
+.review-author{font-family:'Noto Sans KR',sans-serif;font-size:12px;color:var(--text-muted);}
+.review-stars{color:var(--gold);font-size:11px;letter-spacing:1px;margin-top:2px;}
+.review-ep-tag{font-family:'Noto Sans KR',sans-serif;font-size:11px;
+  padding:3px 8px;background:var(--gold-faint);color:var(--gold-dim);
+  border:1px solid rgba(201,168,76,0.15);}
+
+/* ── ABOUT ── */
+#about{position:relative;z-index:1;padding:96px 20px;text-align:center;}
+.about-inner{max-width:500px;margin:0 auto;}
+.about-quote{font-size:clamp(16px,2.8vw,20px);font-weight:300;line-height:2.3;
+  color:var(--text-secondary);margin:36px 0 28px;font-style:italic;}
+.about-name{font-family:'Noto Sans KR',sans-serif;font-size:12px;letter-spacing:.2em;color:var(--gold-dim);}
+
+/* ── FOOTER ── */
+footer{position:relative;z-index:1;padding:40px 20px;text-align:center;
+  border-top:1px solid rgba(201,168,76,0.08);}
+.footer-text{font-family:'Noto Sans KR',sans-serif;font-size:12px;color:var(--text-muted);line-height:2.2;}
+.footer-link{color:var(--gold-dim);text-decoration:none;transition:color .2s;}
+.footer-link:hover{color:var(--gold);}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(8,6,4,0.93);z-index:200;
+  display:flex;align-items:center;justify-content:center;padding:20px;
+  opacity:0;pointer-events:none;transition:opacity .3s;backdrop-filter:blur(8px);}
+.modal-overlay.active{opacity:1;pointer-events:all;}
+.modal{background:var(--ink-soft);border:1px solid rgba(201,168,76,0.2);
+  width:100%;max-width:400px;padding:40px 32px;position:relative;
+  transform:translateY(20px);transition:transform .3s;}
+.modal-overlay.active .modal{transform:translateY(0);}
+.modal-close{position:absolute;top:13px;right:17px;background:none;border:none;
+  color:var(--text-muted);font-size:22px;cursor:pointer;}
+.modal-close:hover{color:var(--text-primary);}
+.modal-tabs{display:flex;border-bottom:1px solid rgba(201,168,76,0.12);margin-bottom:26px;}
+.modal-tab{flex:1;padding:10px;background:none;border:none;
+  font-family:'Noto Sans KR',sans-serif;font-size:14px;color:var(--text-muted);
+  cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;margin-bottom:-1px;}
+.modal-tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+.modal-title{font-size:19px;font-weight:700;letter-spacing:.08em;margin-bottom:6px;}
+.modal-sub{font-family:'Noto Sans KR',sans-serif;font-size:13px;color:var(--text-muted);margin-bottom:24px;}
+.form-group{margin-bottom:16px;}
+.form-label{display:block;font-family:'Noto Sans KR',sans-serif;font-size:12px;
+  letter-spacing:.1em;color:var(--text-muted);margin-bottom:7px;}
+.form-input{width:100%;background:var(--ink);border:1px solid rgba(201,168,76,0.18);
+  color:var(--text-primary);padding:11px 14px;font-family:'Noto Sans KR',sans-serif;
+  font-size:14px;outline:none;transition:border-color .2s;}
+.form-input:focus{border-color:var(--gold);}
+.form-input::placeholder{color:var(--text-muted);}
+.btn-full{width:100%;padding:13px;background:var(--gold);color:var(--ink);border:none;
+  font-family:'Noto Serif KR',serif;font-size:15px;font-weight:700;
+  letter-spacing:.1em;cursor:pointer;margin-top:4px;transition:background .2s;}
+.btn-full:hover{background:var(--gold-light);}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes fadeInDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
+.reveal{opacity:0;transform:translateY(20px);transition:opacity .7s,transform .7s;}
+.reveal.visible{opacity:1;transform:none;}
+
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(14px);
+  background:var(--ink-mid);border:1px solid var(--gold-dim);color:var(--text-primary);
+  font-family:'Noto Sans KR',sans-serif;font-size:13px;padding:11px 22px;
+  z-index:300;opacity:0;transition:all .3s;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ── MOBILE ── */
+@media(max-width:640px){
+  nav{padding:14px 18px;}
+  .nav-links{display:none;}
+  .series-card{grid-template-columns:52px 1fr;gap:16px;padding:20px 18px;}
+  .card-right,.card-arrow{display:none;}
+  .card-num{font-size:26px;}
+  .hero-cta{flex-direction:column;align-items:center;}
+  .btn-primary,.btn-secondary{width:100%;max-width:260px;}
+  .ep-box{padding:28px 20px;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand" onclick="window.scrollTo({top:0,behavior:'smooth'})">IF YOU WERE</div>
+  <div class="nav-links">
+    <span class="nav-link" onclick="smoothTo('catalog')">시리즈</span>
+    <span class="nav-link" onclick="smoothTo('how')">이용 방법</span>
+    <span class="nav-link" onclick="smoothTo('reviews')">후기</span>
+    <span class="nav-link" onclick="smoothTo('about')">소개</span>
+  </div>
+  <div class="nav-actions">
+    <button class="btn-ghost" onclick="openModal('login')">로그인</button>
+    <button class="btn-gold" onclick="openModal('signup')">회원가입</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-deco"></div>
+  <div class="hero-eyebrow">HISTORY EXPERIENCE · 역사체험 교육 게임</div>
+  <p class="hero-quote" id="heroQuote"><span class="cursor"></span></p>
+  <div class="hero-rule"></div>
+  <h1 class="hero-title">IF YOU WERE</h1>
+  <p class="hero-sub">역사 속 그 사람이었다면<br>당신은 어떤 선택을 했겠는가</p>
+  <div class="hero-cta">
+    <button class="btn-primary" onclick="smoothTo('catalog')">시리즈 보기</button>
+    <button class="btn-secondary" onclick="goFreePlay()">무료 체험 →</button>
+  </div>
+</section>
+
+<!-- CATALOG -->
+<section id="catalog">
+  <div class="sec-head reveal">
+    <div class="sec-tag">SERIES CATALOG · 시리즈</div>
+    <h2 class="sec-title">지금 떠날 수 있는 역사</h2>
+  </div>
+  <div class="series-list" id="series-list"></div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="how-inner">
+    <div class="sec-head reveal">
+      <div class="sec-tag">HOW IT WORKS · 이용 방법</div>
+      <h2 class="sec-title">네 단계로 역사 속으로</h2>
+    </div>
+    <div class="steps">
+      <div class="step reveal">
+        <div class="step-num">01</div>
+        <div class="step-title">회원가입</div>
+        <div class="step-desc">가입 즉시 환생포인트 10 지급.<br>이성계편 무료 체험 시작.</div>
+      </div>
+      <div class="step reveal" style="transition-delay:.1s">
+        <div class="step-num">02</div>
+        <div class="step-title">역사 게임</div>
+        <div class="step-desc">신하와 대화하고 선택합니다.<br>당신의 선택이 역사를 바꿉니다.</div>
+      </div>
+      <div class="step reveal" style="transition-delay:.2s">
+        <div class="step-num">03</div>
+        <div class="step-title">학습 소설 · 퀴즈</div>
+        <div class="step-desc">게임 후 소설로 깊이 읽고,<br>퀴즈 20문제로 마무리.</div>
+      </div>
+      <div class="step reveal" style="transition-delay:.3s">
+        <div class="step-num">04</div>
+        <div class="step-title">소책자 저장</div>
+        <div class="step-desc">A5 소책자 PDF로 저장해<br>언제든 다시 꺼내 읽습니다.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EP 포인트 -->
+<section id="ep">
+  <div class="ep-box reveal">
+    <div class="sec-tag">REBIRTH POINT · 환생포인트</div>
+    <div class="ep-title">✨ 환생포인트</div>
+    <div class="ep-sub">
+      활동하면 포인트가 쌓입니다.<br>
+      쌓인 포인트로 새 편을 열어보세요.
+    </div>
+    <div class="ep-list">
+      <div class="ep-row">
+        <span class="ep-action">🎉 회원가입</span>
+        <span class="ep-reward">+10 EP</span>
+      </div>
+      <div class="ep-row">
+        <span class="ep-action">📝 퀴즈 80점 이상</span>
+        <span class="ep-reward">+5 EP</span>
+      </div>
+      <div class="ep-row">
+        <span class="ep-action">✍️ 후기 작성</span>
+        <span class="ep-reward">+10 EP</span>
+      </div>
+      <div class="ep-row">
+        <span class="ep-action">👥 친구 초대 (가입 완료 시)</span>
+        <span class="ep-reward">+20 EP</span>
+      </div>
+      <div class="ep-row" style="border-top:1px solid rgba(201,168,76,0.15);margin-top:2px;">
+        <span class="ep-action" style="color:var(--gold)">다음 편 열기</span>
+        <span class="ep-reward" style="color:var(--text-secondary)">EP 사용</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- REVIEWS -->
+<section id="reviews">
+  <div class="reviews-inner">
+    <div class="sec-head reveal">
+      <div class="sec-tag">REVIEWS · 체험 후기</div>
+      <h2 class="sec-title">직접 경험한 분들의 이야기</h2>
+    </div>
+    <div class="reviews-grid">
+      <div class="review-card reveal">
+        <div class="review-qmark">"</div>
+        <div class="review-text">연산군이 왜 그렇게 됐는지 교과서로는 몰랐는데, 게임으로 직접 선택해보니 이해가 됐어요. 저도 똑같이 선택했을 것 같아서 무서웠어요.</div>
+        <div class="review-foot">
+          <div><div class="review-author">중학교 2학년 · 김○○</div><div class="review-stars">★★★★★</div></div>
+          <div class="review-ep-tag">연산군편</div>
+        </div>
+      </div>
+      <div class="review-card reveal" style="transition-delay:.1s">
+        <div class="review-qmark">"</div>
+        <div class="review-text">역사 공부를 이렇게 재밌게 할 수 있다니. 퀴즈까지 다 풀고 나서 아이가 스스로 책을 찾아보더라고요.</div>
+        <div class="review-foot">
+          <div><div class="review-author">중2 자녀 학부모 · 이○○</div><div class="review-stars">★★★★★</div></div>
+          <div class="review-ep-tag">이성계편</div>
+        </div>
+      </div>
+      <div class="review-card reveal" style="transition-delay:.2s">
+        <div class="review-qmark">"</div>
+        <div class="review-text">정조편은 복수라는 키워드가 강렬했어요. 역사를 감정으로 느끼게 해주는 콘텐츠. 수업 전 배경지식으로 완벽합니다.</div>
+        <div class="review-foot">
+          <div><div class="review-author">역사 교사 · 박○○</div><div class="review-stars">★★★★★</div></div>
+          <div class="review-ep-tag">정조편</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="about-inner">
+    <div class="sec-tag reveal">CREATOR · 만든 사람</div>
+    <div class="about-quote reveal">
+      "어떤 일은 하루만에 일어나기도 하고,<br>
+      또 어떤 일은 몇백년에 걸쳐서 일어나기도 한다.<br><br>
+      역사를 들여다본다는 것은<br>한 인간을 들여다보는 일이다.<br><br>
+      사람을 이해하지 않고<br>어찌 역사를 이해한단 말인가."
+    </div>
+    <div class="about-name reveal">— 제작자</div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-text">
+    IF YOU WERE · 역사체험 교육 게임<br>
+    문의: 카카오톡 채널 &nbsp;|&nbsp;
+    <a class="footer-link" href="joseon-kings.html">조선의 왕 시리즈</a><br><br>
+    © 2025 IF YOU WERE. All rights reserved.
+  </div>
+</footer>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <div class="modal-tabs">
+      <button class="modal-tab active" id="tabLogin" onclick="switchTab('login')">로그인</button>
+      <button class="modal-tab" id="tabSignup" onclick="switchTab('signup')">회원가입</button>
+    </div>
+
+    <!-- 로그인 폼 -->
+    <div id="formLogin">
+      <div class="modal-title">다시 오셨군요</div>
+      <div class="modal-sub">이메일과 비밀번호를 입력해주세요</div>
+      <div class="form-group">
+        <label class="form-label">이메일</label>
+        <input class="form-input" id="login-email" type="email" placeholder="example@email.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">비밀번호</label>
+        <div style="position:relative;">
+          <input class="form-input" id="login-pw" type="password" placeholder="••••••••" style="padding-right:44px;">
+          <button onclick="togglePw('login-pw',this)" type="button" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:15px;">👁</button>
+        </div>
+      </div>
+      <div id="login-error" style="font-family:'Noto Sans KR',sans-serif;font-size:12px;color:#c06060;margin-bottom:8px;display:none;"></div>
+      <button class="btn-full" id="login-btn" onclick="doLogin()">로그인</button>
+      <div style="text-align:center;margin-top:12px;">
+        <button onclick="showResetPw()" style="background:none;border:none;font-family:'Noto Sans KR',sans-serif;font-size:12px;color:var(--text-muted);cursor:pointer;text-decoration:underline;">비밀번호를 잊으셨나요?</button>
+      </div>
+    </div>
+
+    <!-- 비밀번호 재설정 폼 -->
+    <div id="formResetPw" style="display:none">
+      <div class="modal-title">비밀번호 재설정</div>
+      <div class="modal-sub">가입한 이메일로 재설정 링크를 보내드립니다</div>
+      <div class="form-group">
+        <label class="form-label">이메일</label>
+        <input class="form-input" id="reset-email" type="email" placeholder="example@email.com">
+      </div>
+      <div id="reset-msg" style="font-family:'Noto Sans KR',sans-serif;font-size:12px;margin-bottom:8px;display:none;"></div>
+      <button class="btn-full" id="reset-btn" onclick="doResetPw()">재설정 링크 보내기</button>
+      <div style="text-align:center;margin-top:12px;">
+        <button onclick="switchTab('login')" style="background:none;border:none;font-family:'Noto Sans KR',sans-serif;font-size:12px;color:var(--text-muted);cursor:pointer;text-decoration:underline;">← 로그인으로 돌아가기</button>
+      </div>
+    </div>
+
+    <!-- 회원가입 폼 -->
+    <div id="formSignup" style="display:none">
+      <div class="modal-title">역사 속으로</div>
+      <div class="modal-sub">가입 즉시 이성계편 + ✨ 환생포인트 10 지급</div>
+      <div class="form-group">
+        <label class="form-label">닉네임</label>
+        <input class="form-input" id="signup-nick" type="text" placeholder="왕의 이름을 입력하세요">
+      </div>
+      <div class="form-group">
+        <label class="form-label">이메일</label>
+        <input class="form-input" id="signup-email" type="email" placeholder="example@email.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">전화번호 <span style="color:var(--text-muted);font-size:10px;">선택</span></label>
+        <input class="form-input" id="signup-phone" type="tel" placeholder="010-0000-0000">
+      </div>
+      <div class="form-group">
+        <label class="form-label">비밀번호</label>
+        <div style="position:relative;">
+          <input class="form-input" id="signup-pw" type="password" placeholder="8자 이상" style="padding-right:44px;">
+          <button onclick="togglePw('signup-pw',this)" type="button" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:15px;">👁</button>
+        </div>
+      </div>
+      <div id="signup-error" style="font-family:'Noto Sans KR',sans-serif;font-size:12px;color:#c06060;margin-bottom:8px;display:none;"></div>
+      <button class="btn-full" id="signup-btn" onclick="doSignup()">✨ 무료 체험 시작하기</button>
+    </div>
+
+    <!-- 내 정보 (로그인 완료 상태) -->
+    <div id="formLoggedIn" style="display:none;padding:10px 0;">
+      <div class="modal-title" style="margin-bottom:4px;">내 정보</div>
+      <div id="loggedin-nick" class="modal-sub" style="margin-bottom:16px;"></div>
+      <div id="loggedin-ep" style="font-family:'Noto Sans KR',sans-serif;font-size:13px;color:var(--gold);margin-bottom:20px;text-align:center;"></div>
+      <div style="margin-bottom:12px;">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;justify-content:space-between;">
+          <span style="font-family:'Noto Sans KR',sans-serif;font-size:13px;color:var(--text-secondary);">새 편 출시 알림</span>
+          <input type="checkbox" id="notify-toggle" onchange="saveNotify(this.checked)" style="width:18px;height:18px;accent-color:var(--gold);cursor:pointer;">
+        </label>
+      </div>
+      <button class="btn-full" onclick="location.href='kings/yiseonggye.html'" style="margin-bottom:8px;">▶ 이성계편 시작하기</button>
+      <button class="btn-full" onclick="doLogout()" style="background:transparent;border:1px solid rgba(201,168,76,0.3);color:var(--text-muted);">로그아웃</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ══════════════════════════════════════
+   시리즈 목록 — 여기에만 추가하면 자동으로 카드가 생성됩니다
+   ══════════════════════════════════════
+
+   status:
+     'live'   → 공개 중 (클릭 가능)
+     'soon'   → 준비 중 (클릭 불가)
+
+   epCount: 완성된 에피소드 수 (live일 때만 표시)
+   href: 클릭 시 이동할 URL
+   ══════════════════════════════════════ */
+const SERIES_LIST = [
+  {
+    num: '01',
+    label: 'SERIES 01',
+    title: '조선의 왕 시리즈',
+    // desc와 epCount는 kings.json을 읽어 자동 생성됨 (아래 buildSeriesList 참조)
+    desc: '내가 그 왕이었다면, 어떤 선택을 했을까',
+    status: 'live',
+    epCount: '',
+    href: 'joseon-kings.html',
+  },
+  /* ── 새 시리즈 추가 시 아래에 복사해서 붙여넣기 ──
+  {
+    num: '02',
+    label: 'SERIES 02',
+    title: '시리즈 제목',
+    desc: '시리즈 설명',
+    status: 'soon',      // 'live' 또는 'soon'
+    epCount: '',          // live일 때 편수
+    href: '',             // live일 때 링크
+  },
+  ── */
+  {
+    num: '02',
+    label: 'SERIES 02',
+    title: '다음 시리즈',
+    desc: '새로운 역사 속 인물이 찾아옵니다',
+    status: 'soon',
+    epCount: '',
+    href: '',
+  },
+  {
+    num: '03',
+    label: 'SERIES 03',
+    title: '다음 시리즈',
+    desc: '새로운 역사 속 인물이 찾아옵니다',
+    status: 'soon',
+    epCount: '',
+    href: '',
+  },
+];
+
+function buildSeriesList() {
+  const list = document.getElementById('series-list');
+  if (!list) return;
+
+  // kings.json을 읽어 조선의 왕 시리즈의 desc/epCount 자동 갱신
+  fetch('kings.json')
+    .then(r => r.json())
+    .then(kings => {
+      const liveKings = kings.filter(k => k.status === 'live');
+      const liveCount = liveKings.length;
+      const liveNames = liveKings
+        .map(k => k.personalName)
+        .join(' · ');
+
+      const joseonSeries = SERIES_LIST.find(s => s.title === '조선의 왕 시리즈');
+      if (joseonSeries) {
+        joseonSeries.desc = `${liveNames} — ${liveCount}편 완성<br>내가 그 왕이었다면, 어떤 선택을 했을까`;
+        joseonSeries.epCount = `${liveCount}편 완성`;
+      }
+      renderSeriesList(list);
+    })
+    .catch(err => {
+      // 실패해도 기본 데이터로 렌더링
+      console.warn('kings.json 읽기 실패:', err);
+      renderSeriesList(list);
+    });
+}
+
+function renderSeriesList(list) {
+  list.innerHTML = SERIES_LIST.map((s, idx) => {
+    const delay = idx === 0 ? '' : `style="transition-delay:${idx * 0.1}s"`;
+    if (s.status === 'live') {
+      return `
+      <a class="series-card reveal" href="${s.href}" ${delay}>
+        <div class="card-num">${s.num}</div>
+        <div class="card-body">
+          <div class="card-series-label">${s.label}</div>
+          <div class="card-title">${s.title}</div>
+          <div class="card-desc">${s.desc}</div>
+        </div>
+        <div class="card-right">
+          ${s.epCount ? `<div class="card-ep-count">${s.epCount}</div>` : ''}
+          <span class="status-chip chip-live">공개 중</span>
+        </div>
+        <span class="card-arrow">→</span>
+      </a>`;
+    } else {
+      return `
+      <div class="series-card coming reveal" ${delay}>
+        <div class="card-num">${s.num}</div>
+        <div class="card-body">
+          <div class="card-series-label">${s.label}</div>
+          <div class="card-title">${s.title}</div>
+          <div class="card-desc">${s.desc}</div>
+        </div>
+        <div class="card-right">
+          <span class="status-chip chip-soon">준비 중</span>
+        </div>
+      </div>`;
+    }
+  }).join('');
+
+  // Reveal 재적용
+  const obs = new IntersectionObserver(e => e.forEach(x => {
+    if (x.isIntersecting) x.target.classList.add('visible');
+  }), { threshold: 0.1 });
+  list.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+}
+
+buildSeriesList();
+const SUPA_URL = 'https://qwsjofkabllbnbsgndun.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3c2pvZmthYmxsYm5ic2duZHVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNDc1NTYsImV4cCI6MjA5MTcyMzU1Nn0.2ryUWHRVqNuJ2ylHYr9tvgFwGK_EsVM7KMeuOpgLnks';
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+/* ── 타이핑 애니메이션 ── */
+const lines=['어떤 일은 하루만에 일어나기도 하고,','또 어떤 일은 몇백년에 걸쳐서 일어나기도 한다.','','역사를 들여다본다는 것은','한 인간을 들여다보는 일이다.','','사람을 이해하지 않고','어찌 역사를 이해한단 말인가.'];
+const full=lines.join('\n');
+const qEl=document.getElementById('heroQuote');
+let i=0;
+function typeNext(){
+  if(i>=full.length)return;
+  const ch=full[i++];
+  const cur=qEl.querySelector('.cursor');
+  if(ch==='\n')cur.before(document.createElement('br'));
+  else cur.before(document.createTextNode(ch));
+  setTimeout(typeNext,ch===','||ch==='.'?80:ch==='\n'?300:45);
+}
+setTimeout(typeNext,1200);
+
+/* ── Reveal ── */
+const obs=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('visible');}),{threshold:0.1});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+/* ── 로그인 상태 감지 ── */
+sb.auth.onAuthStateChange((event, session) => {
+  if (session && session.user) {
+    updateNavLoggedIn(session.user);
+  } else {
+    updateNavLoggedOut();
+  }
+});
+
+async function checkSession() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session && session.user) updateNavLoggedIn(session.user);
+}
+checkSession();
+
+function updateNavLoggedIn(user) {
+  const actions = document.querySelector('.nav-actions');
+  if (!actions) return;
+  const nick = user.user_metadata?.nickname || user.email.split('@')[0];
+  actions.innerHTML = `
+    <span style="font-family:'Noto Sans KR',sans-serif;font-size:13px;color:var(--gold);margin-right:4px;">✨ ${nick}</span>
+    <button class="btn-ghost" onclick="openModal('loggedin')">내 정보</button>
+  `;
+}
+
+function updateNavLoggedOut() {
+  const actions = document.querySelector('.nav-actions');
+  if (!actions) return;
+  actions.innerHTML = `
+    <button class="btn-ghost" onclick="openModal('login')">로그인</button>
+    <button class="btn-gold" onclick="openModal('signup')">회원가입</button>
+  `;
+}
+
+/* ── 로그인 ── */
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pw    = document.getElementById('login-pw').value;
+  const errEl = document.getElementById('login-error');
+  const btn   = document.getElementById('login-btn');
+
+  if (!email || !pw) { showErr(errEl, '이메일과 비밀번호를 입력해주세요.'); return; }
+
+  btn.textContent = '로그인 중...'; btn.disabled = true;
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
+
+  if (error) {
+    showErr(errEl, '이메일 또는 비밀번호가 올바르지 않습니다.');
+    btn.textContent = '로그인'; btn.disabled = false;
+    return;
+  }
+
+  closeModal();
+  showToast('환영합니다! 로그인됐습니다.');
+  btn.textContent = '로그인'; btn.disabled = false;
+}
+
+/* ── 회원가입 ── */
+async function doSignup() {
+  const nick   = document.getElementById('signup-nick').value.trim();
+  const email  = document.getElementById('signup-email').value.trim();
+  const phone  = document.getElementById('signup-phone').value.trim();
+  const pw     = document.getElementById('signup-pw').value;
+  const notify = document.getElementById('signup-notify').checked;
+  const errEl  = document.getElementById('signup-error');
+  const btn    = document.getElementById('signup-btn');
+
+  if (!nick)  { showErr(errEl, '닉네임을 입력해주세요.'); return; }
+  if (!email) { showErr(errEl, '이메일을 입력해주세요.'); return; }
+  if (pw.length < 8) { showErr(errEl, '비밀번호는 8자 이상이어야 합니다.'); return; }
+
+  btn.textContent = '가입 중...'; btn.disabled = true;
+  const { data, error } = await sb.auth.signUp({
+    email, password: pw,
+    options: { data: { nickname: nick, phone: phone, notify_new: notify } }
+  });
+
+  if (error) {
+    let msg = '가입 중 오류가 발생했습니다: ' + error.message;
+    if (error.message.includes('already') || error.message.includes('registered')) msg = '이미 가입된 이메일입니다. 로그인해주세요.';
+    else if (error.message.includes('authorized')) msg = '인증 이메일을 발송했습니다. 받은 편지함을 확인해주세요.';
+    else if (error.message.includes('email')) msg = '이메일 형식을 확인해주세요.';
+    showErr(errEl, msg);
+    btn.textContent = '✨ 무료 체험 시작하기'; btn.disabled = false;
+    return;
+  }
+
+  closeModal();
+  showToast('✨ 가입 완료! 환생포인트 10이 지급됐습니다.');
+  btn.textContent = '✨ 무료 체험 시작하기'; btn.disabled = false;
+}
+
+/* ── 로그아웃 ── */
+async function doLogout() {
+  await sb.auth.signOut();
+  closeModal();
+  showToast('로그아웃됐습니다.');
+}
+
+/* ── 모달 ── */
+function openModal(tab) {
+  document.getElementById('modalOverlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+  if (tab === 'loggedin') showLoggedIn();
+  else switchTab(tab);
+}
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('active');
+  document.body.style.overflow = '';
+  const tabs = document.querySelector('.modal-tabs');
+  if (tabs) tabs.style.display = 'flex';
+}
+function handleOverlayClick(e) { if(e.target===document.getElementById('modalOverlay')) closeModal(); }
+function switchTab(tab) {
+  ['formLogin','formSignup','formLoggedIn','formResetPw'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+  const tabs = document.querySelector('.modal-tabs');
+  if (tabs) tabs.style.display = 'flex';
+  if (tab === 'login')  document.getElementById('formLogin').style.display  = 'block';
+  if (tab === 'signup') document.getElementById('formSignup').style.display = 'block';
+  document.getElementById('tabLogin').classList.toggle('active',  tab==='login');
+  document.getElementById('tabSignup').classList.toggle('active', tab==='signup');
+}
+function showResetPw() {
+  ['formLogin','formSignup','formLoggedIn'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+  document.getElementById('formResetPw').style.display = 'block';
+}
+async function doResetPw() {
+  const email = document.getElementById('reset-email').value.trim();
+  const msgEl = document.getElementById('reset-msg');
+  const btn   = document.getElementById('reset-btn');
+  if (!email) { msgEl.textContent='이메일을 입력해주세요.'; msgEl.style.color='#c06060'; msgEl.style.display='block'; return; }
+  btn.textContent = '발송 중...'; btn.disabled = true;
+  const { error } = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: 'https://sparkly-sorbet-d3b535.netlify.app'
+  });
+  if (error) {
+    msgEl.textContent = '오류가 발생했습니다. 이메일을 확인해주세요.';
+    msgEl.style.color = '#c06060';
+  } else {
+    msgEl.textContent = '✓ 재설정 링크를 이메일로 보냈습니다.';
+    msgEl.style.color = '#70a850';
+  }
+  msgEl.style.display = 'block';
+  btn.textContent = '재설정 링크 보내기'; btn.disabled = false;
+}
+async function showLoggedIn() {
+  ['formLogin','formSignup','formResetPw'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+  document.getElementById('formLoggedIn').style.display = 'block';
+  // 탭 숨기기
+  const tabs = document.querySelector('.modal-tabs');
+  if (tabs) tabs.style.display = 'none';
+  const { data: { user } } = await sb.auth.getUser();
+  if (user) {
+    const nick = user.user_metadata?.nickname || user.email.split('@')[0];
+    document.getElementById('loggedin-nick').textContent = nick + ' 님';
+    const { data: profile } = await sb.from('profiles').select('ep_balance, notify_new, rebirth_tickets').eq('id', user.id).single();
+    if (profile) {
+      document.getElementById('loggedin-ep').textContent = '✨ 환생포인트 ' + profile.ep_balance + '   🎟 환생권 ' + (profile.rebirth_tickets||0) + '장';
+      document.getElementById('notify-toggle').checked = profile.notify_new || false;
+    }
+  }
+}
+async function saveNotify(checked) {
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return;
+  await sb.from('profiles').update({ notify_new: checked }).eq('id', user.id);
+  showToast(checked ? '✓ 알림이 설정됐습니다.' : '알림이 해제됐습니다.');
+}
+
+/* ── 유틸 ── */
+function togglePw(id, btn) {
+  const input = document.getElementById(id);
+  if (input.type === 'password') { input.type = 'text'; btn.textContent = '🙈'; }
+  else { input.type = 'password'; btn.textContent = '👁'; }
+}
+async function goFreePlay() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    location.href = 'kings/yiseonggye.html';
+  } else {
+    openModal('signup');
+  }
+}
+function showErr(el, msg) { el.textContent = msg; el.style.display = 'block'; }
+function smoothTo(id) { document.getElementById(id).scrollIntoView({behavior:'smooth'}); }
+function showToast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3500); }
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
+</script>
+</body>
+</html>

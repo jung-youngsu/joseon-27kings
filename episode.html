@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>에피소드 — 역사체험 시리즈</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600;700&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:  #0a0604;
+  --bg2: #0f0906;
+  --bg3: #140c08;
+  --accent2: #8a5e1a;
+  --accent3: #e0b060;
+  --text:  #ece0d0;
+  --text2: #c8b89a;
+  --text3: #907860;
+  --border:  #1e1408;
+  --border2: #2e1e0c;
+}
+
+html, body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans KR', sans-serif;
+  min-height: 100vh;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+/* ── 상단 네비 ── */
+.ep-nav {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.ep-nav a {
+  color: var(--text3);
+  text-decoration: none;
+  font-size: 11px;
+  letter-spacing: 1px;
+  transition: color .15s;
+}
+.ep-nav a:hover { color: var(--accent3); }
+.ep-info {
+  text-align: center;
+  flex: 1;
+}
+.ep-num {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 11px;
+  color: var(--accent3);
+  letter-spacing: 2px;
+  font-weight: 600;
+}
+.ep-title {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 14px;
+  color: var(--text);
+  margin-top: 2px;
+  font-weight: 500;
+}
+
+/* ── 탭 ── */
+.ep-tabs {
+  flex-shrink: 0;
+  display: flex;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.ep-tabs::-webkit-scrollbar { display: none; }
+.ep-tab {
+  padding: 12px 18px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 12px;
+  color: var(--text3);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  transition: all .15s;
+}
+.ep-tab:hover { color: var(--text2); }
+.ep-tab.active {
+  color: var(--accent3);
+  border-bottom-color: var(--accent3);
+}
+
+/* ── 탭 컨텐츠 ── */
+.tab-pane {
+  display: none;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+.tab-pane.active { display: flex; }
+
+/* 게임 (iframe) */
+.game-frame {
+  flex: 1;
+  width: 100%;
+  border: none;
+  min-height: 600px;
+  background: var(--bg);
+}
+
+/* 텍스트 컨텐츠 (소설, 자료) */
+.content-body {
+  padding: 32px 24px;
+  font-family: 'Noto Serif KR', serif;
+  line-height: 2.2;
+  color: var(--text2);
+  font-size: 14px;
+}
+.content-body h1, .content-body h2, .content-body h3 {
+  font-family: 'Noto Serif KR', serif;
+  color: var(--text);
+  margin: 28px 0 14px;
+  line-height: 1.5;
+}
+.content-body h1 { font-size: 22px; font-weight: 700; }
+.content-body h2 { font-size: 18px; font-weight: 600; }
+.content-body h3 { font-size: 15px; font-weight: 600; color: var(--accent3); }
+.content-body p { margin-bottom: 18px; }
+.content-body em { color: var(--text); font-style: normal; font-weight: 500; }
+.content-body strong { color: var(--accent3); font-weight: 600; }
+.content-body blockquote {
+  margin: 20px 0;
+  padding: 14px 20px;
+  border-left: 2px solid var(--accent2);
+  background: var(--bg2);
+  font-style: italic;
+  color: var(--text3);
+}
+.content-body hr {
+  border: none;
+  border-top: 1px solid var(--border2);
+  margin: 32px 0;
+}
+
+/* 빈 상태 */
+.empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px;
+  text-align: center;
+  color: var(--text3);
+  font-family: 'Noto Serif KR', serif;
+}
+.empty-state-glyph {
+  font-size: 32px;
+  color: var(--accent2);
+  margin-bottom: 16px;
+}
+.empty-state-title {
+  font-size: 15px;
+  color: var(--text2);
+  margin-bottom: 8px;
+}
+.empty-state-sub {
+  font-size: 12px;
+  font-family: 'Noto Sans KR', sans-serif;
+  letter-spacing: 1px;
+}
+
+/* 퀴즈 */
+.quiz-area { padding: 24px 20px; }
+.quiz-q {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 15px;
+  color: var(--text);
+  margin-bottom: 14px;
+  line-height: 1.7;
+  font-weight: 600;
+}
+.quiz-num {
+  display: inline-block;
+  font-size: 11px;
+  color: var(--accent3);
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+.quiz-ch-list { display: flex; flex-direction: column; gap: 7px; margin-bottom: 24px; }
+.quiz-ch {
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  padding: 12px 14px;
+  text-align: left;
+  font-family: 'Noto Serif KR', serif;
+  font-size: 13px;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all .15s;
+}
+.quiz-ch:hover { background: var(--bg3); color: var(--text); }
+.quiz-ch.selected { border-color: var(--accent3); color: var(--text); }
+.quiz-ch.correct { border-color: var(--accent3); background: rgba(224,176,96,0.1); }
+.quiz-ch.wrong { opacity: 0.5; }
+.quiz-explain {
+  margin-top: 8px;
+  padding: 12px 16px;
+  background: var(--bg2);
+  border-left: 2px solid var(--accent3);
+  font-family: 'Noto Serif KR', serif;
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.9;
+  display: none;
+}
+.quiz-explain.show { display: block; }
+.quiz-divider {
+  height: 1px;
+  background: var(--border2);
+  margin: 28px 0;
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ 상단 네비 ═══════════════════════════════════════════ -->
+<div class="ep-nav">
+  <a href="index.html">← 홈</a>
+  <div class="ep-info">
+    <div class="ep-num" id="ep-num">EP--</div>
+    <div class="ep-title" id="ep-title">로딩 중...</div>
+  </div>
+  <a href="joseon-kings.html">시리즈 →</a>
+</div>
+
+<!-- ═══ 탭 ═══════════════════════════════════════════════ -->
+<div class="ep-tabs">
+  <button class="ep-tab active" data-tab="game">게임</button>
+  <button class="ep-tab" data-tab="novel">소설</button>
+  <button class="ep-tab" data-tab="quiz">퀴즈</button>
+  <button class="ep-tab" data-tab="study">심화</button>
+  <button class="ep-tab" data-tab="reviews">후기</button>
+</div>
+
+<!-- ═══ 탭 컨텐츠 ═══════════════════════════════════════════ -->
+<div class="tab-pane active" id="pane-game">
+  <iframe class="game-frame" id="game-frame" src="about:blank"></iframe>
+</div>
+
+<div class="tab-pane" id="pane-novel">
+  <div class="content-body" id="novel-content">
+    <div class="empty-state">
+      <div class="empty-state-glyph">⌛</div>
+      <div class="empty-state-title">소설 준비 중</div>
+      <div class="empty-state-sub">곧 공개됩니다</div>
+    </div>
+  </div>
+</div>
+
+<div class="tab-pane" id="pane-quiz">
+  <div class="quiz-area" id="quiz-content">
+    <div class="empty-state">
+      <div class="empty-state-glyph">?</div>
+      <div class="empty-state-title">퀴즈 준비 중</div>
+      <div class="empty-state-sub">게임을 마친 후 도전해보세요</div>
+    </div>
+  </div>
+</div>
+
+<div class="tab-pane" id="pane-study">
+  <div class="content-body" id="study-content">
+    <div class="empty-state">
+      <div class="empty-state-glyph">◯</div>
+      <div class="empty-state-title">심화 자료 준비 중</div>
+      <div class="empty-state-sub">사료, 시대 배경, 깊은 이야기</div>
+    </div>
+  </div>
+</div>
+
+<div class="tab-pane" id="pane-reviews">
+  <div class="content-body" id="reviews-content">
+    <div class="empty-state">
+      <div class="empty-state-glyph">♡</div>
+      <div class="empty-state-title">후기 준비 중</div>
+      <div class="empty-state-sub">학생들의 감상이 모이는 곳</div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   에피소드 프레임 로직
+═══════════════════════════════════════════════════════════════ */
+
+// URL에서 ep 번호 읽기
+function getEpFromURL() {
+  const params = new URLSearchParams(window.location.search);
+  const ep = params.get('ep');
+  return ep ? parseInt(ep) : 1;
+}
+
+// kings.json 읽고 해당 EP 찾기
+async function loadEpisode() {
+  const ep = getEpFromURL();
+  let king;
+
+  try {
+    const res = await fetch('kings.json');
+    const kings = await res.json();
+    king = kings.find(k => k.ep === ep);
+  } catch (e) {
+    console.error('kings.json 읽기 실패', e);
+  }
+
+  if (!king) {
+    document.getElementById('ep-num').textContent = 'EP' + (ep < 10 ? '0' + ep : ep);
+    document.getElementById('ep-title').textContent = '에피소드 정보를 찾을 수 없습니다';
+    return;
+  }
+
+  // 헤더 갱신
+  const epStr = ep < 10 ? '0' + ep : ep;
+  document.getElementById('ep-num').textContent = `EP${epStr} · ${king.korName}`;
+  document.getElementById('ep-title').textContent = king.tagline || '';
+  document.title = `EP${epStr} · ${king.korName} — ${king.tagline || ''}`;
+
+  // 게임 iframe 로드
+  const slugFolder = `kings/ep${epStr}_${king.slug}`;
+  const gameFrame = document.getElementById('game-frame');
+  gameFrame.src = `${slugFolder}/game.html`;
+
+  // 소설 로드
+  loadMarkdownIfExists(`${slugFolder}/novel.md`, 'novel-content');
+
+  // 심화 로드
+  loadMarkdownIfExists(`${slugFolder}/study.md`, 'study-content');
+
+  // 퀴즈 로드
+  loadQuizIfExists(`${slugFolder}/quiz.json`);
+
+  // 후기 로드 (있으면)
+  loadMarkdownIfExists(`${slugFolder}/reviews.md`, 'reviews-content');
+}
+
+// 마크다운 파일 있으면 표시
+async function loadMarkdownIfExists(url, targetId) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return; // 파일 없으면 빈 상태 유지
+    const text = await res.text();
+    if (!text.trim() || text.length < 30) return; // 거의 빈 템플릿이면 표시 안 함
+
+    const target = document.getElementById(targetId);
+    target.innerHTML = simpleMarkdown(text);
+  } catch (e) {
+    // 무시 (빈 상태 유지)
+  }
+}
+
+// 퀴즈 JSON 있으면 표시
+async function loadQuizIfExists(url) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.questions || !data.questions.length) return;
+
+    // 빈 문제만 있는지 검사
+    const hasContent = data.questions.some(q => q.q && q.q.trim());
+    if (!hasContent) return;
+
+    renderQuiz(data);
+  } catch (e) {
+    // 무시
+  }
+}
+
+function renderQuiz(data) {
+  const target = document.getElementById('quiz-content');
+  let html = '';
+
+  data.questions.forEach((q, idx) => {
+    if (!q.q || !q.q.trim()) return;
+    html += `
+      <div class="quiz-num">문제 ${idx + 1}</div>
+      <div class="quiz-q">${escapeHTML(q.q)}</div>
+      <div class="quiz-ch-list" data-q="${idx}">
+        ${q.choices.map((c, i) => `
+          <button class="quiz-ch" data-idx="${i}" data-correct="${i === q.answer}">${escapeHTML(c)}</button>
+        `).join('')}
+      </div>
+      <div class="quiz-explain" id="quiz-exp-${idx}">${escapeHTML(q.explain || '')}</div>
+      ${idx < data.questions.length - 1 ? '<div class="quiz-divider"></div>' : ''}
+    `;
+  });
+
+  target.innerHTML = html;
+
+  // 클릭 이벤트
+  target.querySelectorAll('.quiz-ch-list').forEach(list => {
+    list.querySelectorAll('.quiz-ch').forEach(btn => {
+      btn.onclick = () => {
+        const correct = btn.dataset.correct === 'true';
+        list.querySelectorAll('.quiz-ch').forEach(b => {
+          b.style.pointerEvents = 'none';
+          if (b.dataset.correct === 'true') b.classList.add('correct');
+          else b.classList.add('wrong');
+        });
+        if (correct) btn.classList.add('selected');
+        const qIdx = list.dataset.q;
+        document.getElementById(`quiz-exp-${qIdx}`).classList.add('show');
+      };
+    });
+  });
+}
+
+// 매우 간단한 마크다운 → HTML
+function simpleMarkdown(md) {
+  let html = md.split('\n');
+  let out = [];
+  let inBQ = false;
+  for (let line of html) {
+    if (/^### /.test(line)) out.push('<h3>' + escapeHTML(line.slice(4)) + '</h3>');
+    else if (/^## /.test(line)) out.push('<h2>' + escapeHTML(line.slice(3)) + '</h2>');
+    else if (/^# /.test(line)) out.push('<h1>' + escapeHTML(line.slice(2)) + '</h1>');
+    else if (/^---+$/.test(line.trim())) out.push('<hr>');
+    else if (/^> /.test(line)) out.push('<blockquote>' + processInline(line.slice(2)) + '</blockquote>');
+    else if (line.trim() === '') out.push('');
+    else out.push('<p>' + processInline(line) + '</p>');
+  }
+  return out.join('\n');
+}
+
+function processInline(s) {
+  return escapeHTML(s)
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/_(.+?)_/g, '<em>$1</em>');
+}
+
+function escapeHTML(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// 탭 전환
+document.querySelectorAll('.ep-tab').forEach(tab => {
+  tab.onclick = () => {
+    document.querySelectorAll('.ep-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    document.getElementById('pane-' + tab.dataset.tab).classList.add('active');
+  };
+});
+
+// 게임 종료 신호 받기
+window.addEventListener('message', (e) => {
+  if (e.data && e.data.type === 'game-complete') {
+    console.log('게임 완료:', e.data);
+    // 자동으로 퀴즈 탭으로 이동? — 일단 비활성. 학생이 자유롭게.
+    // document.querySelector('.ep-tab[data-tab="quiz"]').click();
+  }
+});
+
+// 시작
+loadEpisode();
+</script>
+
+</body>
+</html>

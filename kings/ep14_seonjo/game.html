@@ -3,22 +3,1293 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EP14 · 선조 — 임진왜란을 마주하다</title>
-<!-- 게임 본체. 추후 작성. -->
+<title>당신이 선조라면? — 두려운 왕</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600;700&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#03040a;--bg2:#07080f;--bg3:#0c0d16;
+  --blue2:#2a5a9a;--blue3:#90c0f0;
+  --text:#dde0ec;--text2:#b8c0d4;--text3:#8898b8;
+  --border:#181e2e;--border2:#242e44;--border3:#3a4860;
+  --green2:#208848;--green3:#70f080;
+  --red2:#803020;--red3:#f07060;
+  --hist2:#2a4060;--hist3:#90b8e0;
+}
+
+/* ── 기본 ── */
+html{background:var(--bg);}
+html,body{min-height:100%;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);max-width:640px;margin:0 auto;min-height:100vh;}
+
+/* ── 씬 — position:fixed 제거, 자연 flow ── */
+.sc{
+  display:none;
+  flex-direction:column;
+  min-height:100vh;
+  background:var(--bg);
+  opacity:0;
+  transition:opacity 0.35s ease;
+}
+.sc.on{display:flex;}
+@keyframes fi{from{opacity:0}to{opacity:1}}
+@keyframes fi-up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── 진행바 ── */
+.prog{flex-shrink:0;background:var(--bg);padding:8px 20px 6px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10;}
+.prog-bar{flex:1;height:2px;background:var(--border2);border-radius:1px;overflow:hidden;}
+.prog-fill{height:100%;background:var(--blue2);transition:width .6s ease;}
+.prog-lbl{font-size:11px;color:#7888b8;letter-spacing:1px;white-space:nowrap;}
+
+/* ── 아트 ── */
+.art{flex-shrink:0;background:#020308;}
+.art svg{width:100%;display:block;}
+
+/* ── 나레이션 ── */
+.narr-body{flex:1;display:flex;flex-direction:column;justify-content:center;padding:40px 28px;}
+.narr-era{font-size:11px;letter-spacing:3px;color:#7888b8;margin-bottom:18px;}
+.narr-text{font-family:'Noto Serif KR',serif;font-size:20px;line-height:2.8;color:var(--text2);}
+.narr-text em{color:var(--text);font-style:normal;}
+.cursor{display:inline-block;width:2px;height:1em;background:#4860a0;margin-left:2px;vertical-align:text-bottom;animation:blink .7s step-end infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.nav-area{flex-shrink:0;padding:16px 24px 32px;display:flex;gap:8px;flex-wrap:wrap;}
+
+/* ── 시대상황 ── */
+.context-body{flex:1;display:flex;flex-direction:column;justify-content:center;padding:32px 28px;}
+.ctx-year{font-family:'Noto Serif KR',serif;font-size:52px;font-weight:700;color:#4a6090;line-height:1;margin-bottom:20px;}
+.ctx-title{font-family:'Noto Serif KR',serif;font-size:16px;font-weight:600;color:var(--text);margin-bottom:16px;letter-spacing:.5px;}
+.ctx-body{font-family:'Noto Serif KR',serif;font-size:14px;color:var(--text2);line-height:2.3;}
+.ctx-body strong{color:var(--text);font-weight:400;}
+
+/* ── 게임 ── */
+.game-body{flex:1;display:flex;flex-direction:column;padding:20px 24px 0;}
+.dial-wrap{display:flex;flex-direction:column;gap:9px;margin-bottom:16px;}
+.dial{border-radius:6px;padding:13px 16px;animation:fi-up .3s ease;}
+.dial.npc-left{background:#07090f;border:1px solid #1e2438;border-left:2px solid #c07840;}
+.dial.npc-right{background:#060a0e;border:1px solid #141e1a;border-left:2px solid #2a8858;}
+.dial.npc-mid{background:#080610;border:1px solid #1a1430;border-left:2px solid #7060a0;}
+.dial.king{background:#070a16;border:1px solid #141e32;border-left:2px solid #2a5090;}
+.dial-who{font-size:11px;letter-spacing:2px;font-weight:500;margin-bottom:6px;}
+.dial.npc-left .dial-who{color:#d08050;}
+.dial.npc-right .dial-who{color:#50a878;}
+.dial.npc-mid .dial-who{color:#9080c8;}
+.dial.king .dial-who{color:#6090c8;}
+.dial-text{font-family:'Noto Serif KR',serif;font-size:14px;color:var(--text);line-height:2;}
+.inner-voice{margin:0 0 14px;padding:11px 15px;border-left:2px solid #243050;background:#050810;font-family:'Noto Serif KR',serif;font-size:13px;color:#8898c8;line-height:2.1;font-style:italic;animation:fi .4s ease;}
+
+/* ── 선택지 ── */
+.ch-area{padding:16px 0 32px;}
+.ch-label{font-size:12px;letter-spacing:2px;color:var(--text2);margin-bottom:10px;font-family:'Noto Serif KR',serif;}
+.ch-list{display:flex;flex-direction:column;gap:7px;}
+.ch{width:100%;text-align:left;background:#060810;border:1px solid var(--border2);border-radius:6px;padding:13px 15px;color:var(--text2);font-family:'Noto Serif KR',serif;font-size:14px;line-height:1.7;cursor:pointer;transition:all .15s;}
+.ch:hover:not(.seonjo):not(.blocked){background:#0c0e1c;border-color:var(--border3);color:var(--text);}
+.ch.seonjo{background:#06101e;border-color:var(--hist2);color:var(--hist3);cursor:default;}
+.ch.blocked{opacity:.25;cursor:default;pointer-events:none;}
+.ch.wrong-shake{animation:shake .35s ease;}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+/* ── 막힘 메시지 ── */
+.block-msg{display:none;margin-top:10px;padding:10px 14px;background:#0e0604;border:1px solid #502010;border-radius:5px;font-family:'Noto Serif KR',serif;font-size:13px;color:#c08070;line-height:1.8;animation:fi .3s ease;}
+.block-msg.on{display:block;}
+
+/* ── 깊게 살펴보기 ── */
+.deep-body{flex:1;display:flex;flex-direction:column;padding:28px 24px;}
+.deep-tag{font-size:11px;letter-spacing:2px;font-weight:500;margin-bottom:10px;color:var(--hist3);}
+.deep-title{font-family:'Noto Serif KR',serif;font-size:17px;font-weight:700;color:var(--text);line-height:1.5;margin-bottom:14px;}
+.deep-text{font-family:'Noto Serif KR',serif;font-size:14px;color:var(--text2);line-height:2.3;}
+.deep-text em{color:var(--text3);font-style:italic;}
+.deep-quote{margin-top:16px;padding:12px 16px;border-left:2px solid var(--blue2);background:#060c1c;font-family:'Noto Serif KR',serif;font-size:13px;color:#90b0d8;line-height:2;font-style:italic;}
+
+/* ── 오프닝 ── */
+.opening{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;text-align:center;}
+.op-question{font-family:'Noto Serif KR',serif;font-size:22px;font-weight:600;color:var(--text);margin-bottom:32px;opacity:0;letter-spacing:.5px;}
+.op-glyph{font-family:'Noto Serif KR',serif;font-size:64px;font-weight:700;color:#3a5080;line-height:1;margin-bottom:18px;opacity:0;}
+.op-series{font-size:11px;color:#7888b8;letter-spacing:2px;margin-bottom:28px;opacity:0;}
+.op-stage{position:relative;width:100%;height:90px;margin-bottom:28px;}
+.op-line{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:100%;font-family:'Noto Serif KR',serif;font-size:15px;color:var(--text2);line-height:2.6;opacity:0;transition:opacity 1.4s ease;padding:8px 16px;border-radius:4px;}
+.op-line em{color:var(--blue3);font-style:normal;}
+.op-cta{font-family:'Noto Serif KR',serif;font-size:14px;color:#78b0e8;background:#060e20;border:1px solid #203860;padding:13px 44px;border-radius:2px;cursor:pointer;letter-spacing:2px;opacity:0;transition:all .2s;}
+.op-cta:hover{background:#0c1830;border-color:var(--blue3);}
+.op-disc{font-size:12px;color:#7888b8;margin-top:14px;line-height:1.9;opacity:0;}
+
+/* ── 환생 ── */
+.rebirth{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 28px;}
+.rb-portal-wrap{width:100px;height:100px;margin:0 auto 36px;}
+.rb-portal{width:100px;height:100px;border-radius:50%;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 1s ease;position:relative;}
+.rb-portal.show{opacity:1;}
+.rb-ring-out{position:absolute;inset:0;border-radius:50%;border:1.5px solid transparent;border-top:1.5px solid var(--blue2);border-right:1.5px solid var(--blue2);}
+.rb-portal.show .rb-ring-out{animation:spin 2s linear infinite;}
+.rb-ring-mid{position:absolute;inset:14px;border-radius:50%;border:1px solid transparent;border-bottom:1px solid #4080c0;border-left:1px solid #4080c0;}
+.rb-portal.show .rb-ring-mid{animation:spin 1.4s linear infinite reverse;}
+.rb-glyph{font-family:'Noto Serif KR',serif;font-size:24px;font-weight:700;color:var(--blue2);opacity:0;transition:opacity 1.2s ease .3s;}
+.rb-portal.show .rb-glyph{opacity:1;}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.rb-stage{position:relative;width:100%;height:68px;margin-bottom:36px;}
+.rb-word{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);white-space:nowrap;font-family:'Noto Serif KR',serif;font-size:20px;color:var(--text2);opacity:0;transition:opacity .9s ease;}
+.rb-word.dim{font-size:15px;color:#6070a0;}
+.rb-word.final{font-size:17px;font-weight:600;color:var(--text);letter-spacing:1px;}
+#rb-cta{opacity:0;transition:opacity 1s ease;}
+
+/* ── 에필로그 ── */
+.epi-body{flex:1;padding:28px;}
+.epi-year{font-size:11px;letter-spacing:3px;color:#7888b8;margin-bottom:12px;}
+.epi-big{font-family:'Noto Serif KR',serif;font-size:19px;font-weight:700;color:var(--text);line-height:1.5;margin-bottom:14px;}
+.epi-text{font-family:'Noto Serif KR',serif;font-size:14px;color:var(--text2);line-height:2.2;margin-bottom:14px;}
+.epi-quote{padding:12px 18px;border-top:1px solid var(--border3);border-bottom:1px solid var(--border3);font-family:'Noto Serif KR',serif;font-size:14px;font-weight:600;color:var(--blue3);line-height:1.9;margin-bottom:14px;}
+.epi-log{padding:12px 16px;background:var(--bg2);border:1px solid var(--border2);border-radius:6px;}
+.epi-log-label{font-size:11px;letter-spacing:2px;color:#6070a0;margin-bottom:8px;}
+.epi-log-line{font-family:'Noto Serif KR',serif;font-size:13px;color:#7888b8;line-height:2.1;}
+
+/* ── 공통 버튼 ── */
+.btn-p{padding:11px 24px;border-radius:22px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .2s;background:#070e20;border:1px solid #243870;color:#78b0e8;}
+.btn-p:hover{background:#0c1830;border-color:var(--blue3);}
+.btn-s{padding:11px 24px;border-radius:22px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .2s;background:transparent;border:1px solid var(--border3);color:#7888b8;}
+.btn-s:hover{border-color:#485070;color:var(--text2);}
+
+/* ── 메뉴 ── */
+.menu-wrap{position:fixed;top:12px;right:12px;z-index:400;}
+.menu-btn{background:rgba(3,4,10,.92);border:1px solid var(--border2);color:var(--text3);cursor:pointer;padding:5px 10px;border-radius:5px;font-size:16px;line-height:1;transition:color .2s;}
+.menu-btn:hover{color:var(--text);}
+.menu-drop{display:none;position:absolute;top:34px;right:0;background:#07080f;border:1px solid var(--border2);border-radius:8px;overflow:hidden;min-width:160px;box-shadow:0 4px 20px rgba(0,0,0,.7);}
+.menu-drop.open{display:block;animation:fi-up .2s ease;}
+.menu-item{display:block;width:100%;text-align:left;padding:10px 16px;font-size:13px;color:var(--text2);cursor:pointer;font-family:'Noto Sans KR',sans-serif;background:transparent;border:none;border-bottom:1px solid var(--border);transition:background .15s;}
+.menu-item:last-child{border-bottom:none;}
+.menu-item:hover{background:#0c0e18;color:var(--text);}
+.menu-divider{height:1px;background:var(--border2);margin:2px 0;}
+.menu-section{padding:6px 16px 3px;font-size:10px;letter-spacing:2px;color:#7888b8;}
+</style>
 </head>
 <body>
-<!-- TODO: 선조(이연) 게임 콘텐츠 -->
-<!-- 표준 메타데이터 -->
-<script type="application/json" id="meta">
-{
-  "ep": 14,
-  "slug": "seonjo",
-  "korName": "선조",
-  "personalName": "이연",
-  "reign": "1567-1608",
-  "era": "1552-1608",
-  "tagline": "임진왜란을 마주하다"
+
+<!-- ■ 씬 0: 오프닝 -->
+<div class="sc on" id="s0">
+<div class="opening">
+  <div class="op-question" id="op-question">왕이 되고 싶습니까?</div>
+  <div class="op-glyph" id="op-glyph">宣</div>
+  <div class="op-series" id="op-series">역사체험 교육 게임 · 조선의 왕 시리즈 4화</div>
+  <div class="op-stage">
+    <div class="op-line" id="op-line1">1567년. 아무도 주목하지 않던 아이가<br>갑자기 왕이 됐다.</div>
+    <div class="op-line" id="op-line2">나보다 뛰어난 사람들 앞에서.<br>누가 진심인지 알 수 없는 자리에서.<br><em>그 두려움이 — 지금 당신이다.</em></div>
+  </div>
+  <button class="op-cta" id="op-cta" onclick="startRebirth()">▶ 선택의 순간으로</button>
+  <div class="op-disc" id="op-disc"><strong>※ 역사적 사실을 바탕으로 한 교육 목적의 재구성입니다.</strong></div>
+</div>
+</div>
+
+<!-- ■ 씬 1: 환생 -->
+<div class="sc" id="s1">
+<div class="rebirth">
+  <div class="rb-portal-wrap">
+    <div class="rb-portal" id="rb-portal">
+      <div class="rb-ring-out"></div><div class="rb-ring-mid"></div>
+      <div class="rb-glyph">宣</div>
+    </div>
+  </div>
+  <div class="rb-stage" id="rb-stage"></div>
+  <div id="rb-cta">
+    <button onclick="go(2)" style="font-family:'Noto Serif KR',serif;font-size:14px;color:#78b0e8;background:#060e20;border:1px solid #203860;padding:11px 36px;border-radius:2px;cursor:pointer;letter-spacing:2px;">들어간다</button>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     0막 — 이이의 경고
+═══════════════════════════════════════════ -->
+<!-- ■ 씬 2: 0막 나레이션 -->
+<div class="sc" id="s2">
+<div class="art" style="height:150px;">
+<svg viewBox="0 0 640 150" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="150" fill="#020308"/>
+  <rect x="220" y="22" width="200" height="84" rx="2" fill="#060a14" stroke="#0e1424" stroke-width="1.5"/>
+  <path d="M202 28 L320 8 L438 28Z" fill="#070c18" stroke="#0e1424" stroke-width="1"/>
+  <circle cx="320" cy="52" r="8" fill="#14203a"/><rect x="312" y="60" width="16" height="24" fill="#14203a" rx="2"/>
+  <circle cx="100" cy="122" r="8" fill="#0c1020"/><rect x="92" y="130" width="16" height="20" fill="#0c1020" rx="2"/>
+  <circle cx="148" cy="118" r="8" fill="#0c1020"/><rect x="140" y="126" width="16" height="20" fill="#0c1020" rx="2"/>
+  <circle cx="196" cy="122" r="8" fill="#0c1020"/><rect x="188" y="130" width="16" height="20" fill="#0c1020" rx="2"/>
+  <circle cx="444" cy="122" r="8" fill="#0c1020"/><rect x="436" y="130" width="16" height="20" fill="#0c1020" rx="2"/>
+  <circle cx="492" cy="118" r="8" fill="#0c1020"/><rect x="484" y="126" width="16" height="20" fill="#0c1020" rx="2"/>
+  <circle cx="540" cy="122" r="8" fill="#0c1020"/><rect x="532" y="130" width="16" height="20" fill="#0c1020" rx="2"/>
+</svg>
+</div>
+<div class="narr-body">
+  <div class="narr-era">0막 · 1582년</div>
+  <div class="narr-text" id="narr2"></div>
+</div>
+<div class="nav-area" id="nav2" style="display:none;">
+  <button class="btn-p" onclick="go(3)">시대 상황 보기 →</button>
+</div>
+</div>
+
+<!-- ■ 씬 3: 0막 시대상황 -->
+<div class="sc scrollable" id="s3">
+<div class="context-body">
+  <div class="ctx-year">1582</div>
+  <div class="ctx-title">준비 없이 앉은 자리</div>
+  <div class="ctx-body">
+    선조가 즉위한 지 15년째입니다.<br><br>
+    선조는 신하들이 골라서 세운 왕이었습니다. 60년 전, 같은 신하들이 연산군을 몰아내고 중종을 세웠습니다. <strong>세울 수 있으면 내릴 수도 있습니다.</strong><br><br>
+    조정은 동인과 서인으로 갈라져 있었습니다. 상대의 말은 무조건 반박하는 것이 당연한 시절이었습니다. 누가 진심으로 나를 위하는지, 누가 당파를 위해 움직이는지 알 수 없었습니다.<br><br>
+    이황, 이이, 유성룡은 조선에서 가장 뛰어난 인재였습니다. 선조는 인재를 알아보는 눈이 있었습니다. 그러나 그 사람들이 자신보다 뛰어나다는 것도 알고 있었습니다.<br><br>
+    <strong>왕에게는 의지할 곳이 없었습니다.</strong> 믿을 수 있는 사람도, 기댈 수 있는 자리도 없었습니다.
+  </div>
+</div>
+<div class="nav-area">
+  <button class="btn-p" onclick="go(4)">게임 시작 →</button>
+  <button class="btn-s" onclick="go(4)">건너뛰기</button>
+</div>
+</div>
+
+<!-- ■ 씬 4: 0막 게임 -->
+<div class="sc" id="s4">
+<div class="prog"><div class="prog-bar"><div class="prog-fill" style="width:14%"></div></div><span class="prog-lbl">0막 · 1582년</span></div>
+<div class="game-body">
+  <div class="dial-wrap">
+    <div class="dial npc-mid">
+      <div class="dial-who">이이</div>
+      <div class="dial-text">"전하, 지금 병력 십만을 길러야 합니다. 왜는 반드시 쳐들어옵니다. 지금이 마지막 기회입니다."</div>
+    </div>
+    <div class="inner-voice">
+      어느 날 갑자기 이 사람들이 찾아와 왕이라고 했다.<br>
+      그 사람들이 전에 왕을 갈아치운 사람들이다.<br>
+      15년이 지났다.<br>
+      그 감각이 아직도 사라지지 않는다.
+    </div>
+  </div>
+  <div class="ch-area">
+    <div class="ch-label">당신은 어떻게 하겠는가</div>
+    <div class="ch-list">
+      <button class="ch" id="g4a" onclick="tryPick(4,'a','b')">① 따르겠다. 지금 당장 시작하라.</button>
+      <button class="ch" id="g4b" onclick="tryPick(4,'b','b')">② 신중히 검토하겠소. 좀 더 생각해보자.</button>
+    </div>
+    <div class="block-msg" id="bm4">선조는 이 선택을 하지 않았습니다.<br><button onclick="resetBlock(4)" style="margin-top:6px;background:transparent;border:1px solid #503020;border-radius:4px;padding:4px 12px;color:#a07060;font-size:12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;">↩ 다시 선택하기</button></div>
+  </div>
+</div>
+</div>
+
+<!-- ■ 씬 5: 0막 깊게 살펴보기 -->
+<div class="sc scrollable" id="s5">
+<div class="prog"><div class="prog-bar"><div class="prog-fill" style="width:14%"></div></div><span class="prog-lbl">0막 · 깊게 살펴보기</span></div>
+<div class="deep-body">
+  <div>
+    <div class="deep-tag">선조의 선택 · 깊게 살펴보기</div>
+    <div class="deep-title">"듣는 척하고 쓰지 않았습니다"</div>
+    <div class="deep-text">
+      이이의 십만양병설은 진지하게 논의됐습니다. 선조도 경청했습니다. 하지만 실행되지 않았습니다.<br><br>
+      이이는 말년에 선조에게 직접 말했습니다.<br>
+      <em>"전하께서는 신하의 말을 듣는 척하시지만 실제로는 쓰지 않으십니다."</em><br><br>
+      이이는 이 건의를 마지막으로 조정을 떠났습니다. 2년 후 세상을 떠났습니다. 그로부터 8년 후, 임진왜란이 시작됐습니다.
+    </div>
+    <div class="deep-quote">
+      알아보는 눈은 있었습니다.<br>
+      신뢰하는 용기가 없었습니다.<br>
+      궐 안에 있는 왕은 진실을 확인할 수 없었을 것입니다.
+    </div>
+  </div>
+</div>
+<div class="nav-area">
+  <button class="btn-p" onclick="go(6)">다음 막 →</button>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     1막 — 황윤길과 김성일
+═══════════════════════════════════════════ -->
+<!-- ■ 씬 6: 1막 나레이션 -->
+<div class="sc" id="s6">
+<div class="art" style="height:150px;">
+<svg viewBox="0 0 640 150" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="150" fill="#020308"/>
+  <rect x="0" y="0" width="640" height="86" fill="#03040c"/>
+  <rect x="0" y="86" width="640" height="64" fill="#020309"/>
+  <rect x="94" y="12" width="5" height="88" fill="#07081a" rx="1"/>
+  <rect x="308" y="6" width="5" height="94" fill="#07081a" rx="1"/>
+  <rect x="542" y="12" width="5" height="88" fill="#07081a" rx="1"/>
+  <circle cx="138" cy="112" r="8" fill="#1c0e08"/><rect x="130" y="120" width="16" height="22" fill="#1c0e08" rx="2"/>
+  <circle cx="502" cy="112" r="8" fill="#081810"/><rect x="494" y="120" width="16" height="22" fill="#081810" rx="2"/>
+  <circle cx="320" cy="50" r="8" fill="#14203a"/><rect x="312" y="58" width="16" height="24" fill="#14203a" rx="2"/>
+  <line x1="146" y1="112" x2="302" y2="68" stroke="#1a1008" stroke-width="1" stroke-dasharray="3 4"/>
+  <line x1="494" y1="112" x2="338" y2="68" stroke="#081810" stroke-width="1" stroke-dasharray="3 4"/>
+</svg>
+</div>
+<div class="narr-body">
+  <div class="narr-era">1막 · 1591년 가을</div>
+  <div class="narr-text" id="narr6"></div>
+</div>
+<div class="nav-area" id="nav6" style="display:none;">
+  <button class="btn-p" onclick="go(7)">시대 상황 보기 →</button>
+</div>
+</div>
+
+<!-- ■ 씬 7: 1막 시대상황 -->
+<div class="sc scrollable" id="s7">
+<div class="context-body">
+  <div class="ctx-year">1591</div>
+  <div class="ctx-title">일본과 조선 — 엇갈린 두 나라</div>
+  <div class="ctx-body">
+    일본은 도요토미 히데요시가 100년 전국시대를 끝내고 천하통일을 막 완성했습니다. 전쟁이 끝난 대군이 남아 있었습니다. 히데요시는 그 군대에게 새로운 땅이 필요했습니다.<br><br>
+    조선은 동인과 서인으로 조정이 갈라져 있었습니다. <strong>상대의 말은 무조건 반대하는 것이 당연한 시절이었습니다.</strong> 황윤길(서인)이 전쟁을 경고하면, 김성일(동인)은 반드시 반박했습니다.<br><br>
+    선조는 통신사를 보내 일본을 살피게 했습니다. 그런데 같은 곳을 다녀온 두 사신의 보고가 정반대였습니다. <strong>궐 안에 있는 왕은 진실을 확인할 방법이 없었습니다.</strong>
+  </div>
+</div>
+<div class="nav-area">
+  <button class="btn-p" onclick="go(8)">게임 시작 →</button>
+  <button class="btn-s" onclick="go(8)">건너뛰기</button>
+</div>
+</div>
+
+<!-- ■ 씬 8: 1막 게임 -->
+<div class="sc" id="s8">
+<div class="prog"><div class="prog-bar"><div class="prog-fill" style="width:30%"></div></div><span class="prog-lbl">1막 · 1591년</span></div>
+<div class="game-body">
+  <div class="dial-wrap">
+    <div class="dial npc-left">
+      <div class="dial-who">황윤길 — 단호하다</div>
+      <div class="dial-text">"전하, 반드시 쳐들어옵니다."</div>
+    </div>
+    <div class="dial npc-right">
+      <div class="dial-who">김성일 — 차분하다</div>
+      <div class="dial-text">"신은 그런 징후를 찾지 못했습니다. 괜히 민심을 흉흉하게 할 필요가 없습니다."</div>
+    </div>
+    <div class="inner-voice">
+      조정의 의견이 둘로 갈린다.<br>
+      어떤 게 진실일까.<br>
+      나는 직접 확인할 수 없다.
+    </div>
+  </div>
+  <div class="ch-area">
+    <div class="ch-label">당신은 어떻게 하겠는가</div>
+    <div class="ch-list">
+      <button class="ch" id="g8a" onclick="tryPick(8,'a','b')">① 황윤길 — 전쟁이 온다. 지금 준비한다.</button>
+      <button class="ch" id="g8b" onclick="tryPick(8,'b','b')">② 김성일 — 괜찮을 것이다. 좀 더 지켜보자.</button>
+    </div>
+    <div class="block-msg" id="bm8">선조는 이 선택을 하지 않았습니다.<br><button onclick="resetBlock(8)" style="margin-top:6px;background:transparent;border:1px solid #503020;border-radius:4px;padding:4px 12px;color:#a07060;font-size:12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;">↩ 다시 선택하기</button></div>
+  </div>
+</div>
+</div>
+
+<!-- ■ 씬 9: 1막 깊게 살펴보기 -->
+<div class="sc scrollable" id="s9">
+<div class="prog"><div class="prog-bar"><div class="prog-fill" style="width:30%"></div></div><span class="prog-lbl">1막 · 깊게 살펴보기</span></div>
+<div class="deep-body">
+  <div>
+    <div class="deep-tag">선조의 선택 · 깊게 살펴보기</div>
+    <div class="deep-title">1년 후, 왜군이 쳐들어왔습니다</div>
+    <div class="deep-text">
+      선조는 김성일의 말을 택했습니다.<br><br>
+      나쁜 판단이었을까요. 두 전문가가 정반대 말을 하는 상황에서 무서운 쪽을 믿는 것이 더 어렵습니다. 믿으면 지금 당장 전쟁 준비를 시작해야 하니까요.<br><br>
+      전쟁이 오지 않는다는 말은 편했습니다. 아무것도 하지 않아도 된다는 뜻이었으니까요.<br><br>
+      우리도 매일 이렇게 합니다. 선조는 왕이었습니다. 그래서 그 선택이 1592년으로 이어졌습니다.
+    </div>
+    <div class="deep-quote">
+      믿고 싶은 것이 있고,<br>
+      궐 안에 있는 왕은 진실을 확인할 수 없었습니다.<br>
+      두려운 왕은 항상 안전한 선택을 합니다.
+    </div>
+  </div>
+</div>
+<div class="nav-area">
+  <button class="btn-p" onclick="go(10)">다음 막 →</button>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     2막 — 피란
+═══════════════════════════════════════════ -->
+<!-- ■ 씬 10: 2막 나레이션 -->
+<div class="sc" id="s10">
+<div class="art" style="height:150px;">
+<svg viewBox="0 0 640 150" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="150" fill="#020308"/>
+  <rect x="0" y="0" width="640" height="150" fill="#030208"/>
+  <path d="M80 150 Q92 108 114 122 Q126 92 148 106 Q158 76 170 150Z" fill="#1a0808" opacity=".9"/>
+  <path d="M210 150 Q220 112 236 124 Q244 96 258 150Z" fill="#160608" opacity=".7"/>
+  <path d="M470 150 Q482 112 498 126 Q508 98 520 150Z" fill="#160608" opacity=".7"/>
+  <rect x="170" y="72" width="300" height="78" fill="#050208" stroke="#0e0610" stroke-width="1"/>
+  <rect x="170" y="64" width="22" height="20" fill="#070410"/>
+  <rect x="222" y="58" width="22" height="26" fill="#070410"/>
+  <rect x="308" y="54" width="22" height="30" fill="#070410"/>
+  <rect x="396" y="58" width="22" height="26" fill="#070410"/>
+  <rect x="448" y="64" width="22" height="20" fill="#070410"/>
+  <circle cx="548" cy="92" r="8" fill="#101828"/><rect x="540" y="100" width="16" height="24" fill="#101828" rx="2"/>
+  <path d="M518 100 L540 100" stroke="#181e30" stroke-width="1.5" stroke-dasharray="3 3"/>
+</svg>
+</div>
+<div class="narr-body">
+  <div class="narr-era">2막 · 1592년 봄</div>
+  <div class="narr-text" id="narr10"></div>
+</div>
+<div class="nav-area" id="nav10" style="display:none;">
+  <button class="btn-p" onclick="go(11)">시대 상황 보기 →</button>
+</div>
+</div>
+
+<!-- ■ 씬 11: 2막 시대상황 -->
+<div class="sc scrollable" id="s11">
+<div class="context-body">
+  <div class="ctx-year">1592</div>
+  <div class="ctx-title">임진왜란 — 왜군이 한양에 닿다</div>
+  <div class="ctx-body">
+    4월 13일 왜군이 부산에 상륙했습니다.<br>
+    불과 20일 만에 한양 코앞까지 밀고 올라왔습니다.<br><br>
+    조선 육군은 사실상 무너졌습니다.<br>
+    <strong>이순신은 남해에서 왜군의 수군을 막고 있었습니다.</strong><br><br>
+    선조는 결정을 내려야 했습니다.<br>
+    한양을 지킬 것인가, 피란을 갈 것인가.<br>
+    이순신을 곁에 불러올 것인가, 바다에 둘 것인가.
+  </div>
+</div>
+<div class="nav-area">
+  <button class="btn-p" onclick="go(12)">게임 시작 →</button>
+  <button class="btn-s" onclick="go(12)">건너뛰기</button>
+</div>
+</div>
+
+<!-- ■ 씬 12: 2막 게임 -->
+<div class="sc" id="s12">
+<div class="prog"><div class="prog-bar"><div class="prog-fill" style="width:46%"></div></div><span class="prog-lbl">2막 · 1592년</span></div>
+<div class="game-body">
+  <div class="dial-wrap">
+    <div class="dial king">
+      <div class="dial-who">신하</div>
+      <div class="dial-text">"전하, 왜군이 한양 코앞까지 왔습니다. 하루가 급합니다."</div>
+    </div>
+    <div class="inner-voice">
+      이순신이 바다에서 이기고 있다.<br>
+      그를 이리로 불러야 할까.<br>
+      왜군이 코앞인데, 그가 곁에 있으면.<br>
+      그가 없으면 나는 어떻게 되는가.
+    </div>
+  </div>
+  <div class="ch-area">
+    <div class="ch-label">당신은 어떻게 하겠는가</div>
+    <div class="ch-list">
+      <button class="ch" id="g12a" onclick="tryPick(12,'a','a')">① 이순신에게 육군에 합류하라 명한다.<br><span style="font-size:12px;color:#6878a8;display:block;margin-top:4px;">수도 방위가 급하다. 육지 전선을 강화해야 한다.</span></button>
+      <button class="ch" id="g12b" onclick="tryPick(12,'b','a')">② 이순신을 바다에 그대로 둔다. 수군이 막아야 한다.</button>
+      <button class="ch" id="g12c" onclick="tryPick(12,'c','a')">③ 한양을 버리고 피란한다.</button>
+    </div>
+    <div class="block-msg" id="bm12">선조는 이 선택을 하지 않았습니다.<br><button onclick="resetBlock(12)" style="margin-top:6px;background:transparent;border:1px solid #503020;border-radius:4px;padding:4px 12px;color:#a07060;font-size:12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;">↩ 다시 선택하기</button></div>
+  </div>
+</div>
+</div>
+
+<!-- ■ 씬 13: 2막 깊게 살펴보기 -->
+<div class="sc scrollable" id="s13">
+<div class="prog"><div class="prog-bar"><div class="prog-fill" style="width:46%"></div></div><span class="prog-lbl">2막 · 깊게 살펴보기</span></div>
+<div class="deep-body">
+  <div>
+    <div class="deep-tag">선조와 같은 선택 · 깊게 살펴보기</div>
+    <div class="deep-title">이순신을 곁으로 — 그리고 이순신은 거부했습니다</div>
+    <div class="deep-text">
+      선조는 이순신에게 수군을 버리고 육군에 합류하라 명했습니다.<br><br>
+      표면적으로는 수도 방위를 위한 명령이었습니다. 육지 전선이 무너지고 있으니 가장 유능한 장수를 올려 보내라는 것이었습니다. 틀린 말이 아니었습니다.<br><br>
+      그러나 그 안에는 다른 감각이 있었습니다. 왜군이 코앞까지 온 상황에서 가장 믿을 수 있는 장수를 곁에 두고 싶었던 것입니다. 두려움이었습니다.<br><br>
+      이순신은 거부했습니다. 바다가 뚫리면 일본의 대군이 자유롭게 넘어옵니다. 바다가 막히면 육지의 일본군은 점점 힘을 잃습니다. 수군을 버릴 수 없었습니다.<br><br>
+      한양을 떠나던 날, 백성들이 길을 막았습니다. 돌을 던지는 사람도 있었습니다. 선조는 그 눈빛을 봤습니다. 두려움이 하나 더 생겼습니다.<br><br>
+      선조는 의주까지 피란했습니다. 명나라에 내부를 요청했습니다. 사실상 나라를 넘기겠다는 뜻이었습니다. 신하들이 결사반대했고 실행되지는 않았습니다.
+    </div>
+    <div class="deep-quote">
+      이순신을 등용한 것도 선조,<br>
+      죽일 뻔하게 만든 것도 선조,<br>
+      다시 부른 것도 선조였습니다.
+    </div>
+  </div>
+</div>
+<div class="nav-area">
+  <button class="btn-p" onclick="go(14)">다음 막 →</button>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     3막 — 원균의 말
+═══════════════════════════════════════════ -->
+<!-- ■ 씬 14: 3막 나레이션 -->
+<div class="sc" id="s14">
+<div class="art" style="height:150px;">
+<svg viewBox="0 0 640 150" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="150" fill="#020308"/>
+  <rect x="0" y="92" width="640" height="58" fill="#030510"/>
+  <path d="M0 104 Q80 94 160 104 Q240 114 320 102 Q400 90 480 102 Q560 114 640 104" stroke="#060e20" stroke-width="1.5" fill="none"/>
+  <ellipse cx="320" cy="100" rx="52" ry="10" fill="#0a1220" stroke="#101828" stroke-width="1"/>
+  <rect x="298" y="84" width="44" height="18" rx="1" fill="#080e1c" stroke="#101828" stroke-width="1"/>
+  <circle cx="320" cy="78" r="7" fill="#182038"/><rect x="313" y="85" width="14" height="18" fill="#182038" rx="1"/>
+  <circle cx="78" cy="82" r="7" fill="#1a1008"/><rect x="71" y="89" width="14" height="20" fill="#1a1008" rx="1"/>
+</svg>
+</div>
+<div class="narr-body">
+  <div class="narr-era">3막 · 1597년</div>
+  <div class="narr-text" id="narr14"></div>
+</div>
+<div class="nav-area" id="nav14" style="display:none;">
+  <button class="btn-p" onclick="go(15)">시대 상황 보기 →</button>
+</div>
+</div>
+
+<!-- ■ 씬 15: 3막 시대상황 -->
+<div class="sc scrollable" id="s15">
+<div class="context-body">
+  <div class="ctx-year">1597</div>
+  <div class="ctx-title">원균의 모함 — 이순신을 잡아들이다</div>
+  <div class="ctx-body">
+    이순신은 임진왜란 내내 단 한 번도 지지 않았습니다.<br>
+    그 사이 선조는 의주까지 피란했고, 백성들은 경복궁에 불을 질렀습니다.<br><br>
+    원균은 이순신의 경쟁자였습니다. 그는 선조가 듣고 싶어하는 말을 알고 있었습니다.<br><br>
+    <strong>이순신이 너무 큰 영웅이 됐습니다.</strong><br>
+    선조는 자신이 피란하는 동안 이순신이 이기고 있었다는 것을 알고 있었습니다.
+  </div>
+</div>
+<div class="nav-area">
+  <button class="btn-p" onclick="go(16)">게임 시작 →</button>
+  <button class="btn-s" onclick="go(16)">건너뛰기</button>
+</div>
+</div>
+
+<!-- ■ 씬 16: 3막 게임 -->
+<div class="sc" id="s16">
+<div class="prog"><div class="prog-bar"><div class="prog-fill" style="width:62%"></div></div><span class="prog-lbl">3막 · 1597년</span></div>
+<div class="game-body">
+  <div class="dial-wrap">
+    <div class="dial npc-left">
+      <div class="dial-who">원균</div>
+      <div class="dial-text">"이순신이 전하의 명령을 어겼습니다. 전하께서 없으셨다면 이순신도 없었습니다."</div>
+    </div>
+    <div class="inner-voice">
+      이순신은 한 번도 지지 않았다.<br>
+      나는 한양을 버리고 의주까지 피란했다.<br>
+      백성들은 경복궁에 불을 질렀다.<br>
+      그 사이 이순신은 이기고 있었다.
+    </div>
+  </div>
+  <div class="ch-area">
+    <div class="ch-label">당신은 어떻게 하겠는가</div>
+    <div class="ch-list">
+      <button class="ch" id="g16a" onclick="tryPick(16,'a','b')">① 명령을 거둔다. 이순신을 믿는다.</button>
+      <button class="ch" id="g16b" onclick="tryPick(16,'b','b')">② 명령을 어긴 자는 처벌한다. 잡아들여라.</button>
+    </div>
+    <div class="block-msg" id="bm16">선조는 이 선택을 하지 않았습니다.<br><button onclick="resetBlock(16)" style="margin-top:6px;background:transparent;border:1px solid #503020;border-radius:4px;padding:4px 12px;color:#a07060;font-size:12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;">↩ 다시 선택하기</button></div>
+  </div>
+</div>
+</div>
+
+<!-- ■ 씬 17: 3막 깊게 살펴보기 -->
+<div class="sc scrollable" id="s17">
+<div class="prog"><div class="prog-bar"><div class="prog-fill" style="width:62%"></div></div><span class="prog-lbl">3막 · 깊게 살펴보기</span></div>
+<div class="deep-body">
+  <div>
+    <div class="deep-tag">선조의 선택 · 깊게 살펴보기</div>
+    <div class="deep-title">이순신을 잡아들였습니다</div>
+    <div class="deep-text">
+      형장에서 매를 맞혔고 백의종군을 명했습니다.<br><br>
+      나쁜 의도가 아니었습니다. 내 명령을 어긴 신하를 처벌하는 것뿐이었습니다. 그런데 그 신하가 이순신이었습니다.<br><br>
+      이이와 같은 패턴입니다. 선조는 능력 있는 사람을 알아봤습니다. 그러나 그 사람이 너무 커지면 두려워졌습니다. 이이는 말로 경고했고, 이순신은 이기면서 커졌습니다.<br><br>
+      원균의 말이 달콤했던 것은 선조가 듣고 싶은 말이었기 때문입니다.
+    </div>
+    <div class="deep-quote">
+      맞는 말 하는 사람은 멀리하고,<br>
+      듣기 좋은 말 하는 사람은 끝까지 품었습니다.<br>
+      두려움이 만든 패턴이었습니다.
+    </div>
+  </div>
+</div>
+<div class="nav-area">
+  <button class="btn-p" onclick="go(18)">다음 막 →</button>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     4막 — 칠천량 이후
+═══════════════════════════════════════════ -->
+<!-- ■ 씬 18: 4막 나레이션 -->
+<div class="sc" id="s18">
+<div class="art" style="height:150px;">
+<svg viewBox="0 0 640 150" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="150" fill="#020308"/>
+  <rect x="0" y="88" width="640" height="62" fill="#030510"/>
+  <path d="M0 98 Q160 86 320 96 Q480 106 640 94" stroke="#060e20" stroke-width="1.5" fill="none"/>
+  <rect x="58" y="92" width="78" height="10" rx="1" fill="#0a0c14" stroke="#101420" stroke-width="1" transform="rotate(-8 97 97)"/>
+  <rect x="198" y="94" width="58" height="9" rx="1" fill="#0a0c14" stroke="#101420" stroke-width="1" transform="rotate(5 227 98)"/>
+  <rect x="398" y="90" width="68" height="9" rx="1" fill="#0a0c14" stroke="#101420" stroke-width="1" transform="rotate(-4 432 95)"/>
+  <circle cx="558" cy="66" r="7" fill="#101828"/><rect x="551" y="73" width="14" height="20" fill="#101828" rx="1"/>
+  <text x="320" y="140" text-anchor="middle" fill="#0e1420" font-size="9" font-family="sans-serif" letter-spacing="3">칠천량</text>
+</svg>
+</div>
+<div class="narr-body">
+  <div class="narr-era">4막 · 1597년 · 칠천량</div>
+  <div class="narr-text" id="narr18"></div>
+</div>
+<div class="nav-area" id="nav18" style="display:none;">
+  <button class="btn-p" onclick="go(19)">시대 상황 보기 →</button>
+</div>
+</div>
+
+<!-- ■ 씬 19: 4막 시대상황 -->
+<div class="sc scrollable" id="s19">
+<div class="context-body">
+  <div class="ctx-year">1597</div>
+  <div class="ctx-title">칠천량 — 조선의 수군이 전멸하다</div>
+  <div class="ctx-body">
+    이순신 대신 통제사가 된 원균은 칠천량에서 왜군과 맞섰습니다.<br>
+    결과는 참패였습니다. <strong>조선의 수군이 사실상 전멸했습니다.</strong><br>
+    원균도 이 전투에서 전사했습니다.<br><br>
+    바다가 뚫리면 일본의 대군이 자유롭게 넘어옵니다.<br>
+    <strong>조선은 절망만 남습니다.</strong><br><br>
+    배가 없었습니다. 장수도 없었습니다.
+  </div>
+</div>
+<div class="nav-area">
+  <button class="btn-p" onclick="go(20)">게임 시작 →</button>
+  <button class="btn-s" onclick="go(20)">건너뛰기</button>
+</div>
+</div>
+
+<!-- ■ 씬 20: 4막 게임 -->
+<div class="sc" id="s20">
+<div class="prog"><div class="prog-bar"><div class="prog-fill" style="width:78%"></div></div><span class="prog-lbl">4막 · 1597년</span></div>
+<div class="game-body">
+  <div class="dial-wrap">
+    <div class="dial king">
+      <div class="dial-who">신하</div>
+      <div class="dial-text">"전하, 이순신을 다시 불러야 합니다. 그 외에 방법이 없습니다."</div>
+    </div>
+    <div class="inner-voice">
+      내가 잡아들인 그 사람을.<br>
+      매를 맞혔던 그 사람을.<br>
+      다시 불러야 한다.
+    </div>
+  </div>
+  <div class="ch-area">
+    <div class="ch-label">당신은 어떻게 하겠는가</div>
+    <div class="ch-list">
+      <button class="ch" id="g20a" onclick="tryPick(20,'a','a')">① 이순신을 다시 부른다.</button>
+      <button class="ch" id="g20b" onclick="tryPick(20,'b','a')">② 다른 장수를 찾는다.</button>
+    </div>
+    <div class="block-msg" id="bm20">선조는 이 선택을 하지 않았습니다.<br><button onclick="resetBlock(20)" style="margin-top:6px;background:transparent;border:1px solid #503020;border-radius:4px;padding:4px 12px;color:#a07060;font-size:12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;">↩ 다시 선택하기</button></div>
+  </div>
+</div>
+</div>
+
+<!-- ■ 씬 21: 4막 깊게 살펴보기 -->
+<div class="sc scrollable" id="s21">
+<div class="prog"><div class="prog-bar"><div class="prog-fill" style="width:78%"></div></div><span class="prog-lbl">4막 · 깊게 살펴보기</span></div>
+<div class="deep-body">
+  <div>
+    <div class="deep-tag">선조의 선택 · 깊게 살펴보기</div>
+    <div class="deep-title">이순신을 다시 불렀습니다 — 그리고 다시 두려워졌습니다</div>
+    <div class="deep-text">
+      명량에서 이겼습니다. 배 13척으로 왜선 133척을 막았습니다.<br><br>
+      그러자 선조는 다시 견제하기 시작했습니다. 이기는 이순신이 지는 이순신보다 더 무서웠습니다.<br><br>
+      전쟁이 끝난 후 공신 책봉에서 원균과 이순신은 같은 1등에 올랐습니다. 조선의 수군을 전멸시킨 장수와, 단 한 번도 지지 않은 장수가 같은 자리였습니다.
+    </div>
+    <div class="deep-quote">
+      다시 불렀고, 다시 두려워졌습니다.<br>
+      두려움은 끝까지 사라지지 않았습니다.
+    </div>
+  </div>
+</div>
+<div class="nav-area">
+  <button class="btn-p" onclick="go(22)">에필로그 →</button>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     에필로그 — 유성룡과 징비록
+═══════════════════════════════════════════ -->
+<!-- ■ 씬 22: 에필로그 -->
+<div class="sc scrollable" id="s22">
+<div class="prog"><div class="prog-bar"><div class="prog-fill" style="width:100%"></div></div><span class="prog-lbl">에필로그</span></div>
+<div class="epi-body">
+  <div class="epi-year">1598 — 1604 · 징비록</div>
+  <div class="epi-big">유성룡이 낙향해서 책을 썼다</div>
+  <div class="epi-text">
+    유성룡은 이순신을 발굴한 사람이었습니다. 이순신이 죽을 위기에 처할 때마다 곁에서 지켜줬습니다. 전쟁 내내 선조의 곁에서 나라를 지탱했습니다.<br><br>
+    전쟁이 끝나자마자 그는 탄핵당했습니다.<br>선조는 막지 않았습니다.<br><br>
+    낙향한 유성룡은 책을 썼습니다.<br>
+    <strong>징비(懲毖) — 미리 징계하여 후환을 경계한다.</strong><br><br>
+    그 책에는 이런 말이 있습니다.<br>
+    <em>"올바른 사람을 알아보는 것만으로는 부족하다. 그 사람을 지켜줄 용기가 있어야 한다."</em>
+  </div>
+  <div class="epi-quote">옳은 선택을 하려면 두려움보다 큰 무언가가 필요합니다.<br>그것이 무엇인지는 — 당신이 답해야 합니다.</div>
+  <div class="epi-log">
+    <div class="epi-log-label">당신의 선택</div>
+    <div class="epi-log-line" id="epi-log"></div>
+  </div>
+  <div style="margin-top:20px;font-family:'Noto Serif KR',serif;font-size:16px;font-weight:600;color:var(--text3);text-align:center;letter-spacing:.5px;">그래도 왕이 되고 싶습니까?</div>
+</div>
+
+<!-- 퀴즈 + 후기 -->
+<div style="padding:0 24px 8px;">
+  <div style="border-top:1px solid var(--border2);padding-top:20px;margin-bottom:16px;">
+    <div style="font-family:'Noto Serif KR',serif;font-size:14px;color:var(--text2);margin-bottom:12px;">배운 내용을 확인해볼까요?</div>
+    <button onclick="startQuiz()"
+      style="width:100%;padding:12px;background:#0a1020;border:1px solid var(--border3);border-radius:6px;color:var(--text2);font-family:'Noto Serif KR',serif;font-size:14px;cursor:pointer;transition:all .2s;">
+      ⚡ 스피드 퀴즈 시작 — 20문제
+    </button>
+  </div>
+</div>
+
+<!-- 후기 수집 -->
+<div style="padding:0 24px 32px;">
+  <div style="border-top:1px solid var(--border2);padding-top:24px;">
+    <div style="font-family:'Noto Serif KR',serif;font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px;">후기를 남겨주세요</div>
+    <div style="font-size:11px;color:var(--text3);letter-spacing:1px;margin-bottom:16px;">이 경험이 당신에게 남긴 것</div>
+    <div style="margin-bottom:12px;">
+      <input id="review-name" type="text" placeholder="닉네임 (선택)"
+        style="width:100%;background:#060810;border:1px solid var(--border2);border-radius:6px;padding:10px 14px;color:var(--text2);font-family:'Noto Serif KR',serif;font-size:13px;outline:none;"/>
+    </div>
+    <div style="margin-bottom:12px;">
+      <textarea id="review-text" placeholder="자유롭게 적어주세요. 짧아도 괜찮습니다." rows="4"
+        style="width:100%;background:#060810;border:1px solid var(--border2);border-radius:6px;padding:10px 14px;color:var(--text2);font-family:'Noto Serif KR',serif;font-size:13px;outline:none;resize:none;line-height:1.8;"></textarea>
+    </div>
+    <button onclick="submitReview()"
+      style="width:100%;padding:12px;background:#070e20;border:1px solid #243870;border-radius:6px;color:#78b0e8;font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;">
+      후기 보내기
+    </button>
+    <div id="review-result" style="display:none;margin-top:12px;padding:12px 14px;background:#060c18;border:1px solid var(--hist2);border-radius:6px;font-family:'Noto Serif KR',serif;font-size:13px;color:var(--hist3);line-height:1.8;text-align:center;">
+      후기가 전달됐습니다 ✓
+    </div>
+    <div id="review-error" style="display:none;margin-top:12px;padding:12px 14px;background:#0e0604;border:1px solid #502010;border-radius:6px;font-family:'Noto Serif KR',serif;font-size:13px;color:#b07060;text-align:center;">
+      전송에 실패했습니다. 잠시 후 다시 시도해주세요.
+    </div>
+  </div>
+</div>
+
+<div class="nav-area">
+  <button class="btn-s" onclick="go(0)">처음으로</button>
+  <button class="btn-s" onclick="location.href='../joseon-kings.html'">📜 왕 선택</button>
+  <button class="btn-s" onclick="location.href='../index.html'">🏠 메인</button>
+  <button class="btn-s" onclick="location.href='../joseon-kings.html'">📜 왕 선택</button>
+  <button class="btn-s" onclick="location.href='../index.html'">🏠 메인</button>
+</div>
+</div>
+
+<!-- ■ 씬 23: 퀴즈 -->
+<div class="sc scrollable" id="s23">
+<div class="prog"><div class="prog-bar"><div class="prog-fill" id="quiz-prog-fill" style="width:0%"></div></div><span class="prog-lbl" id="quiz-prog-lbl">퀴즈 0 / 20</span></div>
+<div style="flex:1;display:flex;flex-direction:column;padding:20px 24px 0;">
+  <!-- 타이머 -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+    <div style="font-size:11px;color:var(--text3);letter-spacing:2px;" id="quiz-num">문제 1</div>
+    <div style="font-family:'Noto Serif KR',serif;font-size:20px;font-weight:700;color:var(--blue3);" id="quiz-timer">0.0</div>
+  </div>
+  <!-- 문제 -->
+  <div style="font-family:'Noto Serif KR',serif;font-size:16px;color:var(--text);line-height:1.8;margin-bottom:20px;min-height:80px;" id="quiz-question"></div>
+  <!-- 선택지 -->
+  <div style="display:flex;flex-direction:column;gap:8px;margin-top:auto;padding-bottom:20px;" id="quiz-choices"></div>
+</div>
+</div>
+
+<!-- ■ 씬 24: 퀴즈 결과 -->
+<div class="sc scrollable" id="s24">
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center;">
+  <div style="font-size:10px;letter-spacing:3px;color:var(--text3);margin-bottom:16px;">퀴즈 완료</div>
+  <div style="font-family:'Noto Serif KR',serif;font-size:36px;font-weight:700;color:var(--blue3);margin-bottom:8px;" id="result-time"></div>
+  <div style="font-family:'Noto Serif KR',serif;font-size:14px;color:var(--text2);margin-bottom:6px;" id="result-score"></div>
+  <div style="font-family:'Noto Serif KR',serif;font-size:13px;color:var(--text3);margin-bottom:32px;" id="result-msg"></div>
+  <div style="width:100%;max-width:300px;display:flex;flex-direction:column;gap:10px;">
+    <button onclick="startQuiz()" class="btn-p" style="width:100%;">다시 도전</button>
+    <button onclick="go(22)" class="btn-s" style="width:100%;">에필로그로</button>
+  </div>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPA_URL='https://qwsjofkabllbnbsgndun.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3c2pvZmthYmxsYm5ic2duZHVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNDc1NTYsImV4cCI6MjA5MTcyMzU1Nn0.2ryUWHRVqNuJ2ylHYr9tvgFwGK_EsVM7KMeuOpgLnks';
+const sb=supabase.createClient(SUPA_URL,SUPA_KEY);
+let currentUser=null;
+(async()=>{
+  const{data:{session}}=await sb.auth.getSession();
+  if(!session){alert('로그인이 필요한 콘텐츠입니다.');location.href='../index.html';return;}
+  currentUser=session.user;
+  setTimeout(updateGameNav,800);
+})();
+function updateGameNav(){
+  const mw=document.querySelector('.menu-wrap');
+  if(!mw)return;
+  const nick=currentUser.user_metadata?.nickname||currentUser.email.split('@')[0];
+  const btn=document.createElement('button');
+  btn.className='menu-item';
+  btn.textContent='✨ '+nick+' 님';
+  btn.onclick=()=>location.href='../joseon-kings.html';
+  const div=document.createElement('div');
+  div.className='menu-divider';
+  const drop=mw.querySelector('.menu-drop');
+  if(drop){drop.prepend(div);drop.prepend(btn);}
 }
+
+// ── 구글 폼 설정 ──────────────────────────────────────────
+const FORM_URL='https://docs.google.com/forms/d/e/1FAIpQLSeweqNyIzYpF7oz8lhxbfF5NTpx2ZO7seUeA08hNPZh_2x4Bg/formResponse';
+const ENTRY_GAME    ='entry.1216912678';
+const ENTRY_NICKNAME='entry.1750496392';
+const ENTRY_REVIEW  ='entry.90183123';
+
+// ── 선택 기록 요약 ────────────────────────────────────────
+function getChoicesSummary(){
+  const LOG_MAP={
+    4:{a:'이이의 말을 따랐다',b:'검토하겠다 — 그리고 아무것도 하지 않았다 (선조의 선택)'},
+    8:{a:'황윤길을 믿었다',b:'김성일을 믿었다 (선조의 선택)'},
+    12:{a:'이순신에게 육군 합류를 명했다 (선조의 선택)',b:'이순신을 바다에 두었다',c:'한양을 버리고 피란했다'},
+    16:{a:'이순신을 믿었다',b:'명령을 어긴 자를 처벌했다 (선조의 선택)'},
+    20:{a:'이순신을 다시 불렀다 (선조의 선택)',b:'다른 장수를 찾았다'},
+  };
+  return [4,8,12,16,20].map(s=>{
+    if(picks[s]&&LOG_MAP[s]&&LOG_MAP[s][picks[s]])return LOG_MAP[s][picks[s]];
+    return null;
+  }).filter(Boolean).join('\n');
+}
+
+// ── 후기 전송 ─────────────────────────────────────────────
+async function submitReview(){
+  const body=document.getElementById('review-text').value.trim();
+  if(!body){alert('후기 내용을 입력해주세요.');return;}
+  const sentEl=document.getElementById('review-result');
+  if(currentUser){
+    await sb.from('reviews').insert({user_id:currentUser.id,episode:4,content:body});
+    const{data:profile}=await sb.from('profiles').select('ep_balance,rebirth_tickets').eq('id',currentUser.id).single();
+    if(profile){
+      const newEp=profile.ep_balance+10;
+      const newTickets=profile.rebirth_tickets+Math.floor(newEp/100);
+      const remainEp=newEp%100;
+      await sb.from('profiles').update({ep_balance:remainEp,rebirth_tickets:newTickets}).eq('id',currentUser.id);
+      await sb.from('ep_history').insert({user_id:currentUser.id,amount:10,reason:'4화 후기 작성'});
+      sentEl.textContent=newTickets>profile.rebirth_tickets?'✓ 후기 감사합니다! ✨ EP +10 · 🎟 환생권 획득!':'✓ 후기 감사합니다! ✨ 환생포인트 +10 지급!';
+    }
+  } else {
+    await sb.from('reviews').insert({episode:4,content:body});
+    sentEl.textContent='✓ 후기가 전달됐습니다. 감사합니다!';
+  }
+  sentEl.style.display='block';
+  document.getElementById('review-text').value='';
+}
+
+const picks={};
+
+// ── 선택 처리 ─────────────────────────────────────────────
+const NEXT={4:5,8:9,12:13,16:17,20:21};
+
+function tryPick(scene,letter,answer){
+  if(letter===answer){
+    picks[scene]=letter;
+    const btn=document.getElementById('g'+scene+letter);
+    if(btn){btn.classList.add('seonjo');btn.style.pointerEvents='none';}
+    lockOthers(scene,letter);
+    setTimeout(()=>go(NEXT[scene]),700);
+  } else {
+    const btn=document.getElementById('g'+scene+letter);
+    if(btn){
+      btn.classList.add('wrong-shake','blocked');
+      setTimeout(()=>btn.classList.remove('wrong-shake'),400);
+    }
+    const bm=document.getElementById('bm'+scene);
+    if(bm)bm.classList.add('on');
+  }
+}
+
+function lockOthers(scene,chosen){
+  ['a','b','c'].forEach(l=>{
+    if(l!==chosen){const b=document.getElementById('g'+scene+l);if(b)b.classList.add('blocked');}
+  });
+}
+
+function resetBlock(scene){
+  ['a','b','c'].forEach(l=>{
+    const b=document.getElementById('g'+scene+l);
+    if(b){b.className='ch';b.style.pointerEvents='';}
+  });
+  const bm=document.getElementById('bm'+scene);
+  if(bm)bm.classList.remove('on');
+}
+
+// ── 퀴즈 데이터 ──────────────────────────────────────────
+const QUIZ=[
+  {q:'선조는 어떤 방식으로 왕이 됐는가?',
+   o:['왕의 장남으로 태어나 세자 교육을 받았다','왕의 서자로 태어나 형이 죽자 왕위를 이었다','명종이 후사 없이 죽자 신하들이 선택해 세웠다','반정을 통해 전임 왕을 몰아내고 즉위했다'],a:2},
+  {q:'선조가 즉위했을 때 만 나이는?',
+   o:['만 열 살','만 열두 살','만 열네 살','만 열여섯 살'],a:2},
+  {q:'이이가 선조에게 건의한 십만양병설은 몇 년의 일인가?',
+   o:['1575년','1578년','1582년','1585년'],a:2},
+  {q:'이이가 말년에 선조에게 직접 한 말은?',
+   o:['전하께서는 너무 많은 것을 혼자 결정하십니다','전하께서는 신하의 말을 듣는 척하시지만 실제로는 쓰지 않으십니다','전하께서는 당파에 너무 휘둘리고 계십니다','전하께서는 백성의 목소리를 들으셔야 합니다'],a:1},
+  {q:'황윤길과 김성일은 어디를 다녀온 사신들인가?',
+   o:['명나라','여진족 땅','일본','류큐'],a:2},
+  {q:'황윤길은 어느 당파였는가?',
+   o:['동인','남인','북인','서인'],a:3},
+  {q:'김성일이 왜란이 없을 것이라 주장한 근거는?',
+   o:['일본 군사력이 조선보다 약하다','히데요시가 국내 반란을 진압 중이다','명나라가 개입할 것이므로 감히 못 온다','일본은 바다를 건너올 배가 없다'],a:2},
+  {q:'황윤길과 김성일이 엇갈린 보고를 한 연도는?',
+   o:['1589년','1590년','1591년','1592년'],a:2},
+  {q:'임진왜란이 시작된 연도는?',
+   o:['1589년','1590년','1591년','1592년'],a:3},
+  {q:'왜군이 부산 상륙 후 한양까지 오는 데 걸린 시간은?',
+   o:['약 5일','약 10일','약 20일','약 40일'],a:2},
+  {q:'선조가 이순신에게 육군 합류를 명한 표면적 이유는?',
+   o:['이순신이 너무 커져서 견제하려 했다','수도 방위가 급하고 육지 전선을 강화해야 했다','원균의 모함을 믿었기 때문이다','이순신의 수군이 연전연패했기 때문이다'],a:1},
+  {q:'선조가 피란할 때 백성들이 한 행동은?',
+   o:['선조를 호위하며 따라갔다','경복궁에 불을 질렀다','이순신에게 도움을 요청했다','명나라 군대를 환영했다'],a:1},
+  {q:'선조가 피란 중 명나라에 요청한 것은?',
+   o:['군사 지원','식량 지원','내부 — 나라를 명나라에 귀속시켜 달라는 요청','왜군과의 협상 중재'],a:2},
+  {q:'이순신을 발굴하고 위기 때마다 지켜준 사람은?',
+   o:['이황','이이','유성룡','원균'],a:2},
+  {q:'원균이 이끄는 조선 수군이 전멸한 전투는?',
+   o:['한산도 대첩','명량 대첩','칠천량 전투','노량 해전'],a:2},
+  {q:'명량 대첩에서 이순신이 이끈 배의 수는?',
+   o:['3척','13척','33척','130척'],a:1},
+  {q:'칠천량 전투가 일어난 연도는?',
+   o:['1594년','1595년','1596년','1597년'],a:3},
+  {q:'전쟁 후 공신 책봉에서 원균과 이순신은 어느 등급에 올랐는가?',
+   o:['원균 1등, 이순신 2등','원균 2등, 이순신 1등','둘 다 1등','이순신만 1등, 원균 제외'],a:2},
+  {q:'유성룡이 낙향해서 쓴 책의 이름은?',
+   o:['난중일기','징비록','목민심서','경국대전'],a:1},
+  {q:'징비(懲毖)의 뜻은?',
+   o:['전쟁 중의 기록','백성을 다스리는 마음','미리 징계하여 후환을 경계한다','나라를 경영하는 큰 법'],a:2},
+];
+
+// ── 퀴즈 로직 ────────────────────────────────────────────
+let quizIdx=0,quizCorrect=0,quizStart=0,quizTimer=null,quizLocked=false;
+
+function startQuiz(){
+  quizIdx=0;quizCorrect=0;quizStart=Date.now();quizLocked=false;
+  const c=getCurrentScene();if(c>=0)sceneHistory.push(c);
+  switchScene(23);
+  showQuestion();
+  startQuizTimer();
+}
+
+function startQuizTimer(){
+  clearInterval(quizTimer);
+  quizTimer=setInterval(()=>{
+    const el=document.getElementById('quiz-timer');
+    if(el)el.textContent=((Date.now()-quizStart)/1000).toFixed(1)+'초';
+  },100);
+}
+
+function showQuestion(){
+  const q=QUIZ[quizIdx];
+  const numEl=document.getElementById('quiz-num');
+  const qEl=document.getElementById('quiz-question');
+  const cEl=document.getElementById('quiz-choices');
+  const progFill=document.getElementById('quiz-prog-fill');
+  const progLbl=document.getElementById('quiz-prog-lbl');
+  if(numEl)numEl.textContent='문제 '+(quizIdx+1);
+  if(progFill)progFill.style.width=((quizIdx/20)*100)+'%';
+  if(progLbl)progLbl.textContent='퀴즈 '+quizIdx+' / 20';
+  if(qEl)qEl.textContent=q.q;
+  if(!cEl)return;
+  cEl.innerHTML='';
+  quizLocked=false;
+  q.o.forEach((opt,i)=>{
+    const btn=document.createElement('button');
+    btn.textContent='① ② ③ ④'.split(' ')[i]+'  '+opt;
+    btn.style.cssText='width:100%;text-align:left;background:#060810;border:1px solid var(--border2);border-radius:6px;padding:12px 15px;color:var(--text2);font-family:\'Noto Serif KR\',serif;font-size:14px;line-height:1.6;cursor:pointer;transition:all .15s;';
+    btn.onmouseover=()=>{if(!quizLocked)btn.style.background='#0c0e1c';};
+    btn.onmouseout=()=>{if(!quizLocked&&btn.dataset.state!=='correct'&&btn.dataset.state!=='wrong')btn.style.background='#060810';};
+    btn.onclick=()=>quizPick(i,q.a,btn);
+    cEl.appendChild(btn);
+  });
+}
+
+function quizPick(i,correct,btn){
+  if(quizLocked)return;
+  if(i===correct){
+    quizCorrect++;
+    btn.style.background='#081a0a';
+    btn.style.borderColor='var(--green2)';
+    btn.style.color='var(--green3)';
+    btn.dataset.state='correct';
+    quizLocked=true;
+    setTimeout(nextQuestion,600);
+  } else {
+    btn.style.background='#1a0806';
+    btn.style.borderColor='var(--red2)';
+    btn.style.color='var(--red3)';
+    btn.dataset.state='wrong';
+    quizLocked=true;
+    setTimeout(()=>{
+      btn.style.background='#060810';
+      btn.style.borderColor='var(--border2)';
+      btn.style.color='var(--text2)';
+      btn.dataset.state='';
+      quizLocked=false;
+    },2000);
+  }
+}
+
+function nextQuestion(){
+  quizIdx++;
+  if(quizIdx>=QUIZ.length){
+    clearInterval(quizTimer);
+    showQuizResult();
+    return;
+  }
+  const progFill=document.getElementById('quiz-prog-fill');
+  const progLbl=document.getElementById('quiz-prog-lbl');
+  if(progFill)progFill.style.width=((quizIdx/20)*100)+'%';
+  if(progLbl)progLbl.textContent='퀴즈 '+quizIdx+' / 20';
+  showQuestion();
+}
+
+async function showQuizResult(){
+  const elapsed=parseFloat(((Date.now()-quizStart)/1000).toFixed(1));
+  const perfect=(quizCorrect===QUIZ.length);
+  const epGiven=(perfect&&elapsed<=60)?5:0;
+  if(currentUser){
+    await sb.from('quiz_records').insert({user_id:currentUser.id,episode:4,elapsed:elapsed,perfect:perfect,ep_given:epGiven});
+    if(epGiven>0){
+      const{data:profile}=await sb.from('profiles').select('ep_balance,rebirth_tickets').eq('id',currentUser.id).single();
+      if(profile){
+        const newEp=profile.ep_balance+epGiven;
+        const newTickets=profile.rebirth_tickets+Math.floor(newEp/100);
+        const remainEp=newEp%100;
+        await sb.from('profiles').update({ep_balance:remainEp,rebirth_tickets:newTickets}).eq('id',currentUser.id);
+        await sb.from('ep_history').insert({user_id:currentUser.id,amount:epGiven,reason:'선조편 퀴즈 100점 (60초 이내)'});
+      }
+    }
+  }
+  const c=getCurrentScene();if(c>=0)sceneHistory.push(c);
+  switchScene(24);
+  const timeEl=document.getElementById('result-time');
+  const scoreEl=document.getElementById('result-score');
+  const msgEl=document.getElementById('result-msg');
+  if(timeEl)timeEl.textContent=elapsed+'초';
+  if(scoreEl)scoreEl.textContent=quizCorrect+' / '+QUIZ.length+' 정답';
+  const pct=Math.round(quizCorrect/QUIZ.length*100);
+  let msg='';
+  if(pct===100)msg='완벽합니다. 선조의 시대를 꿰뚫었습니다.';
+  else if(pct>=80)msg='훌륭합니다. 선조를 깊이 이해했습니다.';
+  else if(pct>=60)msg='좋습니다. 게임을 다시 해보면 더 선명해질 거예요.';
+  else msg='다시 도전해보세요. 선조의 이야기가 기다립니다.';
+  if(msgEl)msgEl.textContent=msg;
+}
+
+// ── 에필로그 로그 ─────────────────────────────────────────
+const LOG_MAP={
+  4:{a:'이이의 말을 따랐다',b:'검토하겠다 — 그리고 아무것도 하지 않았다 (선조의 선택)'},
+  8:{a:'황윤길을 믿었다',b:'김성일을 믿었다 (선조의 선택)'},
+  12:{a:'이순신에게 육군 합류를 명했다 (선조의 선택)',b:'이순신을 바다에 두었다',c:'한양을 버리고 피란했다'},
+  16:{a:'이순신을 믿었다',b:'명령을 어긴 자를 처벌했다 (선조의 선택)'},
+  20:{a:'이순신을 다시 불렀다 (선조의 선택)',b:'다른 장수를 찾았다'},
+};
+function buildEpi(){
+  const lines=[];
+  [4,8,12,16,20].forEach(s=>{
+    if(picks[s]&&LOG_MAP[s]&&LOG_MAP[s][picks[s]])lines.push(LOG_MAP[s][picks[s]]);
+  });
+  const el=document.getElementById('epi-log');
+  if(el)el.innerHTML=lines.length?lines.join('<br>'):'—';
+}
+
+// ── 타이핑 ───────────────────────────────────────────────
+const NARR={
+  2:'열넷.\n왕이 됐다.\n\n조정에는 이황, 이이, 유성룡이 있다.\n이 나라에서 가장 뛰어난 사람들이\n나를 바라보고 있다.',
+  6:'두 사람이 돌아왔다.\n황윤길과 김성일.\n통신사단의 이름이다.',
+  10:'왜군이 왔다.\n이이가 경고한 그대로였다.\n\n한양이 무너지고 있다.',
+  14:'이순신이 이기고 있다.\n한 번도 지지 않았다.\n\n원균이 조정에 와서 말한다.',
+  18:'칠천량.\n원균이 조선의 수군을 전멸시켰다.\n배도 없다. 장수도 없다.',
+};
+const NARR_NAV={2:'nav2',6:'nav6',10:'nav10',14:'nav14',18:'nav18'};
+let typingTimers=[],sceneToken=0;
+const SPD=44;
+
+function typeText(id,text,onDone){
+  typingTimers.forEach(clearTimeout);typingTimers=[];
+  const el=document.getElementById(id);if(!el)return;
+  el.innerHTML='';let i=0;const tok=sceneToken;
+  function tick(){
+    if(tok!==sceneToken)return;
+    if(i>=text.length){
+      el.innerHTML=el.innerHTML.replace('<span class="cursor"></span>','');
+      if(onDone)setTimeout(()=>{if(tok===sceneToken)onDone();},300);return;
+    }
+    const ch=text[i];
+    el.innerHTML=el.innerHTML.replace('<span class="cursor"></span>','')
+      +(ch==='\n'?'<br>':ch)+'<span class="cursor"></span>';
+    i++;
+    const d=ch==='\n'?SPD*5:ch==='.'||ch==='?'||ch==='!'?SPD*4:ch===','?SPD*2:SPD;
+    typingTimers.push(setTimeout(tick,d));
+  }
+  tick();
+}
+
+// ── 환생 ─────────────────────────────────────────────────
+const RB=[
+  {text:'1567년',hold:1500},
+  {text:'열넷.',cls:'dim',hold:1500},
+  {text:'지금부터 — 당신이 선조다.',cls:'final',hold:2400,last:true},
+];
+let rbTimers=[];
+function startRebirth(){
+  switchScene(1);rbTimers.forEach(clearTimeout);rbTimers=[];
+  const stage=document.getElementById('rb-stage'),portal=document.getElementById('rb-portal'),cta=document.getElementById('rb-cta');
+  if(stage)stage.innerHTML='';if(cta)cta.style.opacity='0';if(portal)portal.classList.remove('show');
+  setTimeout(()=>{
+    if(portal)setTimeout(()=>portal.classList.add('show'),200);
+    const FI=900,FO=600;let cur=500;
+    RB.forEach(step=>{
+      const el=document.createElement('div');
+      el.className='rb-word'+(step.cls?' '+step.cls:'');
+      el.textContent=step.text;el.style.cssText='opacity:0;transition:opacity '+(FI/1000)+'s ease;';
+      if(stage)stage.appendChild(el);const ref=el;
+      rbTimers.push(setTimeout(()=>{ref.style.opacity='1';},cur));
+      if(!step.last){
+        rbTimers.push(setTimeout(()=>{ref.style.transition='opacity '+(FO/1000)+'s ease';ref.style.opacity='0';setTimeout(()=>{if(ref.parentNode)ref.parentNode.removeChild(ref);},FO);},cur+FI+step.hold));
+        cur+=FI+step.hold+FO;
+      } else {
+        cur+=FI+step.hold;
+        rbTimers.push(setTimeout(()=>{if(cta){cta.style.transition='opacity 1s ease';cta.style.opacity='1';}},cur+300));
+      }
+    });
+  },400);
+}
+
+// ── 메뉴 ─────────────────────────────────────────────────
+let forwardHistory=[];
+function toggleMenu(){
+  const d=document.getElementById('menu-drop');
+  if(d)d.classList.toggle('open');
+}
+function closeMenu(){
+  const d=document.getElementById('menu-drop');
+  if(d)d.classList.remove('open');
+}
+function menuGoBack(){closeMenu();goBack();}
+function menuGoForward(){
+  closeMenu();
+  if(!forwardHistory.length)return;
+  const n=forwardHistory.pop();
+  const c=getCurrentScene();if(c>=0)sceneHistory.push(c);
+  switchScene(n);
+}
+function menuReload(){
+  closeMenu();
+  const c=getCurrentScene();
+  if(c>=0)switchScene(c);
+}
+function menuGo(n){closeMenu();go(n);}
+document.addEventListener('click',e=>{
+  const mw=document.querySelector('.menu-wrap');
+  if(mw&&!mw.contains(e.target))closeMenu();
+});
+
+// ── switchScene ──────────────────────────────────────────
+let sceneHistory=[];
+function go(n){forwardHistory=[];const c=getCurrentScene();if(c>=0)sceneHistory.push(c);switchScene(n);}
+function goBack(){if(!sceneHistory.length){switchScene(0);return;}const c=getCurrentScene();if(c>=0)forwardHistory.push(c);switchScene(sceneHistory.pop());}
+function getCurrentScene(){const on=document.querySelector('.sc.on');return on?parseInt(on.id.replace('s','')):-1;}
+
+// ── 오프닝 애니메이션 ────────────────────────────────────
+function runOpeningAnim(){
+  const ids=['op-question','op-glyph','op-series','op-line1','op-line2','op-cta','op-disc'];
+  const els=ids.map(id=>document.getElementById(id));
+  els.forEach(el=>{if(el){el.style.transition='none';el.style.opacity='0';}});
+  const FI='opacity 1.6s ease';
+  requestAnimationFrame(()=>{
+    els.forEach(el=>{if(el)el.style.transition=FI;});
+    setTimeout(()=>{if(els[0])els[0].style.opacity='1';},400);
+    setTimeout(()=>{if(els[0]){els[0].style.transition='opacity 1.2s ease';els[0].style.opacity='0';}},3800);
+    setTimeout(()=>{if(els[1]){els[1].style.opacity='1';}},5200);
+    setTimeout(()=>{if(els[2])els[2].style.opacity='1';},7000);
+    setTimeout(()=>{if(els[3])els[3].style.opacity='1';},8800);
+    setTimeout(()=>{if(els[3]){els[3].style.transition='opacity 1.2s ease';els[3].style.opacity='0';}},12200);
+    setTimeout(()=>{if(els[4])els[4].style.opacity='1';},13600);
+    setTimeout(()=>{if(els[5])els[5].style.opacity='1';},16400);
+    setTimeout(()=>{if(els[6])els[6].style.opacity='1';},17600);
+  });
+}
+
+// ── 사운드 ───────────────────────────────────────────────
+let droneCtx=null,droneGain=null;
+function createDrone(){if(droneCtx)return;droneCtx=new(window.AudioContext||window.webkitAudioContext)();droneGain=droneCtx.createGain();droneGain.gain.value=0;droneGain.connect(droneCtx.destination);[55,110].forEach(f=>{const o=droneCtx.createOscillator(),g=droneCtx.createGain();o.type='sine';o.frequency.value=f;g.gain.value=0.1;o.connect(g);g.connect(droneGain);o.start();});}
+function startDrone(){createDrone();if(droneCtx.state==='suspended')droneCtx.resume();droneGain.gain.cancelScheduledValues(droneCtx.currentTime);droneGain.gain.setValueAtTime(droneGain.gain.value,droneCtx.currentTime);droneGain.gain.linearRampToValueAtTime(0.26,droneCtx.currentTime+8);}
+function stopDrone(){if(!droneCtx||!droneGain)return;const c=droneCtx.currentTime,v=droneGain.gain.value;droneGain.gain.cancelScheduledValues(c);droneGain.gain.setValueAtTime(v,c);droneGain.gain.linearRampToValueAtTime(0,c+(v<0.05?0.3:8));}
+let deepCtx=null,deepGain=null;
+function createDeep(){if(deepCtx)return;deepCtx=new(window.AudioContext||window.webkitAudioContext)();deepGain=deepCtx.createGain();deepGain.gain.value=0;deepGain.connect(deepCtx.destination);[40,80].forEach(f=>{const o=deepCtx.createOscillator(),g=deepCtx.createGain();o.type='sine';o.frequency.value=f;g.gain.value=0.07;o.connect(g);g.connect(deepGain);o.start();});}
+function startDeep(){createDeep();if(deepCtx.state==='suspended')deepCtx.resume();deepGain.gain.cancelScheduledValues(deepCtx.currentTime);deepGain.gain.setValueAtTime(deepGain.gain.value,deepCtx.currentTime);deepGain.gain.linearRampToValueAtTime(0.2,deepCtx.currentTime+10);}
+function stopDeep(){if(!deepCtx||!deepGain)return;const c=deepCtx.currentTime,v=deepGain.gain.value;deepGain.gain.cancelScheduledValues(c);deepGain.gain.setValueAtTime(v,c);deepGain.gain.linearRampToValueAtTime(0,c+(v<0.05?0.3:10));}
+
+function switchScene(n){
+  sceneToken++;typingTimers.forEach(clearTimeout);typingTimers=[];rbTimers.forEach(clearTimeout);rbTimers=[];
+  if(n!==23&&n!==24){clearInterval(quizTimer);}
+
+  // 모든 씬 숨기기
+  document.querySelectorAll('.sc').forEach(s=>{
+    s.classList.remove('on');
+    s.style.display='none';
+    s.style.opacity='0';
+    s.style.transition='none';
+  });
+
+  const t=document.getElementById('s'+n);if(!t)return;
+  t.style.display='flex';
+  t.style.flexDirection='column';
+  t.style.opacity='0';
+  t.classList.add('on');
+
+  // 페이지 최상단으로
+  window.scrollTo(0,0);
+  document.documentElement.scrollTop=0;
+  document.body.scrollTop=0;
+
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{t.style.transition='opacity 0.35s ease';t.style.opacity='1';}));
+
+  document.querySelectorAll('.btn-back,.menu-wrap').forEach(b=>b.remove());
+  if(n>0){
+    const menuWrap=document.createElement('div');
+    menuWrap.className='menu-wrap';
+    menuWrap.innerHTML=`
+      <button class="menu-btn" onclick="toggleMenu()">⋯</button>
+      <div class="menu-drop" id="menu-drop">
+        <button class="menu-item" onclick="menuGoBack()">← 이전으로</button>
+        <button class="menu-item" onclick="menuGoForward()">→ 앞으로</button>
+        <button class="menu-item" onclick="menuReload()">↺ 현재 페이지 다시보기</button>
+        <div class="menu-divider"></div>
+        <div class="menu-section">막 이동</div>
+        <button class="menu-item" onclick="menuGo(2)">0막 · 이이의 경고</button>
+        <button class="menu-item" onclick="menuGo(6)">1막 · 황윤길과 김성일</button>
+        <button class="menu-item" onclick="menuGo(10)">2막 · 피란</button>
+        <button class="menu-item" onclick="menuGo(14)">3막 · 원균의 말</button>
+        <button class="menu-item" onclick="menuGo(18)">4막 · 칠천량</button>
+      </div>`;
+    document.body.appendChild(menuWrap);
+  }
+
+  if(n===0)setTimeout(runOpeningAnim,300);
+
+  if(NARR[n]){
+    const navId=NARR_NAV[n];
+    const navEl=document.getElementById(navId);
+    if(navEl)navEl.style.display='none';
+    const narrEl=document.getElementById('narr'+n);
+    if(narrEl)narrEl.innerHTML='';
+    setTimeout(()=>{
+      typeText('narr'+n,NARR[n],()=>{
+        if(navEl){navEl.style.display='flex';navEl.style.animation='fi .4s ease';}
+      });
+    },400);
+  }
+
+  if([4,8,12,16,20].includes(n)){resetBlock(n);}
+  if(n===22)buildEpi();
+
+  const deep=[10,11,12,13,14,15,16,17,18,19,20,21].includes(n);
+  const drone=[2,3,4,5,6,7,8,9,22].includes(n);
+  if(!deep)stopDeep();if(!drone)stopDrone();
+  if(deep)setTimeout(startDeep,500);if(drone)setTimeout(startDrone,500);
+}
+
+window.addEventListener('load',()=>{
+  document.querySelectorAll('.sc').forEach(s=>{
+    s.style.display='none';
+    s.style.opacity='0';
+  });
+  const s0=document.getElementById('s0');
+  if(s0){
+    s0.style.display='flex';
+    s0.style.flexDirection='column';
+    s0.style.opacity='1';
+    s0.classList.add('on');
+  }
+  setTimeout(runOpeningAnim,300);
+});
 </script>
 </body>
 </html>

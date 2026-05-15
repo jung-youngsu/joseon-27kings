@@ -1,0 +1,605 @@
+/* ═══════════════════════════════════════════════════════════════
+   shared/style.css
+   조선 27왕 시리즈 — 공통 스타일 (1층)
+
+   원칙:
+   - 구조, 레이아웃, 여백, 글꼴, 애니메이션은 여기서 정의
+   - 색상은 변수(--var)로만 사용. 실제 색은 themes/*.css에서 정함
+   - EP 고유 효과는 kings/ep??/style.css에서 추가
+═══════════════════════════════════════════════════════════════ */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── 변수 기본값 (themes에서 덮어씀) ────────────────────────── */
+:root {
+  /* 배경 3단계 */
+  --bg:  #0a0604;
+  --bg2: #0f0906;
+  --bg3: #140c08;
+
+  /* 강조색 (시대/막 표시, 진행바, 인용) */
+  --accent2: #8a5e1a;
+  --accent3: #e0b060;
+
+  /* 텍스트 3단계 */
+  --text:  #ece0d0;
+  --text2: #c8b89a;
+  --text3: #907860;
+
+  /* 테두리 3단계 */
+  --border:  #1e1408;
+  --border2: #2e1e0c;
+  --border3: #4e3418;
+
+  /* 정답 (성취 색) */
+  --good2: #208848;
+  --good3: #70f080;
+
+  /* 오답 (경고 색) */
+  --bad2: #803020;
+  --bad3: #f07060;
+
+  /* 사료/원문 박스 */
+  --hist2: #3a2808;
+  --hist3: #c09040;
+
+  /* 글꼴 */
+  --font-serif: 'Noto Serif KR', serif;
+  --font-sans:  'Noto Sans KR', sans-serif;
+}
+
+html { background: var(--bg); }
+html, body { min-height: 100%; }
+body {
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text);
+  max-width: 640px;
+  margin: 0 auto;
+  min-height: 100vh;
+}
+
+/* ═══ 씬 시스템 ═══════════════════════════════════════════════
+   .sc 는 한 씬. display:none/flex로만 전환.
+   position:fixed 안 씀 → 창 크기와 무관하게 동작.
+   min-height:100vh + overflow:visible → 짧으면 채우고 길면 스크롤.
+═══════════════════════════════════════════════════════════════ */
+.sc {
+  display: none;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--bg);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+.sc.on { display: flex; opacity: 1; }
+
+@keyframes fi    { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fi-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+@keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+
+/* ═══ 진행바 ═══════════════════════════════════════════════ */
+.prog {
+  flex-shrink: 0;
+  background: var(--bg);
+  padding: 8px 20px 6px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.prog-bar {
+  flex: 1;
+  height: 2px;
+  background: var(--border2);
+  border-radius: 1px;
+  overflow: hidden;
+}
+.prog-back {
+  background: transparent;
+  border: 1px solid var(--border3);
+  color: var(--text3);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .15s;
+  font-family: var(--font-serif);
+  line-height: 1;
+}
+.prog-back:hover {
+  border-color: var(--accent3);
+  color: var(--accent3);
+  transform: translateX(-2px);
+}
+.prog-back-spacer {
+  width: 28px;
+  height: 28px;
+}
+.prog-fill {
+  height: 100%;
+  background: var(--accent2);
+  transition: width .6s ease;
+}
+.prog-lbl {
+  font-size: 11px;
+  color: var(--accent3);
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+/* ═══ 상단 네비 (홈/시리즈로 가기) ═══════════════════════════ */
+.top-nav {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-sans);
+  font-size: 11px;
+}
+.top-nav a {
+  color: var(--text3);
+  text-decoration: none;
+  letter-spacing: 1px;
+  transition: color .15s;
+}
+.top-nav a:hover { color: var(--accent3); }
+.top-nav .ep-label {
+  color: var(--text2);
+  letter-spacing: 2px;
+  font-weight: 500;
+}
+
+/* ═══ 나레이션 씬 ═══════════════════════════════════════════ */
+.narr-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 80px 28px 32px;
+}
+.narr-era {
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: var(--text3);
+  margin-bottom: 18px;
+}
+.narr-text {
+  font-family: var(--font-serif);
+  font-size: 19px;
+  line-height: 2.6;
+  color: var(--text2);
+  min-height: 200px;
+}
+.narr-text em {
+  color: var(--text);
+  font-style: normal;
+  font-weight: 600;
+}
+.narr-text strong {
+  color: var(--accent3);
+  font-weight: 600;
+}
+.cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: var(--accent3);
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  animation: blink .7s step-end infinite;
+}
+.nav-area {
+  flex-shrink: 0;
+  padding: 16px 24px 32px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ═══ 시대상황 씬 ═══════════════════════════════════════════ */
+.context-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 50px 28px 32px;
+}
+.ctx-year {
+  font-family: var(--font-serif);
+  font-size: 52px;
+  font-weight: 700;
+  color: var(--accent2);
+  line-height: 1;
+  margin-bottom: 20px;
+}
+.ctx-title {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 16px;
+  letter-spacing: .5px;
+}
+.ctx-body {
+  font-family: var(--font-serif);
+  font-size: 14px;
+  color: var(--text2);
+  line-height: 2.3;
+}
+.ctx-body strong {
+  color: var(--text);
+  font-weight: 400;
+}
+
+/* ═══ 게임 씬 (대사 + 선택지) ═══════════════════════════════ */
+.game-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 24px 0;
+}
+.dial-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-bottom: 16px;
+}
+.dial {
+  border-radius: 6px;
+  padding: 13px 16px;
+  animation: fi-up .3s ease;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-left: 2px solid var(--text3);
+}
+/* 화자 종류별 좌측 막대 색 (themes에서 다르게 줄 수 있음) */
+.dial.npc-a  { border-left-color: var(--accent3); }
+.dial.npc-b  { border-left-color: var(--good3); }
+.dial.npc-c  { border-left-color: #8870b0; }
+.dial.king   { border-left-color: var(--accent2); background: var(--bg3); }
+.dial.father { border-left-color: var(--hist3); }
+
+.dial-who {
+  font-size: 10px;
+  letter-spacing: 2px;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: var(--text3);
+}
+.dial.npc-a  .dial-who { color: var(--accent3); }
+.dial.npc-b  .dial-who { color: var(--good3); }
+.dial.npc-c  .dial-who { color: #9878b8; }
+.dial.king   .dial-who { color: var(--accent3); }
+.dial.father .dial-who { color: var(--hist3); }
+
+.dial-text {
+  font-family: var(--font-serif);
+  font-size: 14px;
+  color: var(--text);
+  line-height: 2;
+}
+
+/* 내면 독백 (방과의 시선) */
+.inner-voice {
+  margin: 0 0 14px;
+  padding: 11px 15px;
+  border-left: 2px solid var(--hist2);
+  background: var(--bg2);
+  font-family: var(--font-serif);
+  font-size: 13px;
+  color: var(--text3);
+  line-height: 2.1;
+  font-style: italic;
+  animation: fi .4s ease;
+}
+
+/* ═══ 선택지 ═══════════════════════════════════════════════ */
+.ch-area { padding: 16px 0 32px; }
+.ch-label {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 14px;
+  font-family: var(--font-serif);
+  letter-spacing: .3px;
+  line-height: 1.6;
+}
+.ch-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.ch {
+  width: 100%;
+  text-align: left;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  padding: 13px 15px;
+  color: var(--text2);
+  font-family: var(--font-serif);
+  font-size: 14px;
+  line-height: 1.7;
+  cursor: pointer;
+  transition: all .15s;
+}
+.ch:hover:not(.locked):not(.blocked) {
+  background: var(--bg3);
+  border-color: var(--border3);
+  color: var(--text);
+}
+.ch.locked {
+  background: var(--hist2);
+  border-color: var(--hist2);
+  color: var(--hist3);
+  cursor: default;
+}
+.ch.previously-chosen {
+  border-left: 2px solid var(--accent3);
+  background: var(--bg3);
+  color: var(--text);
+  position: relative;
+}
+.ch.previously-chosen::before {
+  content: '✓';
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--accent3);
+  font-size: 13px;
+  opacity: 0.6;
+}
+.ch.blocked { opacity: .25; cursor: default; pointer-events: none; }
+.ch.wrong-shake { animation: shake .35s ease; }
+
+.block-msg {
+  display: none;
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: var(--bg2);
+  border: 1px solid var(--border3);
+  border-radius: 5px;
+  font-family: var(--font-serif);
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.8;
+  animation: fi .3s ease;
+}
+.block-msg.on { display: block; }
+
+/* "정답 없음" 막의 코멘트 */
+.no-answer-msg {
+  display: none;
+  margin-top: 10px;
+  padding: 12px 16px;
+  background: var(--bg2);
+  border: 1px solid var(--border3);
+  border-radius: 5px;
+  font-family: var(--font-serif);
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 2;
+  animation: fi .3s ease;
+}
+.no-answer-msg.on { display: block; }
+.no-answer-nav { display: none; margin-top: 12px; }
+.no-answer-nav.on { display: flex; gap: 8px; }
+
+/* ═══ 깊게 살펴보기 (게임 씬 안에서 펼쳐짐) ═══════════════════ */
+.deep-reveal {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 1.2s ease, opacity 1.2s ease;
+  margin-top: 0;
+}
+.deep-reveal.on {
+  max-height: 5000px;
+  opacity: 1;
+  margin-top: 24px;
+}
+.deep-divider {
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--border3), transparent);
+  margin: 8px 0 24px;
+}
+.deep-reveal .nav-area {
+  padding: 24px 0 0;
+  margin-top: 8px;
+}
+
+/* ═══ 깊게 살펴보기 (별도 씬 - 호환용) ═══════════════════════ */
+.deep-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 28px 24px;
+}
+.deep-tag {
+  font-size: 11px;
+  letter-spacing: 2px;
+  font-weight: 500;
+  margin-bottom: 10px;
+  color: var(--accent3);
+}
+.deep-title {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+.deep-text {
+  font-family: var(--font-serif);
+  font-size: 14px;
+  color: var(--text2);
+  line-height: 2.3;
+}
+.deep-text em { color: var(--text3); font-style: italic; }
+.deep-quote {
+  margin-top: 16px;
+  padding: 12px 16px;
+  border-left: 2px solid var(--accent2);
+  background: var(--bg2);
+  font-family: var(--font-serif);
+  font-size: 13px;
+  color: var(--accent3);
+  line-height: 2;
+  font-style: italic;
+}
+
+/* ═══ 오프닝 씬 ═══════════════════════════════════════════════ */
+.opening {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 28px;
+  text-align: center;
+}
+
+/* 순차 등장 베이스 */
+.fade-target {
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 1s ease, transform 1s ease;
+}
+.fade-target.on {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.op-question {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text2);
+  margin-bottom: 24px;
+  letter-spacing: .5px;
+  line-height: 1.8;
+}
+.op-glyph {
+  font-family: var(--font-serif);
+  font-size: 64px;
+  font-weight: 700;
+  color: var(--accent2);
+  line-height: 1;
+  margin-bottom: 20px;
+}
+.op-series {
+  font-size: 11px;
+  color: var(--accent3);
+  letter-spacing: 3px;
+  margin-bottom: 36px;
+}
+
+/* 흐름형 lines — 한 줄씩 세로로 자연스럽게 등장 */
+.op-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 36px;
+  max-width: 480px;
+}
+.op-line-stacked {
+  font-family: var(--font-serif);
+  font-size: 15px;
+  color: var(--text2);
+  line-height: 2.0;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 1s ease, transform 1s ease;
+  text-align: center;
+}
+.op-line-stacked.on {
+  opacity: 1;
+  transform: translateY(0);
+}
+.op-line-stacked em {
+  color: var(--accent3);
+  font-style: normal;
+}
+.op-line-stacked strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.op-start {
+  margin-top: 8px;
+}
+
+.op-disc {
+  font-size: 12px;
+  color: var(--accent3);
+  margin-top: 14px;
+  line-height: 1.9;
+}
+
+/* ═══ 에필로그 씬 ═══════════════════════════════════════════ */
+.epi-body { flex: 1; padding: 28px; }
+.epi-year {
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: var(--accent3);
+  margin-bottom: 12px;
+}
+.epi-big {
+  font-family: var(--font-serif);
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+.epi-text {
+  font-family: var(--font-serif);
+  font-size: 14px;
+  color: var(--text2);
+  line-height: 2.2;
+  margin-bottom: 14px;
+}
+.epi-quote {
+  padding: 12px 18px;
+  border-top: 1px solid var(--border3);
+  border-bottom: 1px solid var(--border3);
+  font-family: var(--font-serif);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent3);
+  line-height: 1.9;
+  margin-bottom: 14px;
+}
+
+/* ═══ 공통 버튼 ═══════════════════════════════════════════════ */
+.btn-p {
+  padding: 11px 24px;
+  border-radius: 22px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: all .2s;
+  background: var(--bg2);
+  border: 1px solid var(--border3);
+  color: var(--accent3);
+}
+.btn-p:hover { background: var(--bg3); border-color: var(--accent3); }
+.btn-p.ghost { background: transparent; }
+.btn-p.solid { background: var(--accent2); color: var(--bg); border-color: var(--accent2); }
+.btn-p.solid:hover { background: var(--accent3); border-color: var(--accent3); }

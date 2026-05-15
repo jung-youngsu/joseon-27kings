@@ -3,22 +3,1472 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EP01 · 태조 — 조선을 열다</title>
-<!-- 게임 본체. 추후 작성. -->
+<title>당신이 이성계라면? — 의리의 왕</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600;700&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0a0604;--bg2:#0f0906;--bg3:#140c08;
+  --gold2:#8a5e1a;--gold3:#e0b060;
+  --text:#ece0d0;--text2:#c8b89a;--text3:#907860;
+  --border:#1e1408;--border2:#2e1e0c;--border3:#4e3418;
+  --green2:#208848;--green3:#70f080;
+  --red2:#803020;--red3:#f07060;
+  --hist2:#3a2808;--hist3:#c09040;
+}
+
+/* ── 기본 ── */
+html{background:var(--bg);}
+html,body{min-height:100%;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);max-width:640px;margin:0 auto;min-height:100vh;}
+
+/* ── 씬 ──
+   모든 씬은 display:none/flex로만 전환
+   position:fixed 없음 → 창 크기에 무관하게 동작
+   min-height:100vh → 내용 짧아도 전체 화면 채움
+   overflow:visible → 내용 길어지면 자연스럽게 스크롤
+*/
+.sc{
+  display:none;
+  flex-direction:column;
+  min-height:100vh;
+  background:var(--bg);
+  opacity:0;
+  transition:opacity 0.35s ease;
+}
+.sc.on{display:flex;}
+
+@keyframes fi{from{opacity:0}to{opacity:1}}
+@keyframes fi-up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── 진행바 ── */
+.prog{flex-shrink:0;background:var(--bg);padding:8px 20px 6px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10;}
+.prog-bar{flex:1;height:2px;background:var(--border2);border-radius:1px;overflow:hidden;}
+.prog-fill{height:100%;background:var(--gold2);transition:width .6s ease;}
+.prog-lbl{font-size:11px;color:#c0a060;letter-spacing:1px;white-space:nowrap;}
+
+/* ── 아트 ── */
+.art{flex-shrink:0;background:#060402;}
+.art svg{width:100%;display:block;}
+
+/* ── 나레이션 ── */
+.narr-body{flex:1;display:flex;flex-direction:column;justify-content:center;padding:40px 28px;}
+.narr-era{font-size:11px;letter-spacing:3px;color:#a08060;margin-bottom:18px;}
+.narr-text{font-family:'Noto Serif KR',serif;font-size:20px;line-height:2.8;color:var(--text2);}
+.narr-text em{color:var(--text);font-style:normal;}
+.cursor{display:inline-block;width:2px;height:1em;background:#c08040;margin-left:2px;vertical-align:text-bottom;animation:blink .7s step-end infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.nav-area{flex-shrink:0;padding:16px 24px 32px;display:flex;gap:8px;flex-wrap:wrap;}
+
+/* ── 시대상황 ── */
+.context-body{flex:1;display:flex;flex-direction:column;justify-content:center;padding:32px 28px;}
+.ctx-year{font-family:'Noto Serif KR',serif;font-size:52px;font-weight:700;color:#6a4020;line-height:1;margin-bottom:20px;}
+.ctx-title{font-family:'Noto Serif KR',serif;font-size:16px;font-weight:600;color:var(--text);margin-bottom:16px;letter-spacing:.5px;}
+.ctx-body{font-family:'Noto Serif KR',serif;font-size:14px;color:var(--text2);line-height:2.3;}
+.ctx-body strong{color:var(--text);font-weight:400;}
+
+/* ── 게임 ── */
+.game-body{flex:1;display:flex;flex-direction:column;padding:20px 24px 0;}
+.dial-wrap{display:flex;flex-direction:column;gap:9px;margin-bottom:16px;}
+.dial{border-radius:6px;padding:13px 16px;animation:fi-up .3s ease;}
+.dial.npc-left{background:#0f0804;border:1px solid #2a1808;border-left:2px solid #c07840;}
+.dial.npc-right{background:#080e04;border:1px solid #141e08;border-left:2px solid #608828;}
+.dial.npc-mid{background:#0a080e;border:1px solid #1a1428;border-left:2px solid #806890;}
+.dial.king{background:#0a0804;border:1px solid #1e1408;border-left:2px solid #907030;}
+.dial-who{font-size:10px;letter-spacing:2px;font-weight:500;margin-bottom:6px;}
+.dial.npc-left .dial-who{color:#c87840;}
+.dial.npc-right .dial-who{color:#80a848;}
+.dial.npc-mid .dial-who{color:#9878b8;}
+.dial.king .dial-who{color:#b09050;}
+.dial-text{font-family:'Noto Serif KR',serif;font-size:14px;color:var(--text);line-height:2;}
+.inner-voice{margin:0 0 14px;padding:11px 15px;border-left:2px solid #3a2808;background:#080604;font-family:'Noto Serif KR',serif;font-size:13px;color:#907050;line-height:2.1;font-style:italic;animation:fi .4s ease;}
+
+.ch-area{padding:16px 0 32px;}
+.ch-label{font-size:16px;font-weight:700;color:var(--text);margin-bottom:14px;font-family:'Noto Serif KR',serif;letter-spacing:.3px;line-height:1.6;}
+.ch-list{display:flex;flex-direction:column;gap:7px;}
+.ch{width:100%;text-align:left;background:#0a0806;border:1px solid var(--border2);border-radius:6px;padding:13px 15px;color:var(--text2);font-family:'Noto Serif KR',serif;font-size:14px;line-height:1.7;cursor:pointer;transition:all .15s;}
+.ch:hover:not(.iseonggye):not(.blocked){background:#140e08;border-color:var(--border3);color:var(--text);}
+.ch.iseonggye{background:#180e04;border-color:var(--hist2);color:var(--hist3);cursor:default;}
+.ch.blocked{opacity:.25;cursor:default;pointer-events:none;}
+.ch.wrong-shake{animation:shake .35s ease;}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+.block-msg{display:none;margin-top:10px;padding:10px 14px;background:#0e0806;border:1px solid #503010;border-radius:5px;font-family:'Noto Serif KR',serif;font-size:13px;color:#a07040;line-height:1.8;animation:fi .3s ease;}
+.block-msg.on{display:block;}
+
+/* 4막 정답없음 */
+.no-answer-msg{display:none;margin-top:10px;padding:12px 16px;background:#0e0a06;border:1px solid var(--border3);border-radius:5px;font-family:'Noto Serif KR',serif;font-size:13px;color:var(--text2);line-height:2;animation:fi .3s ease;}
+.no-answer-msg.on{display:block;}
+.no-answer-nav{display:none;margin-top:12px;}
+.no-answer-nav.on{display:flex;gap:8px;}
+
+/* ── 깊게살펴보기 ── */
+.deep-body{flex:1;display:flex;flex-direction:column;padding:28px 24px;}
+.deep-tag{font-size:11px;letter-spacing:2px;font-weight:500;margin-bottom:10px;color:var(--gold3);}
+.deep-title{font-family:'Noto Serif KR',serif;font-size:17px;font-weight:700;color:var(--text);line-height:1.5;margin-bottom:14px;}
+.deep-text{font-family:'Noto Serif KR',serif;font-size:14px;color:var(--text2);line-height:2.3;}
+.deep-text em{color:var(--text3);font-style:italic;}
+.deep-quote{margin-top:16px;padding:12px 16px;border-left:2px solid var(--gold2);background:#0c0804;font-family:'Noto Serif KR',serif;font-size:13px;color:#c0a060;line-height:2;font-style:italic;}
+
+/* ── 오프닝 ── */
+.opening{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;text-align:center;}
+.op-question{font-family:'Noto Serif KR',serif;font-size:20px;font-weight:600;color:var(--text);margin-bottom:8px;opacity:0;letter-spacing:.5px;line-height:2;}
+.op-glyph{font-family:'Noto Serif KR',serif;font-size:64px;font-weight:700;color:#604020;line-height:1;margin-bottom:18px;opacity:0;}
+.op-series{font-size:11px;color:#c0a060;letter-spacing:2px;margin-bottom:28px;opacity:0;}
+.op-stage{position:relative;width:100%;height:90px;margin-bottom:28px;}
+.op-line{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:100%;font-family:'Noto Serif KR',serif;font-size:15px;color:var(--text2);line-height:2.6;opacity:0;transition:opacity 1.4s ease;padding:8px 16px;border-radius:4px;}
+.op-line em{color:var(--gold3);font-style:normal;}
+.op-disc{font-size:12px;color:#c0a060;margin-top:14px;line-height:1.9;opacity:0;}
+
+/* ── 환생 ── */
+.rebirth{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 28px;}
+.rb-portal-wrap{width:100px;height:100px;margin:0 auto 36px;}
+.rb-portal{width:100px;height:100px;border-radius:50%;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 1s ease;position:relative;}
+.rb-portal.show{opacity:1;}
+.rb-ring-out{position:absolute;inset:0;border-radius:50%;border:1.5px solid transparent;border-top:1.5px solid var(--gold2);border-right:1.5px solid var(--gold2);}
+.rb-portal.show .rb-ring-out{animation:spin 2s linear infinite;}
+.rb-ring-mid{position:absolute;inset:14px;border-radius:50%;border:1px solid transparent;border-bottom:1px solid #c07830;border-left:1px solid #c07830;}
+.rb-portal.show .rb-ring-mid{animation:spin 1.4s linear infinite reverse;}
+.rb-glyph{font-family:'Noto Serif KR',serif;font-size:24px;font-weight:700;color:var(--gold2);opacity:0;transition:opacity 1.2s ease .3s;}
+.rb-portal.show .rb-glyph{opacity:1;}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.rb-stage{position:relative;width:100%;height:68px;margin-bottom:36px;}
+.rb-word{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);white-space:nowrap;font-family:'Noto Serif KR',serif;font-size:20px;color:var(--text2);opacity:0;transition:opacity .9s ease;}
+.rb-word.dim{font-size:15px;color:#504030;}
+.rb-word.final{font-size:17px;font-weight:600;color:var(--text);letter-spacing:1px;}
+#rb-cta{opacity:0;transition:opacity 1s ease;}
+
+/* ── 에필로그 ── */
+.epi-body{flex:1;padding:28px;}
+.epi-year{font-size:11px;letter-spacing:3px;color:#c0a060;margin-bottom:12px;}
+.epi-big{font-family:'Noto Serif KR',serif;font-size:19px;font-weight:700;color:var(--text);line-height:1.5;margin-bottom:14px;}
+.epi-text{font-family:'Noto Serif KR',serif;font-size:14px;color:var(--text2);line-height:2.2;margin-bottom:14px;}
+.epi-quote{padding:12px 18px;border-top:1px solid var(--border3);border-bottom:1px solid var(--border3);font-family:'Noto Serif KR',serif;font-size:14px;font-weight:600;color:var(--gold3);line-height:1.9;margin-bottom:14px;}
+
+/* ── 공통 버튼 ── */
+.btn-p{padding:11px 24px;border-radius:22px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .2s;background:#0c0806;border:1px solid #3a2008;color:#c09040;}
+.btn-p:hover{background:#160e06;border-color:var(--gold3);}
+.btn-s{padding:11px 24px;border-radius:22px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .2s;background:transparent;border:1px solid var(--border3);color:var(--text3);}
+.btn-s:hover{border-color:#604828;color:var(--text2);}
+
+/* ── 메뉴 ── */
+.menu-wrap{position:fixed;top:12px;right:12px;z-index:400;}
+.menu-btn{background:rgba(10,6,4,.92);border:1px solid var(--border2);color:var(--text3);cursor:pointer;padding:5px 10px;border-radius:5px;font-size:16px;line-height:1;transition:color .2s;}
+.menu-btn:hover{color:var(--text);}
+.menu-drop{display:none;position:absolute;top:34px;right:0;background:#0a0806;border:1px solid var(--border2);border-radius:8px;overflow:hidden;min-width:160px;box-shadow:0 4px 20px rgba(0,0,0,.7);}
+.menu-drop.open{display:block;animation:fi-up .2s ease;}
+.menu-item{display:block;width:100%;text-align:left;padding:10px 16px;font-size:13px;color:var(--text2);cursor:pointer;font-family:'Noto Sans KR',sans-serif;background:transparent;border:none;border-bottom:1px solid var(--border);transition:background .15s;}
+.menu-item:last-child{border-bottom:none;}
+.menu-item:hover{background:#140e08;color:var(--text);}
+.menu-divider{height:1px;background:var(--border2);margin:2px 0;}
+.menu-section{padding:6px 16px 3px;font-size:10px;letter-spacing:2px;color:var(--text3);}
+
+/* ── 퀴즈 ── */
+.quiz-body{flex:1;display:flex;flex-direction:column;padding:20px 24px 32px;gap:0;}
+.quiz-num{font-size:10px;letter-spacing:2px;color:var(--text3);margin-bottom:8px;}
+.quiz-question{font-family:'Noto Serif KR',serif;font-size:15px;color:var(--text);line-height:1.9;margin-bottom:16px;}
+.quiz-choices{display:flex;flex-direction:column;gap:7px;}
+.quiz-timer{font-size:11px;color:var(--text3);}
+
+/* ── 후기 ── */
+.rv-title{font-family:'Noto Serif KR',serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.rv-sub{font-size:13px;color:var(--text3);margin-bottom:12px;line-height:1.8;}
+.rv-input{width:100%;background:#0a0806;border:1px solid var(--border2);border-radius:6px;padding:10px 12px;color:var(--text);font-family:'Noto Serif KR',serif;font-size:14px;margin-bottom:8px;display:block;}
+.rv-textarea{width:100%;background:#0a0806;border:1px solid var(--border2);border-radius:6px;padding:10px 12px;color:var(--text);font-family:'Noto Serif KR',serif;font-size:14px;resize:none;height:110px;line-height:1.8;margin-bottom:8px;display:block;}
+.rv-input:focus,.rv-textarea:focus{outline:none;border-color:var(--border3);}
+.rv-sent{display:none;padding:14px;background:#0c0e08;border:1px solid #303a18;border-radius:6px;font-family:'Noto Serif KR',serif;font-size:14px;color:#90a858;text-align:center;}
+</style>
 </head>
 <body>
-<!-- TODO: 태조(이성계) 게임 콘텐츠 -->
-<!-- 표준 메타데이터 -->
-<script type="application/json" id="meta">
-{
-  "ep": 1,
-  "slug": "taejo",
-  "korName": "태조",
-  "personalName": "이성계",
-  "reign": "1392-1398",
-  "era": "1335-1408",
-  "tagline": "조선을 열다"
+
+<!-- ■ 씬 0: 오프닝 -->
+<div class="sc on" id="s0">
+<div class="opening">
+  <div class="op-question" id="op-question">왕명을 따르면 내 사람을 잃는다.<br>따르지 않아도 내 사람을 잃는다.<br>따를 것인가. 따르지 않을 것인가. 선택하라.</div>
+  <div class="op-glyph" id="op-glyph">朝</div>
+  <div class="op-series" id="op-series">역사체험 교육 게임 · 조선의 왕 시리즈 1화</div>
+
+  <!-- 5초 선택 구역 — 오프닝에서 바로 등장 -->
+  <div id="op-choice-area" style="width:100%;opacity:0;transition:opacity .8s ease;">
+    <!-- 숫자 카운트다운 -->
+    <div style="text-align:center;margin-bottom:16px;">
+      <span id="op-timer-num" style="font-family:'Noto Serif KR',serif;font-size:48px;font-weight:700;color:var(--gold3);line-height:1;">5</span>
+    </div>
+    <!-- 두 선택지 -->
+    <div style="display:flex;gap:10px;">
+      <button id="op-btn-follow" onclick="opChoose('follow')" style="flex:1;font-family:'Noto Serif KR',serif;font-size:15px;color:var(--text2);background:#0a0806;border:1px solid var(--border2);border-radius:6px;padding:16px 10px;cursor:pointer;line-height:1.8;transition:all .15s;" onmouseover="this.style.background='#160e06';this.style.borderColor='var(--gold3)'" onmouseout="this.style.background='#0a0806';this.style.borderColor='var(--border2)'">① 따른다</button>
+      <button id="op-btn-defy" onclick="opChoose('defy')" style="flex:1;font-family:'Noto Serif KR',serif;font-size:15px;color:var(--text2);background:#0a0806;border:1px solid var(--border2);border-radius:6px;padding:16px 10px;cursor:pointer;line-height:1.8;transition:all .15s;" onmouseover="this.style.background='#160e06';this.style.borderColor='var(--gold3)'" onmouseout="this.style.background='#0a0806';this.style.borderColor='var(--border2)'">② 따르지 않는다</button>
+    </div>
+  </div>
+
+  <div class="op-disc" id="op-disc"><strong>※ 역사적 사실을 바탕으로 한 교육 목적의 재구성입니다.</strong></div>
+</div>
+</div>
+
+<!-- ■ 씬 1: 환생 -->
+<div class="sc" id="s1">
+<div class="rebirth">
+  <div class="rb-portal-wrap">
+    <div class="rb-portal" id="rb-portal">
+      <div class="rb-ring-out"></div><div class="rb-ring-mid"></div>
+      <div class="rb-glyph">朝</div>
+    </div>
+  </div>
+  <div class="rb-stage" id="rb-stage"></div>
+  <div id="rb-cta">
+    <button onclick="go(2)" style="font-family:'Noto Serif KR',serif;font-size:14px;color:#d09840;background:#0c0804;border:1px solid #3a2008;padding:11px 36px;border-radius:2px;cursor:pointer;letter-spacing:2px;">들어간다</button>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     0막 — 때를 기다린다
+═══════════════════════════════════════════ -->
+<!-- ■ 씬 2: 0막 나레이션 -->
+<div class="sc" id="s2">
+<div class="art" style="height:150px;">
+<svg viewBox="0 0 640 150" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="150" fill="#060402"/>
+  <rect x="0" y="100" width="640" height="50" fill="#040302"/>
+  <path d="M0 108 Q80 98 160 108 Q240 118 320 106 Q400 94 480 106 Q560 118 640 108" stroke="#1a0e06" stroke-width="1.5" fill="none"/>
+  <!-- 아버지와 이성계 실루엣 -->
+  <circle cx="280" cy="80" r="8" fill="#5a3a18"/><rect x="272" y="88" width="16" height="22" fill="#5a3a18" rx="2"/>
+  <circle cx="320" cy="84" r="7" fill="#4a2e10"/><rect x="313" y="91" width="14" height="20" fill="#4a2e10" rx="2"/>
+  <!-- 횃불 -->
+  <rect x="360" y="72" width="4" height="30" fill="#6a3a14"/>
+  <ellipse cx="362" cy="70" rx="6" ry="8" fill="#e07030" opacity=".9"/>
+  <ellipse cx="362" cy="68" rx="4" ry="6" fill="#f0c050" opacity=".7"/>
+  <!-- 산 실루엣 -->
+  <path d="M0 150 Q60 80 120 110 Q180 80 240 150" fill="#2a1a0a" opacity=".9"/>
+  <path d="M420 150 Q500 70 560 100 Q600 80 640 150" fill="#2a1a0a" opacity=".9"/>
+</svg>
+</div>
+<div class="narr-body">
+  <div class="narr-era">0막 · 1356년</div>
+  <div class="narr-text" id="narr2"></div>
+</div>
+<div class="nav-area" id="nav2" style="display:none;">
+  <button class="btn-p" onclick="go(3)">시대 상황 보기 →</button>
+</div>
+</div>
+
+<!-- ■ 씬 3: 0막 시대상황 -->
+<div class="sc scrollable" id="s3">
+<div class="context-body">
+  <div class="ctx-year">1356</div>
+  <div class="ctx-title">흔들리는 나라 — 차별이 시작됐다</div>
+  <div class="ctx-body">
+    이성계의 집안은 함경도 쌍성의 실력자였습니다. 토박이 호족으로 삶은 팍팍하지 않았습니다.<br><br>
+    그런데 원나라 황실이 권력 싸움에 빠졌습니다. 1340년대 가뭄과 홍수가 연이어 왔습니다. 백성들이 반란을 일으켰습니다. 원나라가 흔들렸습니다.<br><br>
+    고려 이주민의 차별이 점차 심해지고 있습니다.<br><br>
+    아버지의 동료들이 싸웠습니다. 크게 다쳤습니다. 싸움에서 이겼지만 더 큰 원나라 병사들이 왔습니다. 동료들은 아버지를 원망했습니다. 아버지는 대답하지 않았습니다.
+  </div>
+</div>
+<div class="nav-area">
+  <button class="btn-p" onclick="go(4)">게임 시작 →</button>
+  <button class="btn-s" onclick="go(4)">건너뛰기</button>
+</div>
+</div>
+
+<!-- ■ 씬 4: 0막 게임 -->
+<div class="sc" id="s4">
+<div class="prog"><div class="prog-bar"><div class="prog-fill" style="width:14%"></div></div><span class="prog-lbl">0막 · 1356년</span></div>
+<div class="game-body">
+  <div class="dial-wrap">
+    <div class="dial npc-left">
+      <div class="dial-who">아버지의 동료</div>
+      <div class="dial-text">"동료들이 다쳤소. 함께 싸웠다면 달랐을 거요. 당신은 왜 움직이지 않았소?"</div>
+    </div>
+  </div>
+  <div class="ch-area">
+    <div class="ch-label">지금 싸우시겠습니까?</div>
+    <div class="ch-list">
+      <button class="ch" id="g4a" onclick="tryPick(4,'a','x')">① 싸운다</button>
+      <button class="ch" id="g4b" onclick="tryPick(4,'b','x')">② 싸우지 않는다</button>
+    </div>
+    <div class="block-msg" id="bm4">
+      <span id="bm4-text"></span><br>
+      <button onclick="resetBlock(4)" style="margin-top:6px;background:transparent;border:1px solid #503010;border-radius:4px;padding:4px 12px;color:#a07040;font-size:12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;">↩ 다시 선택하기</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ■ 씬 5: 0막 깊게 살펴보기 -->
+<div class="sc scrollable" id="s5">
+<div class="prog"><div class="prog-bar"><div class="prog-fill" style="width:14%"></div></div><span class="prog-lbl">0막 · 깊게 살펴보기</span></div>
+<div class="deep-body">
+  <div>
+    <div class="deep-tag">이자춘의 선택 · 깊게 살펴보기</div>
+    <div class="deep-title">두 선택지 중 어느 것도 이자춘의 선택이 아니었습니다</div>
+    <div class="deep-text">
+      싸웠다면 — 지방 호족 하나가 원나라를 이길 수 없었습니다. 집안이 사라졌을 것입니다.<br>
+      싸우지 않았다면 — 그냥 버티는 것이었습니다. 기회는 오지 않았을 것입니다.<br><br>
+      이자춘은 세 번째 길을 찾았습니다.<br><br>
+      1355년. 혼자 공민왕을 찾아갔습니다. 아무도 몰랐습니다.<br>
+      싸울지 말지를 고민하지 않았습니다.<br>
+      어떻게 이길 것인가를 생각했습니다.<br><br>
+      1356년. 공민왕의 밀사가 왔을 때 — 함께 움직였습니다. 혼자가 아니었습니다. 명분이 있었습니다. 하루 만에 쌍성총관부가 무너졌습니다.<br><br>
+      싸우는 것도 아니었고 싸우지 않는 것도 아니었습니다.<br>
+      내 사람을 지키기 위해 방법을 찾았습니다.<br>
+      방법이 없다고 생각하면 방법이 없습니다.<br>
+      방법을 찾고자 하면 방법을 찾을 수 있습니다.
+    </div>
+    <div class="deep-quote">
+      힘으로 이기면 적이 쓰러진다.<br>
+      명분으로 이기면 적이 사라진다.<br><br>
+      이자춘은 내 사람을 지키기 위해<br>
+      싸울지 말지가 아니라<br>
+      <strong>누구와 함께 싸울 것인가</strong>를 생각했습니다.
+    </div>
+  </div>
+</div>
+<div class="nav-area">
+  <button class="btn-p" onclick="go(6)">다음 막 →</button>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     1막 — 싸운다
+═══════════════════════════════════════════ -->
+<!-- ■ 씬 6: 1막 나레이션 -->
+<div class="sc" id="s6">
+<div class="art" style="height:150px;">
+<svg viewBox="0 0 640 150" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="150" fill="#060402"/>
+  <!-- 새벽 안개 강가 -->
+  <rect x="0" y="110" width="640" height="40" fill="#040302" opacity=".9"/>
+  <path d="M0 118 Q160 108 320 118 Q480 128 640 118" stroke="#181008" stroke-width="1" fill="none" opacity=".5"/>
+  <!-- 병사들 실루엣 -->
+  <circle cx="180" cy="90" r="6" fill="#4a2e10"/><rect x="174" y="96" width="12" height="18" fill="#4a2e10" rx="1"/>
+  <circle cx="210" cy="88" r="6" fill="#4a2e10"/><rect x="204" y="94" width="12" height="18" fill="#4a2e10" rx="1"/>
+  <circle cx="240" cy="86" r="7" fill="#6a3a18"/><rect x="233" y="93" width="14" height="20" fill="#6a3a18" rx="1"/>
+  <circle cx="270" cy="88" r="6" fill="#4a2e10"/><rect x="264" y="94" width="12" height="18" fill="#4a2e10" rx="1"/>
+  <circle cx="300" cy="90" r="6" fill="#4a2e10"/><rect x="294" y="96" width="12" height="18" fill="#4a2e10" rx="1"/>
+  <!-- 안개 -->
+  <rect x="0" y="100" width="640" height="20" fill="#060402" opacity=".4"/>
+</svg>
+</div>
+<div class="narr-body">
+  <div class="narr-era">1막 · 1361년</div>
+  <div class="narr-text" id="narr6"></div>
+</div>
+<div class="nav-area" id="nav6" style="display:none;">
+  <button class="btn-p" onclick="go(7)">시대 상황 보기 →</button>
+</div>
+</div>
+
+<!-- ■ 씬 7: 1막 시대상황 -->
+<div class="sc scrollable" id="s7">
+<div class="context-body">
+  <div class="ctx-year">1361</div>
+  <div class="ctx-title">홍건적 — 처음으로 명령을 내려야 한다</div>
+  <div class="ctx-body">
+    홍건적은 원나라 말기에 일어난 농민반란군이었습니다. 요동 일대를 휩쓸다가 고려로 방향을 돌렸습니다.<br><br>
+    이성계는 스물여섯. 처음으로 독립 지휘관이 됐습니다.<br>
+    <strong>병사 2천. 홍건적 선봉은 5천이 넘었습니다.</strong><br><br>
+    2천 명이 이성계를 올려다보고 있었습니다.
+  </div>
+</div>
+<div class="nav-area">
+  <button class="btn-p" onclick="go(8)">게임 시작 →</button>
+  <button class="btn-s" onclick="go(8)">건너뛰기</button>
+</div>
+</div>
+
+<!-- ■ 씬 8: 1막 게임 -->
+<div class="sc" id="s8">
+<div class="prog"><div class="prog-bar"><div class="prog-fill" style="width:28%"></div></div><span class="prog-lbl">1막 · 1361년</span></div>
+<div class="game-body">
+  <div class="dial-wrap">
+    <div class="dial npc-left">
+      <div class="dial-who">척후병</div>
+      <div class="dial-text">"장군. 홍건적 선봉이 예상보다 세 배 많습니다. 5천이 넘습니다."</div>
+    </div>
+  </div>
+  <div class="ch-area">
+    <div class="ch-label">홍건적과 싸우시겠습니까?</div>
+    <div class="ch-list">
+      <button class="ch" id="g8a" onclick="tryPick(8,'a','x')">① 싸운다</button>
+      <button class="ch" id="g8b" onclick="tryPick(8,'b','x')">② 싸우지 않는다</button>
+    </div>
+    <div class="block-msg" id="bm8">
+      <span id="bm8-text"></span><br>
+      <button onclick="resetBlock(8)" style="margin-top:6px;background:transparent;border:1px solid #503010;border-radius:4px;padding:4px 12px;color:#a07040;font-size:12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;">↩ 다시 선택하기</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ■ 씬 9: 1막 깊게 살펴보기 -->
+<div class="sc scrollable" id="s9">
+<div class="prog"><div class="prog-bar"><div class="prog-fill" style="width:28%"></div></div><span class="prog-lbl">1막 · 깊게 살펴보기</span></div>
+<div class="deep-body">
+  <div>
+    <div class="deep-tag">이성계의 선택 · 깊게 살펴보기</div>
+    <div class="deep-title">두 선택지 중 어느 것도 이성계의 선택이 아니었습니다</div>
+    <div class="deep-text">
+      싸웠다면 — 2천으로 5천을 정면 돌파해야 했습니다. 내 사람들이 많이 다쳤을 것입니다.<br>
+      싸우지 않았다면 — 그 사이 마을 세 곳이 불탔습니다. 다른 내 사람을 잃었습니다.<br><br>
+      이성계는 세 번째 길을 찾았습니다.<br><br>
+      새벽 3시. 홍건적 진영이 잠든 사이 달려들었습니다.<br>
+      정면 돌파도 아니었고 후퇴도 아니었습니다.<br>
+      남들이 생각하지 못한 시간을 골랐습니다.<br><br>
+      이지란이 어깨에 화살을 맞고도 웃으며 말했습니다.<br>
+      <em>"우리가 이겼습니다."</em><br><br>
+      이지란은 이 전투에서 이성계의 내 사람이 됐습니다.<br>
+      이후 30년을 함께 싸웠습니다. 황산대첩에서도, 위화도에서도.
+    </div>
+    <div class="deep-quote">
+      방법이 없다고 생각하면 방법이 없습니다.<br>
+      방법을 찾고자 하면 방법을 찾을 수 있습니다.<br><br>
+      이성계는 내 사람을 지키기 위해<br>
+      싸울지 말지가 아니라<br>
+      <strong>언제 어떻게 싸울 것인가</strong>를 생각했습니다.
+    </div>
+  </div>
+</div>
+<div class="nav-area">
+  <button class="btn-p" onclick="go(10)">다음 막 →</button>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     2막 — 함께 싸운다
+═══════════════════════════════════════════ -->
+<!-- ■ 씬 10: 2막 나레이션 -->
+<div class="sc" id="s10">
+<div class="art" style="height:150px;">
+<svg viewBox="0 0 640 150" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="150" fill="#060402"/>
+  <!-- 황산 전투 배경 -->
+  <path d="M0 150 Q100 60 180 90 Q240 60 320 150" fill="#2a1a0a" opacity=".9"/>
+  <path d="M320 150 Q400 60 460 80 Q520 50 640 150" fill="#241408" opacity=".9"/>
+  <!-- 아기발도 황금 투구 -->
+  <circle cx="380" cy="70" r="14" fill="#3a2810" stroke="#c09040" stroke-width="2"/>
+  <ellipse cx="380" cy="58" rx="14" ry="8" fill="#503820" stroke="#d0a050" stroke-width="1.5"/>
+  <circle cx="380" cy="70" r="5" fill="#604830"/>
+  <!-- 이성계 -->
+  <circle cx="260" cy="78" r="8" fill="#5a3010"/><rect x="252" y="86" width="16" height="22" fill="#5a3010" rx="2"/>
+  <!-- 이지란 -->
+  <circle cx="240" cy="82" r="7" fill="#4a2808"/><rect x="233" y="89" width="14" height="20" fill="#4a2808" rx="2"/>
+  <!-- 화살 -->
+  <line x1="245" y1="80" x2="374" y2="64" stroke="#d0a050" stroke-width="1.5" opacity=".8"/>
+  <line x1="258" y1="76" x2="376" y2="68" stroke="#a07030" stroke-width="1" opacity=".6"/>
+</svg>
+</div>
+<div class="narr-body">
+  <div class="narr-era">2막 · 1380년</div>
+  <div class="narr-text" id="narr10"></div>
+</div>
+<div class="nav-area" id="nav10" style="display:none;">
+  <button class="btn-p" onclick="go(11)">시대 상황 보기 →</button>
+</div>
+</div>
+
+<!-- ■ 씬 11: 2막 시대상황 -->
+<div class="sc scrollable" id="s11">
+<div class="context-body">
+  <div class="ctx-year">1380</div>
+  <div class="ctx-title">황산대첩 — 왜구 10만이 몰려온다</div>
+  <div class="ctx-body">
+    1380년 왜구 500척이 전라도 진포에 상륙했습니다. 고려군은 5천. 왜구는 10만이었습니다.<br><br>
+    왜구는 전라도와 경상도를 휩쓸며 지리산으로 모여들었습니다. 마을은 텅 비었고 거리에는 죽은 백성들의 시체가 넘쳤습니다.<br><br>
+    <strong>고려 조정은 이성계를 총사령관으로 삼아 군대를 출전시켰습니다.</strong><br><br>
+    왜구에게는 무서운 소년 장수 아기발도가 있었습니다.
+  </div>
+</div>
+<div class="nav-area">
+  <button class="btn-p" onclick="go(12)">게임 시작 →</button>
+  <button class="btn-s" onclick="go(12)">건너뛰기</button>
+</div>
+</div>
+
+<!-- ■ 씬 12: 2막 게임 -->
+<div class="sc" id="s12">
+<div class="prog"><div class="prog-bar"><div class="prog-fill" style="width:44%"></div></div><span class="prog-lbl">2막 · 1380년</span></div>
+<div class="game-body">
+  <div class="dial-wrap">
+    <div class="dial npc-left">
+      <div class="dial-who">병사</div>
+      <div class="dial-text">"장군. 아기발도는 온몸을 갑옷으로 감쌌습니다. 화살이 통하지 않는다고 합니다. 어떻게 하시겠습니까?"</div>
+    </div>
+  </div>
+  <div class="ch-area">
+    <div class="ch-label">아기발도와 싸우시겠습니까?</div>
+    <div class="ch-list">
+      <button class="ch" id="g12a" onclick="tryPick(12,'a','x')">① 싸운다</button>
+      <button class="ch" id="g12b" onclick="tryPick(12,'b','x')">② 싸우지 않는다</button>
+    </div>
+    <div class="block-msg" id="bm12">
+      <span id="bm12-text"></span><br>
+      <button onclick="resetBlock(12)" style="margin-top:6px;background:transparent;border:1px solid #503010;border-radius:4px;padding:4px 12px;color:#a07040;font-size:12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;">↩ 다시 선택하기</button>
+    </div>
+  </div>
+</div>
+</div>
+<div class="sc scrollable" id="s13">
+<div class="prog"><div class="prog-bar"><div class="prog-fill" style="width:44%"></div></div><span class="prog-lbl">2막 · 깊게 살펴보기</span></div>
+<div class="deep-body">
+  <div>
+    <div class="deep-tag">이성계의 선택 · 깊게 살펴보기</div>
+    <div class="deep-title">두 선택지 중 어느 것도 이성계의 선택이 아니었습니다</div>
+    <div class="deep-text">
+      싸웠다면 — 화살이 통하지 않는 아기발도를 상대하다 시간을 잃었습니다.<br>
+      싸우지 않았다면 — 왜구 10만이 계속 밀고 올라왔습니다.<br><br>
+      이성계는 세 번째 길을 찾았습니다.<br><br>
+      이지란이 먼저 말했습니다.<br>
+      <em>"장군. 제가 투구를 맞히겠습니다. 그 순간 장군이 쏘십시오."</em><br><br>
+      이성계는 혼자 쏘지 않았습니다.<br>
+      직접 이기려 하지 않고 — 내 사람을 믿었습니다.<br><br>
+      이지란의 화살이 투구 끈을 끊었습니다. 이성계의 화살이 날아갔습니다. 아기발도가 쓰러졌습니다. 왜구 진영이 무너졌습니다.<br><br>
+      이지란은 여진족 출신이었습니다. 고려인이 아니었습니다. 이성계는 그 차이를 따지지 않았습니다. 함께 싸우는 사람이면 내 사람이었습니다.<br><br>
+      내 사람을 믿었기 때문에 방법이 생겼습니다.<br>
+      방법이 생겼기 때문에 내 사람을 지킬 수 있었습니다.
+    </div>
+    <div class="deep-quote">
+      방법이 없다고 생각하면 방법이 없습니다.<br>
+      방법을 찾고자 하면 방법을 찾을 수 있습니다.<br><br>
+      이성계는 내 사람을 믿는 것이<br>
+      내 사람을 지키는 방법임을 알았습니다.
+    </div>
+  </div>
+</div>
+<div class="nav-area">
+  <button class="btn-p" onclick="go(14)">다음 막 →</button>
+</div>
+</div>
+<!-- ══════════════════════════════════════════
+     3막 — 명분을 만든다
+═══════════════════════════════════════════ -->
+<!-- ■ 씬 14: 3막 나레이션 -->
+<div class="sc" id="s14">
+<div class="art" style="height:150px;">
+<svg viewBox="0 0 640 150" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="150" fill="#060402"/>
+  <!-- 개경 조정 -->
+  <rect x="100" y="30" width="440" height="90" rx="2" fill="#180e06" stroke="#3a2010" stroke-width="1.5"/>
+  <path d="M80 30 L320 10 L560 30Z" fill="#1e1208" stroke="#3a2010" stroke-width="1"/>
+  <!-- 최영 -->
+  <circle cx="220" cy="78" r="8" fill="#6a3820"/><rect x="212" y="86" width="16" height="22" fill="#6a3820" rx="2"/>
+  <!-- 이성계 -->
+  <circle cx="420" cy="78" r="7" fill="#5a2e10"/><rect x="413" y="85" width="14" height="20" fill="#5a2e10" rx="2"/>
+  <!-- 왕 -->
+  <circle cx="320" cy="60" r="9" fill="#6a4818" stroke="#d0a040" stroke-width="1.5"/><rect x="311" y="69" width="18" height="24" fill="#6a4818" rx="2"/>
+  <!-- 병사 실루엣들 -->
+  <circle cx="160" cy="110" r="5" fill="#4a2a0a"/><circle cx="480" cy="110" r="5" fill="#4a2a0a"/>
+</svg>
+</div>
+<div class="narr-body">
+  <div class="narr-era">3막 · 1388년</div>
+  <div class="narr-text" id="narr14"></div>
+</div>
+<div class="nav-area" id="nav14" style="display:none;">
+  <button class="btn-p" onclick="go(15)">시대 상황 보기 →</button>
+</div>
+</div>
+
+<!-- ■ 씬 15: 3막 시대상황 -->
+<div class="sc scrollable" id="s15">
+<div class="context-body">
+  <div class="ctx-year">1388</div>
+  <div class="ctx-title">왕명이 내려왔다 — 그리고 위화도</div>
+  <div class="ctx-body">
+    명나라가 고려 북쪽 땅을 내놓으라 통보했습니다. 최영 장군이 격노했습니다. 우왕이 결정했습니다.<br><br>
+    <strong>요동 정벌. 병사 4만 8천. 지휘관은 이성계.</strong><br><br>
+    이성계는 사불가론(四不可論)을 올렸습니다. 이 전쟁이 불가능한 네 가지 이유였습니다.<br>
+    ① 소국이 대국을 거역하는 것<br>
+    ② 농번기에 군사를 동원하는 것<br>
+    ③ 온 나라 군대를 비우면 왜구가 빈틈을 탈 것<br>
+    ④ 장마철이라 활이 녹고 병사들이 역병에 걸릴 것<br><br>
+    그러나 우왕과 최영은 묵살했습니다. 이성계는 4만 8천을 이끌고 출정했습니다.<br><br>
+    <strong>위화도. 열흘째 비가 내렸습니다. 압록강이 범람했습니다. 식량이 떨어졌습니다.</strong><br>
+    개경에서 최영의 명령이 왔습니다.<br>"즉시 진격하라."
+  </div>
+</div>
+<div class="nav-area">
+  <button class="btn-p" onclick="go(16)">게임 시작 →</button>
+  <button class="btn-s" onclick="go(16)">건너뛰기</button>
+</div>
+</div>
+
+<!-- ■ 씬 16: 3막 게임 -->
+<div class="sc" id="s16">
+<div class="prog"><div class="prog-bar"><div class="prog-fill" style="width:58%"></div></div><span class="prog-lbl">3막 · 1388년 · 위화도</span></div>
+<div class="game-body">
+  <div class="dial-wrap">
+    <div class="dial npc-left">
+      <div class="dial-who">전령</div>
+      <div class="dial-text">"장군. 개경에서 왔습니다. 최영 장군의 명입니다. 즉시 진격하라 하셨습니다."</div>
+    </div>
+  </div>
+  <div class="ch-area">
+    <div class="ch-label">왕명을 따르시겠습니까?</div>
+    <div class="ch-list">
+      <button class="ch" id="g16a" onclick="tryPick(16,'a','x')">① 따른다 — 진격한다</button>
+      <button class="ch" id="g16b" onclick="tryPick(16,'b','x')">② 따르지 않는다 — 회군한다</button>
+    </div>
+    <div class="block-msg" id="bm16">
+      <span id="bm16-text"></span><br>
+      <button onclick="resetBlock(16)" style="margin-top:6px;background:transparent;border:1px solid #503010;border-radius:4px;padding:4px 12px;color:#a07040;font-size:12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;">↩ 다시 선택하기</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ■ 씬 17: 3막 깊게 살펴보기 -->
+<div class="sc scrollable" id="s17">
+<div class="prog"><div class="prog-bar"><div class="prog-fill" style="width:58%"></div></div><span class="prog-lbl">3막 · 깊게 살펴보기</span></div>
+<div class="deep-body">
+  <div>
+    <div class="deep-tag">이성계의 선택 · 깊게 살펴보기</div>
+    <div class="deep-title">두 선택지 중 어느 것도 이성계의 선택이 아니었습니다</div>
+    <div class="deep-text">
+      따랐다면 — 명나라군 100만 앞에 4만 8천이 무너졌습니다.<br>
+      따르지 않았다면 — 그냥 거부하면 반역이 됩니다. 내 사람들이 역적의 가족이 됩니다.<br><br>
+      이성계는 세 번째 길을 찾았습니다.<br><br>
+      출정 전에 사불가론(四不可論)을 올렸습니다.<br>
+      이 전쟁이 불가능한 네 가지 이유를 기록해뒀습니다.<br>
+      우왕과 최영은 묵살했습니다. 그래도 기록은 남았습니다.<br><br>
+      따르는 것도 아니었고 거부하는 것도 아니었습니다.<br>
+      따르면서 돌아설 명분을 미리 만들었습니다.<br><br>
+      위화도에서 군대를 돌렸을 때 — 역적이 아니었습니다.<br>
+      사불가론이 있었으니까요.<br><br>
+      개경으로 돌아오는 날, 백성들이 술과 음식을 들고 마중 나왔습니다.<br>
+      4만 8천 명이 역적의 가족이 되지 않았습니다.<br>
+      그들이 내 사람으로 남았습니다.
+    </div>
+    <div class="deep-quote">
+      방법이 없다고 생각하면 방법이 없습니다.<br>
+      방법을 찾고자 하면 방법을 찾을 수 있습니다.<br><br>
+      이성계는 내 사람을 지키기 위해<br>
+      따를지 말지가 아니라<br>
+      <strong>미리 명분을 만드는 것</strong>이 방법임을 알았습니다.
+    </div>
+  </div>
+</div>
+<div class="nav-area">
+  <button class="btn-p" onclick="go(18)">다음 막 →</button>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     4막 — 정답이 없다
+═══════════════════════════════════════════ -->
+<!-- ■ 씬 18: 4막 나레이션 -->
+<div class="sc" id="s18">
+<div class="art" style="height:150px;">
+<svg viewBox="0 0 640 150" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="150" fill="#060402"/>
+  <!-- 선죽교 밤 -->
+  <rect x="0" y="120" width="640" height="30" fill="#030202"/>
+  <rect x="220" y="115" width="200" height="10" fill="#2a1808" stroke="#4a2810" stroke-width="1"/>
+  <!-- 다리 기둥 -->
+  <rect x="270" y="115" width="8" height="35" fill="#3a2010"/>
+  <rect x="362" y="115" width="8" height="35" fill="#3a2010"/>
+  <!-- 정몽주 실루엣 -->
+  <circle cx="320" cy="98" r="7" fill="#5a3818"/><rect x="313" y="105" width="14" height="20" fill="#5a3818" rx="2"/>
+  <!-- 이방원 부하 실루엣 -->
+  <circle cx="370" cy="100" r="6" fill="#4a2e10"/><rect x="364" y="106" width="12" height="18" fill="#4a2e10" rx="2"/>
+  <circle cx="390" cy="104" r="5" fill="#3a2408"/><rect x="385" y="109" width="10" height="16" fill="#3a2408" rx="2"/>
+  <!-- 달 -->
+  <circle cx="80" cy="40" r="18" fill="#5a4820" stroke="#a08040" stroke-width="1.5"/>
+  <circle cx="86" cy="38" r="15" fill="#060402"/>
+</svg>
+</div>
+<div class="narr-body">
+  <div class="narr-era">4막 · 1392년</div>
+  <div class="narr-text" id="narr18"></div>
+</div>
+<div class="nav-area" id="nav18" style="display:none;">
+  <button class="btn-p" onclick="go(19)">시대 상황 보기 →</button>
+</div>
+</div>
+
+<!-- ■ 씬 19: 4막 시대상황 -->
+<div class="sc scrollable" id="s19">
+<div class="context-body">
+  <div class="ctx-year">1392</div>
+  <div class="ctx-title">정몽주 — 이성계가 포기하지 못한 사람</div>
+  <div class="ctx-body">
+    정몽주. 이성계가 가장 아끼는 사람 중 하나였습니다.<br><br>
+    황산대첩에서 함께 싸웠습니다. 위화도 회군도 지지했습니다. 오랫동안 동지였습니다.<br><br>
+    그런데 새 나라는 원하지 않았습니다. 고려를 바꾸고 싶었지, 고려를 없애고 싶지 않았습니다.<br><br>
+    이성계가 낙마 사고로 다치자 정몽주가 움직였습니다. 정도전과 조준을 귀양 보냈습니다. 이성계를 고립시키려 했습니다.<br><br>
+    이방원이 하여가를 지어 정몽주에게 보냈습니다. 함께 하자는 제안이었습니다. 정몽주는 단심가로 답했습니다.<br><br>
+    <strong>"이 몸이 죽고 죽어 일백 번 고쳐 죽어, 백골이 진토 되어 넋이라도 있고 없고, 님 향한 일편단심이야 가실 줄이 있으랴."</strong><br><br>
+    이방원이 선죽교에서 정몽주를 쳤습니다.
+  </div>
+</div>
+<div class="nav-area">
+  <button class="btn-p" onclick="go(20)">게임 시작 →</button>
+  <button class="btn-s" onclick="go(20)">건너뛰기</button>
+</div>
+</div>
+
+<!-- ■ 씬 20: 4막 게임 — 정답 없음 -->
+<div class="sc" id="s20">
+<div class="prog"><div class="prog-bar"><div class="prog-fill" style="width:78%"></div></div><span class="prog-lbl">4막 · 1392년</span></div>
+<div class="game-body">
+  <div class="dial-wrap">
+    <div class="dial king">
+      <div class="dial-who">신하</div>
+      <div class="dial-text">"전하. 이방원 공이 정몽주를 선죽교에서 쳤습니다."</div>
+    </div>
+  </div>
+  <div class="ch-area">
+    <div class="ch-label">이방원을 어떻게 할 것인가?</div>
+    <div class="ch-list">
+      <button class="ch" id="g20a" onclick="pick4(0)">① 벌한다 — 대신을 함부로 친 죄를 묻는다</button>
+      <button class="ch" id="g20b" onclick="pick4(1)">② 감싼다 — 조선을 위한 일이었다</button>
+      <button class="ch" id="g20c" onclick="pick4(2)">③ 모른 척한다 — 아무것도 하지 않는다</button>
+    </div>
+    <div class="no-answer-msg" id="nam">
+      <span id="nam-text"></span>
+    </div>
+    <div class="no-answer-nav" id="nan">
+      <button class="btn-p" onclick="go(21)">깊게 살펴보기 →</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ■ 씬 21: 4막 깊게 살펴보기 -->
+<div class="sc scrollable" id="s21">
+<div class="prog"><div class="prog-bar"><div class="prog-fill" style="width:78%"></div></div><span class="prog-lbl">4막 · 깊게 살펴보기</span></div>
+<div class="deep-body">
+  <div>
+    <div class="deep-tag">이성계의 선택 · 깊게 살펴보기</div>
+    <div class="deep-title">지키는 것과 감싸는 것은 다르다</div>
+    <div class="deep-text">
+      이성계는 이방원을 벌하지 않았습니다. 기록은 분개했다고 전하지만 — 실상은 알 길이 없습니다.<br><br>
+      벌했다면 — 이방원을 잃었을 것입니다. 명분은 지켰겠지만 내 사람을 잃습니다.<br>
+      모른 척했다면 — 명분을 잃었습니다. 힘으로 이기면 적이 쓰러진다고 했습니다. 정몽주는 쓰러졌습니다. 사라진 것이 아니었습니다. 6년 후 이방원이 다시 칼을 들었습니다. 이번엔 형제들을 향해.<br><br>
+      이성계는 평생 내 사람을 지켰습니다. 때를 알았습니다. 방법을 찾았습니다. 동지를 믿었습니다. 명분을 만들었습니다.<br><br>
+      그런데 밖을 향한 방법이 안을 향할 때는 달랐습니다.<br><br>
+      <strong>지키는 것은 내 사람이 옳을 때 함께 서는 것입니다.<br>
+      감싸는 것은 내 사람이 틀렸을 때도 함께 서는 것입니다.</strong><br><br>
+      이방원이 정몽주를 쳤을 때 — 이성계는 지키지 않았습니다. 감쌌습니다.
+    </div>
+    <div class="deep-quote">
+      내 사람을 지키려면<br>
+      내 사람에게도 명분이 있어야 한다.<br><br>
+      지키는 것과 감싸는 것은 다르다.<br>
+      이것이 이 막에서 정답이 없는 이유다.
+    </div>
+  </div>
+</div>
+<div class="nav-area">
+  <button class="btn-p" onclick="go(22)">에필로그 →</button>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     에필로그
+═══════════════════════════════════════════ -->
+<!-- ■ 씬 22: 에필로그 -->
+<div class="sc scrollable" id="s22">
+<div class="prog"><div class="prog-bar"><div class="prog-fill" style="width:100%"></div></div><span class="prog-lbl">에필로그 · 1398년</span></div>
+<div class="epi-body">
+  <div class="epi-year">1398년 · 함경도</div>
+  <div class="epi-big">왕좌를 떠났다</div>
+  <div class="epi-text">
+    1392년 조선이 열렸습니다. 이성계는 왕이 됐습니다.<br><br>
+    1398년. 왕이 된 지 6년이었습니다. 이방원이 이복동생들을 쳤습니다. 이성계가 아끼던 아들들이었습니다. 이방원도 내 사람이었습니다. 쓰러진 아들들도 내 사람이었습니다.<br><br>
+    내 사람이 내 사람을 잃게 했습니다.<br><br>
+    밖의 적은 막을 수 있었습니다. 때를 알았습니다. 방법을 찾았습니다. 동지를 믿었습니다. 명분을 만들었습니다.<br><br>
+    그런데 안은 달랐습니다. 이방원이 정몽주를 쳤을 때 감쌌습니다. 그게 시작이었습니다.<br><br>
+    이성계는 왕좌를 떠났습니다. 함경도로 돌아갔습니다. 활을 들고. 혼자서.
+  </div>
+  <div class="epi-quote">
+    장군 이성계는 훌륭했습니다.<br>
+    때를 알았습니다. 방법을 찾았습니다.<br>
+    동지를 믿었습니다. 명분을 만들었습니다.<br><br>
+    왕 이성계는 어땠을까요.<br><br>
+    지키는 것과 감싸는 것은 다릅니다.<br>
+    이성계는 이 사실을 알았을까요.<br><br>
+    이 사실을 아는 당신은 —<br>
+    <strong>어떻게 지키시겠습니까?</strong>
+  </div>
+  <div class="epi-text" style="font-size:13px;color:var(--text3);margin-bottom:8px;">당신의 선택 기록</div>
+  <div id="epi-log" style="padding:12px 16px;background:var(--bg2);border:1px solid var(--border2);border-radius:6px;font-family:'Noto Serif KR',serif;font-size:13px;color:#706050;line-height:2.2;margin-bottom:20px;"></div>
+
+  <!-- 후기 입력 — 바로 삽입 -->
+  <div style="margin-bottom:8px;">
+    <div class="rv-title" style="font-size:15px;margin-bottom:6px;">후기를 남겨주세요</div>
+    <div class="rv-sub" style="font-size:12px;margin-bottom:10px;">소중한 의견이 다음 편 제작에 반영됩니다.</div>
+    <input class="rv-input" id="rv-nick" type="text" placeholder="닉네임 (선택)" style="margin-bottom:8px;">
+    <textarea class="rv-textarea" id="rv-body" placeholder="어떠셨나요? 자유롭게 남겨주세요." style="height:90px;margin-bottom:8px;"></textarea>
+    <button class="btn-p" onclick="submitReview()" style="width:100%;border-radius:6px;padding:12px;margin-bottom:8px;">후기 보내기</button>
+    <div class="rv-sent" id="rv-sent">✓ 후기가 전달됐습니다. 감사합니다!</div>
+  </div>
+</div>
+<div class="nav-area" style="flex-wrap:wrap;gap:8px;">
+  <button class="btn-p" onclick="startQuiz()">📝 역사 퀴즈 도전 →</button>
+  <button class="btn-s" onclick="go(0)">처음으로</button>
+  <button class="btn-s" onclick="location.href='../joseon-kings.html'">📜 왕 선택</button>
+  <button class="btn-s" onclick="location.href='../index.html'">🏠 메인</button>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     퀴즈
+═══════════════════════════════════════════ -->
+<!-- ■ 씬 23: 퀴즈 -->
+<div class="sc" id="s23">
+<div class="prog">
+  <div class="prog-bar" id="quiz-prog-wrap"><div class="prog-fill" id="quiz-prog-fill" style="width:0%"></div></div>
+  <span class="prog-lbl" id="quiz-prog-lbl">퀴즈 0 / 20</span>
+  <span class="quiz-timer" id="quiz-timer" style="margin-left:8px;">0.0초</span>
+</div>
+<div class="quiz-body">
+  <div class="quiz-num" id="quiz-num">문제 1</div>
+  <div class="quiz-question" id="quiz-question"></div>
+  <div class="quiz-choices" id="quiz-choices"></div>
+</div>
+</div>
+
+<!-- ■ 씬 24: 퀴즈 결과 -->
+<div class="sc" id="s24">
+<div class="prog"><div class="prog-bar"><div class="prog-fill" style="width:100%"></div></div><span class="prog-lbl">퀴즈 완료</span></div>
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;text-align:center;gap:16px;">
+  <div style="font-family:'Noto Serif KR',serif;font-size:14px;color:var(--text3);">소요 시간</div>
+  <div id="result-time" style="font-family:'Noto Serif KR',serif;font-size:36px;font-weight:700;color:var(--gold3);"></div>
+  <div id="result-score" style="font-family:'Noto Serif KR',serif;font-size:20px;color:var(--text);"></div>
+  <div id="result-msg" style="font-family:'Noto Serif KR',serif;font-size:14px;color:var(--text2);line-height:2;max-width:300px;"></div>
+</div>
+<div class="nav-area" style="justify-content:center;flex-wrap:wrap;gap:8px;">
+  <button class="btn-p" onclick="startQuiz()">↺ 다시 도전</button>
+  <button class="btn-s" onclick="go(22)">에필로그로 →</button>
+  <button class="btn-s" onclick="go(0)">처음으로</button>
+  <button class="btn-s" onclick="location.href='../joseon-kings.html'">📜 왕 선택</button>
+  <button class="btn-s" onclick="location.href='../index.html'">🏠 메인</button>
+</div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ── Supabase ── */
+const SUPA_URL='https://qwsjofkabllbnbsgndun.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3c2pvZmthYmxsYm5ic2duZHVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNDc1NTYsImV4cCI6MjA5MTcyMzU1Nn0.2ryUWHRVqNuJ2ylHYr9tvgFwGK_EsVM7KMeuOpgLnks';
+const sb=supabase.createClient(SUPA_URL,SUPA_KEY);
+
+/* ── 로그인 상태 확인 (태조편은 누구나 접근 가능) ── */
+let currentUser = null;
+(async()=>{
+  const{data:{session}}=await sb.auth.getSession();
+  if(session) currentUser=session.user;
+  // 메뉴에 로그인 상태 반영
+  updateGameNav();
+})();
+
+function updateGameNav(){
+  const mw=document.querySelector('.menu-wrap');
+  if(!mw)return;
+  const loginBtn=document.createElement('button');
+  loginBtn.className='menu-item';
+  if(currentUser){
+    const nick=currentUser.user_metadata?.nickname||currentUser.email.split('@')[0];
+    loginBtn.textContent='✨ '+nick+' 님';
+    loginBtn.onclick=()=>location.href='../joseon-kings.html';
+  }else{
+    loginBtn.textContent='로그인 / 회원가입';
+    loginBtn.onclick=()=>location.href='../index.html';
+  }
+  const divider=document.createElement('div');
+  divider.className='menu-divider';
+  mw.querySelector('.menu-drop')?.prepend(divider);
+  mw.querySelector('.menu-drop')?.prepend(loginBtn);
 }
+
+// ── 퀴즈 문제 ─────────────────────────────────────────────
+const QUIZ=[
+  {q:'이성계의 아버지 이름은?',o:['이자겸','이자춘','이인임','이방원'],a:1},
+  {q:'이성계 가문은 함경도 어느 지역의 실력자였나?',o:['개경','전주','쌍성','평양'],a:2},
+  {q:'원나라가 흔들리기 시작한 이유가 아닌 것은?',o:['황실 권력 싸움','가뭄과 홍수','백성들의 반란','이성계의 저항'],a:3},
+  {q:'이성계의 아버지가 공민왕 편으로 돌아선 사건은?',o:['홍건적 격퇴','쌍성총관부 수복','황산대첩','위화도 회군'],a:1},
+  {q:'쌍성총관부가 수복된 해는?',o:['1350년','1356년','1362년','1388년'],a:1},
+  {q:'이성계와 평생 함께한 여진족 출신 장수는?',o:['이방원','정도전','이지란','최영'],a:2},
+  {q:'1361년 홍건적이 침입했을 때 이성계의 병사 수는?',o:['500명','1천명','2천명','5천명'],a:2},
+  {q:'홍건적 선봉의 병사 수는?',o:['1천명','2천명','3천명','5천명 이상'],a:3},
+  {q:'황산대첩에서 왜구를 이끈 소년 장수는?',o:['아기발도','나하추','탁도경','아지발도'],a:0},
+  {q:'황산대첩이 일어난 해는?',o:['1370년','1375년','1380년','1385년'],a:2},
+  {q:'이지란이 황산대첩에서 아기발도를 상대한 방법은?',o:['정면 돌파','투구 끈을 화살로 끊어 빈틈을 만들었다','기습 공격','함정을 팠다'],a:1},
+  {q:'요동 정벌을 명한 인물은?',o:['이성계','정몽주','최영과 우왕','이방원'],a:2},
+  {q:'사불가론에서 이성계가 든 이유가 아닌 것은?',o:['소국이 대국을 거역함','농번기에 군사 동원','병사들의 급여가 부족함','장마철이라 활이 녹음'],a:2},
+  {q:'이성계가 회군한 장소는?',o:['압록강','위화도','한강','강화도'],a:1},
+  {q:'위화도에서 비가 며칠째 내렸을 때 이성계가 회군을 결정했나?',o:['3일째','5일째','열흘째','보름째'],a:2},
+  {q:'개경으로 돌아오는 이성계를 어떻게 맞이했나?',o:['백성들이 막아섰다','백성들이 술과 음식을 들고 마중 나왔다','아무도 없었다','병사들이 반발했다'],a:1},
+  {q:'정몽주가 피살된 장소는?',o:['경복궁','선죽교','위화도','개경 저잣거리'],a:1},
+  {q:'정몽주를 피살한 사람은?',o:['이성계','정도전','이방원','최영'],a:2},
+  {q:'왕자의 난이 일어난 해는?',o:['1392년','1394년','1396년','1398년'],a:3},
+  {q:'왕자의 난 이후 이성계가 떠난 곳은?',o:['전주','평양','함경도','강화도'],a:2},
+];
+
+// ── 퀴즈 로직 ────────────────────────────────────────────
+const QUIZ_TIME_LIMIT = 60; // 제한시간 60초
+let quizIdx=0,quizCorrect=0,quizStart=0,quizTimer=null,quizCountdown=null,quizLocked=false;
+
+function startQuiz(){
+  quizIdx=0;quizCorrect=0;quizStart=Date.now();quizLocked=false;
+  const c=getCurrentScene();if(c>=0)sceneHistory.push(c);
+  switchScene(23);
+  showQuestion();
+  startQuizTimer();
+}
+
+function startQuizTimer(){
+  clearInterval(quizTimer);
+  clearInterval(quizCountdown);
+
+  // 경과 시간 표시 (카운트업)
+  quizCountdown=setInterval(()=>{
+    const elapsed=(Date.now()-quizStart)/1000;
+    const el=document.getElementById('quiz-timer');
+    if(el) el.textContent=elapsed.toFixed(1)+'초';
+  },100);
+}
+
+function showQuestion(){
+  const q=QUIZ[quizIdx];
+  document.getElementById('quiz-num').textContent='문제 '+(quizIdx+1);
+  document.getElementById('quiz-prog-fill').style.width=((quizIdx/20)*100)+'%';
+  document.getElementById('quiz-prog-lbl').textContent='퀴즈 '+quizIdx+' / 20';
+  document.getElementById('quiz-question').textContent=q.q;
+  const cEl=document.getElementById('quiz-choices');
+  cEl.innerHTML='';quizLocked=false;
+  q.o.forEach((opt,i)=>{
+    const btn=document.createElement('button');
+    btn.textContent='① ② ③ ④'.split(' ')[i]+'  '+opt;
+    btn.style.cssText='width:100%;text-align:left;background:#0a0806;border:1px solid var(--border2);border-radius:6px;padding:12px 15px;color:var(--text2);font-family:\'Noto Serif KR\',serif;font-size:14px;line-height:1.6;cursor:pointer;transition:all .15s;';
+    btn.onmouseover=()=>{if(!quizLocked)btn.style.background='#140e08';};
+    btn.onmouseout=()=>{if(!quizLocked&&btn.dataset.state!=='correct'&&btn.dataset.state!=='wrong')btn.style.background='#0a0806';};
+    btn.onclick=()=>quizPick(i,q.a,btn);
+    cEl.appendChild(btn);
+  });
+}
+
+function quizPick(i,correct,btn){
+  if(quizLocked)return;
+  if(i===correct){
+    quizCorrect++;
+    btn.style.background='#081a0a';btn.style.borderColor='var(--green2)';btn.style.color='var(--green3)';
+    btn.dataset.state='correct';quizLocked=true;
+    setTimeout(nextQuestion,600);
+  } else {
+    btn.style.background='#1a0806';btn.style.borderColor='var(--red2)';btn.style.color='var(--red3)';
+    btn.dataset.state='wrong';quizLocked=true;
+    setTimeout(()=>{
+      btn.style.background='#0a0806';btn.style.borderColor='var(--border2)';btn.style.color='var(--text2)';
+      btn.dataset.state='';quizLocked=false;
+    },2000);
+  }
+}
+
+function nextQuestion(){
+  quizIdx++;
+  if(quizIdx>=QUIZ.length){clearInterval(quizCountdown);showQuizResult(false);return;}
+  document.getElementById('quiz-prog-fill').style.width=((quizIdx/20)*100)+'%';
+  document.getElementById('quiz-prog-lbl').textContent='퀴즈 '+quizIdx+' / 20';
+  showQuestion();
+}
+
+async function showQuizResult(timeout){
+  const elapsed=parseFloat(((Date.now()-quizStart)/1000).toFixed(1));
+  clearInterval(quizCountdown);
+  const c=getCurrentScene();if(c>=0)sceneHistory.push(c);
+  switchScene(24);
+  document.getElementById('result-time').textContent=elapsed+'초';
+  document.getElementById('result-score').textContent=quizCorrect+' / '+QUIZ.length+' 정답';
+
+  const perfect=(quizCorrect===QUIZ.length);
+  const epGiven=(perfect&&!timeout)?5:0;
+
+  let msg='';
+  if(timeout) msg='시간이 초과됐습니다. 다시 도전해보세요!';
+  else if(perfect) msg='완벽합니다! 이성계의 시대를 꿰뚫었습니다. ✨ 환생포인트 5 획득!';
+  else if(quizCorrect>=16) msg='훌륭합니다. 이성계를 깊이 이해했습니다.';
+  else if(quizCorrect>=12) msg='좋습니다. 다시 도전하면 더 선명해질 거예요.';
+  else msg='다시 도전해보세요. 이성계의 이야기가 기다립니다.';
+  document.getElementById('result-msg').textContent=msg;
+
+  if(!currentUser) return;
+
+  // 퀴즈 기록 저장
+  await sb.from('quiz_records').insert({
+    user_id: currentUser.id,
+    episode: 1,
+    elapsed: elapsed,
+    perfect: perfect,
+    ep_given: epGiven
+  });
+
+  // EP 지급 및 환생권 체크
+  if(epGiven>0){
+    const{data:profile}=await sb.from('profiles')
+      .select('ep_balance, rebirth_tickets')
+      .eq('id',currentUser.id).single();
+    if(profile){
+      const newEp = profile.ep_balance + epGiven;
+      const newTickets = profile.rebirth_tickets + Math.floor(newEp/100);
+      const remainEp = newEp % 100;
+
+      await sb.from('profiles').update({
+        ep_balance: remainEp,
+        rebirth_tickets: newTickets
+      }).eq('id',currentUser.id);
+
+      await sb.from('ep_history').insert({
+        user_id: currentUser.id,
+        amount: epGiven,
+        reason: '태조편 퀴즈 100점 (60초 이내)'
+      });
+
+      // 환생권 획득 알림
+      if(newTickets > profile.rebirth_tickets){
+        const gained = newTickets - profile.rebirth_tickets;
+        document.getElementById('result-msg').textContent
+          += ' 🎉 환생권 '+gained+'장 획득!';
+      }
+    }
+  }
+}
+
+// ── 에필로그 로그 ─────────────────────────────────────────
+const LOG_MAP={
+  0:{follow:'왕명을 따른다고 했다',defy:'왕명을 따르지 않겠다고 했다',none:'선택하지 않았다 — 때를 놓쳤다'},
+  4:{a:'싸웠다 — 방법을 찾지 못했다',b:'싸우지 않았다 — 방법을 찾지 못했다'},
+  8:{a:'싸웠다 — 방법을 찾지 못했다',b:'싸우지 않았다 — 방법을 찾지 못했다'},
+  12:{a:'싸웠다 — 방법을 찾지 못했다',b:'싸우지 않았다 — 방법을 찾지 못했다'},
+  16:{a:'따랐다 — 방법을 찾지 못했다',b:'따르지 않았다 — 방법을 찾지 못했다'},
+  20:{a:'이방원을 벌했다',b:'이방원을 감쌌다',c:'모른 척했다'},
+};
+let picks={};
+function buildEpi(){
+  const lines=[];
+  // 오프닝 선택
+  if(opChoice&&LOG_MAP[0]&&LOG_MAP[0][opChoice])lines.push('[오프닝] '+LOG_MAP[0][opChoice]);
+  [4,8,12,16,20].forEach(s=>{
+    if(picks[s]&&LOG_MAP[s]&&LOG_MAP[s][picks[s]])lines.push(LOG_MAP[s][picks[s]]);
+  });
+  const el=document.getElementById('epi-log');
+  if(el)el.innerHTML=lines.length?lines.join('<br>'):'—';
+}
+
+// ── 선택지 처리 ──────────────────────────────────────────
+const WRONG_MSG={
+  4:{
+    a:'싸웠습니다.\n지방 호족 하나가 원나라를 이길 수 없었습니다.\n집안이 사라졌을 것입니다.\n\n이성계의 아버지는 다른 방법을 찾았습니다.',
+    b:'싸우지 않았습니다.\n그냥 버티는 것이었습니다.\n기회는 오지 않았을 것입니다.\n\n이성계의 아버지는 다른 방법을 찾았습니다.',
+  },
+  8:{
+    a:'싸웠습니다.\n정면 돌파. 2천으로 5천을 맞받아쳤습니다.\n많이 다쳤습니다. 이겼지만 값이 비쌌습니다.\n\n이성계는 다른 방법을 찾았습니다.',
+    b:'싸우지 않았습니다.\n후퇴했습니다.\n그 사이 마을 세 곳이 불탔습니다.\n다른 내 사람을 잃었습니다.\n\n이성계는 다른 방법을 찾았습니다.',
+  },
+  12:{
+    a:'싸웠습니다.\n화살이 통하지 않는 아기발도를 상대하다 시간을 잃었습니다.\n\n이성계는 다른 방법을 찾았습니다.',
+    b:'싸우지 않았습니다.\n왜구가 계속 밀고 올라왔습니다.\n내 사람들이 밀렸습니다.\n\n이성계는 다른 방법을 찾았습니다.',
+  },
+  16:{
+    a:'따랐습니다.\n진격했습니다.\n명나라군 100만 앞에 4만 8천이 무너졌습니다.\n\n이성계는 다른 방법을 찾았습니다.',
+    b:'따르지 않았습니다.\n그냥 거부했습니다.\n명분이 없었습니다. 반역이 됐습니다.\n내 사람들이 역적의 가족이 됐습니다.\n\n이성계는 다른 방법을 찾았습니다.',
+  },
+};
+
+const NO_ANSWER_MSG=[
+  '벌했다.\n이방원을 잃었다.\n명분은 지켰다.\n그런데 — 내 사람을 벌하면 다른 내 사람을 잃는다.',
+  '감쌌다.\n정몽주를 잃었다. 명분도 흔들렸다.\n힘으로 이기면 적이 쓰러진다.\n정몽주는 쓰러졌다. 사라진 것이 아니었다.\n6년 후 이방원이 다시 칼을 들었다.',
+  '모른 척했다.\n아무것도 하지 않았다.\n결국 감싼 것과 같았다.\n6년 후 이방원이 다시 칼을 들었다.',
+];
+
+function tryPick(scene, choice, answer){
+  picks[scene]=choice;
+  const btnId='g'+scene+choice;
+  const btn=document.getElementById(btnId);
+  if(!btn)return;
+
+  if(answer==='x'){
+    // 둘 다 선택 가능 — 결과 보여주고 버튼으로 넘어가기
+    const msg=WRONG_MSG[scene]&&WRONG_MSG[scene][choice];
+    ['a','b','c'].forEach(c=>{
+      const b=document.getElementById('g'+scene+c);
+      if(b&&c!==choice)b.classList.add('blocked');
+    });
+    btn.classList.add('iseonggye');
+    const bmEl=document.getElementById('bm'+scene);
+    const textEl=document.getElementById('bm'+scene+'-text');
+    if(bmEl){
+      // 기존 동적 버튼 제거 후 새로 추가
+      const oldBtn=bmEl.querySelector('button.next-btn');
+      if(oldBtn)oldBtn.remove();
+      if(textEl)textEl.innerHTML=msg?msg.replace(/\n/g,'<br>'):'';
+      const nextBtn=document.createElement('button');
+      nextBtn.innerHTML=scene===4?'이자춘은 어떻게 했을까 →':'이성계는 어떻게 했을까 →';
+      nextBtn.className='next-btn';
+      nextBtn.style.cssText='margin-top:10px;background:#0c0804;border:1px solid #3a2008;border-radius:4px;padding:8px 16px;color:#c09040;font-size:13px;cursor:pointer;font-family:\'Noto Serif KR\',serif;display:block;width:100%;';
+      nextBtn.onclick=()=>go(scene+1);
+      bmEl.classList.add('on');
+      bmEl.appendChild(nextBtn);
+    }
+    return;
+  }
+
+  if(choice===answer){
+    // 정답
+    ['a','b','c'].forEach(c=>{
+      const b=document.getElementById('g'+scene+c);
+      if(b&&c!==choice){b.classList.add('blocked');}
+    });
+    btn.classList.add('iseonggye');
+    setTimeout(()=>go(scene+1),700);
+  } else {
+    // 오답
+    const msg=WRONG_MSG[scene]&&WRONG_MSG[scene][choice];
+    if(msg){
+      btn.classList.add('wrong-shake');
+      setTimeout(()=>btn.classList.remove('wrong-shake'),400);
+      const bmEl=document.getElementById('bm'+scene);
+      const textEl=document.getElementById('bm'+scene+'-text');
+      if(textEl)textEl.innerHTML=msg.replace(/\n/g,'<br>');
+      if(bmEl)bmEl.classList.add('on');
+    }
+  }
+}
+
+function resetBlock(scene){
+  ['a','b','c'].forEach(c=>{
+    const b=document.getElementById('g'+scene+c);
+    if(b){b.classList.remove('blocked','iseonggye','wrong-shake');}
+  });
+  const bm=document.getElementById('bm'+scene);
+  if(bm){
+    bm.classList.remove('on');
+    // 동적으로 추가된 버튼 제거
+    const dynBtn=bm.querySelector('button[onclick]');
+    if(dynBtn)dynBtn.remove();
+  }
+  delete picks[scene];
+}
+
+// ── 4막 정답없음 처리 ────────────────────────────────────
+let pick4Done=false;
+function pick4(idx){
+  if(pick4Done)return;
+  picks[20]=['a','b','c'][idx];
+  const ids=['g20a','g20b','g20c'];
+  ids.forEach((id,i)=>{
+    const b=document.getElementById(id);
+    if(b&&i!==idx)b.classList.add('blocked');
+  });
+  const selected=document.getElementById(ids[idx]);
+  if(selected)selected.classList.add('iseonggye');
+  const nam=document.getElementById('nam');
+  const nan=document.getElementById('nan');
+  const txt=document.getElementById('nam-text');
+  if(txt)txt.innerHTML=NO_ANSWER_MSG[idx].replace(/\n/g,'<br>');
+  if(nam)nam.classList.add('on');
+  setTimeout(()=>{if(nan)nan.classList.add('on');},600);
+  pick4Done=true;
+}
+
+// ── 타이핑 ───────────────────────────────────────────────
+const NARR={
+  2:'쌍성.\n원나라의 지배를 받고 있는 고려의 땅.\n\n고려인으로 살아남기\n너무 팍팍하다.',
+  6:'스물여섯.\n\n처음이다.\n명령을 받은 것이 아니라\n내가 명령을 내려야 한다.\n\n2천 명이 나를 올려다보고 있다.',
+  10:'마흔다섯.\n\n왜구 10만이 전라도에 상륙했다.\n아군은 5천.\n\n소년 장수 아기발도가 이끌고 있다.',
+  14:'쉰셋.\n\n왕명이 내려왔다.\n요동 정벌.\n병사 4만 8천.\n\n이성계는 사불가론을 올렸다.\n그러나 묵살됐다.',
+  18:'쉰일곱.\n\n조선이 거의 다 왔다.\n\n그런데 이성계가 말에서 떨어졌다.\n정몽주가 그 틈을 이용했다.',
+};
+const NARR_NAV={2:'nav2',6:'nav6',10:'nav10',14:'nav14',18:'nav18'};
+let typingTimers=[],sceneToken=0;
+const SPD=44;
+
+function typeText(id,text,onDone){
+  typingTimers.forEach(clearTimeout);typingTimers=[];
+  const el=document.getElementById(id);if(!el)return;
+  el.innerHTML='';let i=0;const tok=sceneToken;
+  function tick(){
+    if(tok!==sceneToken)return;
+    if(i>=text.length){
+      el.innerHTML=el.innerHTML.replace('<span class="cursor"></span>','');
+      if(onDone)setTimeout(()=>{if(tok===sceneToken)onDone();},300);return;
+    }
+    const ch=text[i];
+    el.innerHTML=el.innerHTML.replace('<span class="cursor"></span>','')
+      +(ch==='\n'?'<br>':ch)+'<span class="cursor"></span>';
+    i++;
+    const d=ch==='\n'?SPD*5:ch==='.'||ch==='?'||ch==='!'?SPD*4:ch===','?SPD*2:SPD;
+    typingTimers.push(setTimeout(tick,d));
+  }
+  tick();
+}
+
+// ── 환생 ─────────────────────────────────────────────────
+const RB=[
+  {text:'1335년',hold:1500},
+  {text:'함경도 화령.',cls:'dim',hold:1500},
+  {text:'지금부터 — 당신이 이성계다.',cls:'final',hold:2400,last:true},
+];
+let rbTimers=[];
+function startRebirth(){
+  switchScene(1);rbTimers.forEach(clearTimeout);rbTimers=[];
+  const stage=document.getElementById('rb-stage'),portal=document.getElementById('rb-portal'),cta=document.getElementById('rb-cta');
+  if(stage)stage.innerHTML='';if(cta)cta.style.opacity='0';if(portal)portal.classList.remove('show');
+  setTimeout(()=>{
+    if(portal)setTimeout(()=>portal.classList.add('show'),200);
+    const FI=900,FO=600;let cur=500;
+    RB.forEach(step=>{
+      const el=document.createElement('div');
+      el.className='rb-word'+(step.cls?' '+step.cls:'');
+      el.textContent=step.text;el.style.cssText='opacity:0;transition:opacity '+(FI/1000)+'s ease;';
+      if(stage)stage.appendChild(el);const ref=el;
+      rbTimers.push(setTimeout(()=>{ref.style.opacity='1';},cur));
+      if(!step.last){
+        rbTimers.push(setTimeout(()=>{ref.style.transition='opacity '+(FO/1000)+'s ease';ref.style.opacity='0';setTimeout(()=>{if(ref.parentNode)ref.parentNode.removeChild(ref);},FO);},cur+FI+step.hold));
+        cur+=FI+step.hold+FO;
+      } else {
+        cur+=FI+step.hold;
+        rbTimers.push(setTimeout(()=>{if(cta){cta.style.transition='opacity 1s ease';cta.style.opacity='1';}},cur+300));
+      }
+    });
+  },400);
+}
+
+// ── 후기 전송 ────────────────────────────────────────────
+async function submitReview(){
+  const body=document.getElementById('rv-body').value.trim();
+  if(!body){alert('후기 내용을 입력해주세요.');return;}
+
+  const sentEl=document.getElementById('rv-sent');
+
+  // Supabase에 저장
+  if(currentUser){
+    await sb.from('reviews').insert({
+      user_id: currentUser.id,
+      episode: 1,
+      content: body
+    });
+
+    // EP +10 지급
+    const{data:profile}=await sb.from('profiles')
+      .select('ep_balance,rebirth_tickets').eq('id',currentUser.id).single();
+    if(profile){
+      const newEp=profile.ep_balance+10;
+      const newTickets=profile.rebirth_tickets+Math.floor(newEp/100);
+      const remainEp=newEp%100;
+      await sb.from('profiles')
+        .update({ep_balance:remainEp,rebirth_tickets:newTickets})
+        .eq('id',currentUser.id);
+      await sb.from('ep_history').insert({
+        user_id:currentUser.id,amount:10,reason:'태조편 후기 작성'
+      });
+      const msg=newTickets>profile.rebirth_tickets
+        ?'✓ 후기 감사합니다! ✨ EP +10 · 🎟 환생권 '+newTickets+'장!'
+        :'✓ 후기 감사합니다! ✨ 환생포인트 +10 지급!';
+      sentEl.textContent=msg;
+    }
+  } else {
+    // 비로그인 - 그냥 저장만 (익명)
+    await sb.from('reviews').insert({episode:1,content:body});
+    sentEl.textContent='✓ 후기가 전달됐습니다. 감사합니다!';
+  }
+
+  sentEl.style.display='block';
+  document.getElementById('rv-body').value='';
+  document.getElementById('rv-nick').value='';
+}
+
+// ── 메뉴 ─────────────────────────────────────────────────
+let forwardHistory=[];
+function toggleMenu(){document.getElementById('menu-drop')?.classList.toggle('open');}
+function closeMenu(){document.getElementById('menu-drop')?.classList.remove('open');}
+function menuGoBack(){closeMenu();goBack();}
+function menuGoForward(){
+  closeMenu();if(!forwardHistory.length)return;
+  const n=forwardHistory.pop();
+  const c=getCurrentScene();if(c>=0)sceneHistory.push(c);
+  switchScene(n);
+}
+function menuReload(){closeMenu();const c=getCurrentScene();if(c>=0)switchScene(c);}
+function menuGo(n){closeMenu();go(n);}
+document.addEventListener('click',e=>{
+  const mw=document.querySelector('.menu-wrap');
+  if(mw&&!mw.contains(e.target))closeMenu();
+});
+
+// ── switchScene ──────────────────────────────────────────
+let sceneHistory=[];
+function go(n){forwardHistory=[];const c=getCurrentScene();if(c>=0)sceneHistory.push(c);switchScene(n);}
+function goBack(){if(!sceneHistory.length){switchScene(0);return;}const c=getCurrentScene();if(c>=0)forwardHistory.push(c);switchScene(sceneHistory.pop());}
+function getCurrentScene(){const on=document.querySelector('.sc.on');return on?parseInt(on.id.replace('s','')):-1;}
+
+function switchScene(n){
+  sceneToken++;typingTimers.forEach(clearTimeout);typingTimers=[];rbTimers.forEach(clearTimeout);rbTimers=[];
+  if(opTimerInterval){clearInterval(opTimerInterval);opTimerInterval=null;}
+  if(n!==23&&n!==24){clearInterval(quizTimer);}
+
+  // 모든 씬 숨기기
+  document.querySelectorAll('.sc').forEach(s=>{
+    s.classList.remove('on');
+    s.style.display='none';
+    s.style.opacity='0';
+    s.style.transition='none';
+  });
+
+  const t=document.getElementById('s'+n);if(!t)return;
+  t.style.display='flex';
+  t.style.flexDirection='column';
+  t.style.opacity='0';
+  t.classList.add('on');
+
+  // 페이지 최상단으로 스크롤
+  window.scrollTo(0,0);
+  document.documentElement.scrollTop=0;
+  document.body.scrollTop=0;
+
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{t.style.transition='opacity 0.35s ease';t.style.opacity='1';}));
+
+  document.querySelectorAll('.btn-back,.menu-wrap').forEach(b=>b.remove());
+  if(n>0){
+    const menuWrap=document.createElement('div');
+    menuWrap.className='menu-wrap';
+    menuWrap.innerHTML=`
+      <button class="menu-btn" onclick="toggleMenu()">⋯</button>
+      <div class="menu-drop" id="menu-drop">
+        <button class="menu-item" onclick="menuGoBack()">← 이전으로</button>
+        <button class="menu-item" onclick="menuGoForward()">→ 앞으로</button>
+        <button class="menu-item" onclick="menuReload()">↺ 현재 페이지 다시보기</button>
+        <div class="menu-divider"></div>
+        <div class="menu-section">막 이동</div>
+        <button class="menu-item" onclick="menuGo(2)">0막 · 때를 기다린다</button>
+        <button class="menu-item" onclick="menuGo(6)">1막 · 싸운다</button>
+        <button class="menu-item" onclick="menuGo(10)">2막 · 함께 싸운다</button>
+        <button class="menu-item" onclick="menuGo(14)">3막 · 명분을 만든다</button>
+        <button class="menu-item" onclick="menuGo(18)">4막 · 정답이 없다</button>
+        <div class="menu-divider"></div>
+        <button class="menu-item" onclick="location.href='../joseon-kings.html'">📜 왕 선택 화면</button>
+        <button class="menu-item" onclick="location.href='../index.html'">🏠 처음 화면</button>
+      </div>`;
+    document.body.appendChild(menuWrap);
+  }
+
+  if(n===0){
+    setTimeout(runOpeningAnim,300);
+    opChoice=null;
+    const area=document.getElementById('op-choice-area');
+    if(area){area.style.opacity='0';}
+    const num=document.getElementById('op-timer-num');
+    if(num)num.textContent='10';
+    const btnFollow=document.getElementById('op-btn-follow');
+    const btnDefy=document.getElementById('op-btn-defy');
+    if(btnFollow){btnFollow.style.borderColor='var(--border2)';btnFollow.style.color='var(--text2)';}
+    if(btnDefy){btnDefy.style.borderColor='var(--border2)';btnDefy.style.color='var(--text2)';}
+  }
+  if(NARR[n]){
+    const navId=NARR_NAV[n];
+    const navEl=document.getElementById(navId);
+    if(navEl)navEl.style.display='none';
+    const narrEl=document.getElementById('narr'+n);
+    if(narrEl)narrEl.innerHTML='';
+    setTimeout(()=>{
+      typeText('narr'+n,NARR[n],()=>{
+        if(navEl){navEl.style.display='flex';navEl.style.animation='fi .4s ease';}
+      });
+    },400);
+  }
+  if([4,8,12,16].includes(n))resetBlock(n);
+  if(n===20){pick4Done=false;['a','b','c'].forEach(c=>{const b=document.getElementById('g20'+c);if(b)b.classList.remove('blocked','iseonggye');});document.getElementById('nam')?.classList.remove('on');document.getElementById('nan')?.classList.remove('on');}
+  if(n===22)buildEpi();
+
+  const deep=[5,9,13,17,21].includes(n);
+  const drone=[2,3,4,5,6,7,8,9,22].includes(n);
+  if(!deep)stopDeep();if(!drone)stopDrone();
+  if(deep)setTimeout(startDeep,500);if(drone)setTimeout(startDrone,500);
+}
+
+// ── 오프닝 타이머 ────────────────────────────────────────
+let opTimerInterval=null;
+let opChoice=null;
+
+function opChoose(choice){
+  if(opTimerInterval){clearInterval(opTimerInterval);opTimerInterval=null;}
+  opChoice=choice;
+  // 선택한 버튼 표시
+  const btnFollow=document.getElementById('op-btn-follow');
+  const btnDefy=document.getElementById('op-btn-defy');
+  if(choice==='follow'&&btnFollow){btnFollow.style.borderColor='var(--gold3)';btnFollow.style.color='var(--gold3)';}
+  if(choice==='defy'&&btnDefy){btnDefy.style.borderColor='var(--gold3)';btnDefy.style.color='var(--gold3)';}
+  setTimeout(()=>startRebirth(),600);
+}
+
+function startOpTimer(){
+  const area=document.getElementById('op-choice-area');
+  const num=document.getElementById('op-timer-num');
+  if(!area||!num)return;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{area.style.opacity='1';}));
+
+  let remaining=10;
+  num.textContent=remaining;
+
+  opTimerInterval=setInterval(()=>{
+    remaining--;
+    if(num)num.textContent=remaining;
+    if(remaining<=0){
+      clearInterval(opTimerInterval);opTimerInterval=null;
+      // 시간이 다 돼도 페이지 넘기지 않음 — 선택을 기다린다
+      if(num)num.textContent='...';
+    }
+  },1000);
+}
+
+// ── 오프닝 애니메이션 ────────────────────────────────────
+function runOpeningAnim(){
+  const ids=['op-question','op-glyph','op-series','op-disc'];
+  const els=ids.map(id=>document.getElementById(id));
+  els.forEach(el=>{if(el){el.style.transition='none';el.style.opacity='0';}});
+  const area=document.getElementById('op-choice-area');
+  if(area){area.style.opacity='0';}
+
+  requestAnimationFrame(()=>{
+    // 1. 질문 3줄 등장
+    if(els[0]){els[0].style.transition='opacity 1.6s ease';els[0].style.opacity='1';}
+    // 2. 질문과 동시에 선택지도 등장
+    setTimeout(()=>startOpTimer(),800);
+    // 3. 글리프
+    setTimeout(()=>{if(els[1]){els[1].style.transition='opacity 1.4s ease';els[1].style.opacity='1';}},2000);
+    // 4. 시리즈
+    setTimeout(()=>{if(els[2]){els[2].style.transition='opacity 1.4s ease';els[2].style.opacity='1';}},3200);
+    // 5. 주석
+    setTimeout(()=>{if(els[3]){els[3].style.transition='opacity 1.4s ease';els[3].style.opacity='1';}},4000);
+  });
+}
+
+// ── 사운드 ───────────────────────────────────────────────
+let droneCtx=null,droneGain=null;
+function createDrone(){if(droneCtx)return;droneCtx=new(window.AudioContext||window.webkitAudioContext)();droneGain=droneCtx.createGain();droneGain.gain.value=0;droneGain.connect(droneCtx.destination);[55,110].forEach(f=>{const o=droneCtx.createOscillator(),g=droneCtx.createGain();o.type='sine';o.frequency.value=f;g.gain.value=0.1;o.connect(g);g.connect(droneGain);o.start();});}
+function startDrone(){createDrone();if(droneCtx.state==='suspended')droneCtx.resume();droneGain.gain.cancelScheduledValues(droneCtx.currentTime);droneGain.gain.setValueAtTime(droneGain.gain.value,droneCtx.currentTime);droneGain.gain.linearRampToValueAtTime(0.26,droneCtx.currentTime+8);}
+function stopDrone(){if(!droneCtx||!droneGain)return;const c=droneCtx.currentTime,v=droneGain.gain.value;droneGain.gain.cancelScheduledValues(c);droneGain.gain.setValueAtTime(v,c);droneGain.gain.linearRampToValueAtTime(0,c+(v<0.05?0.3:8));}
+let deepCtx=null,deepGain=null;
+function createDeep(){if(deepCtx)return;deepCtx=new(window.AudioContext||window.webkitAudioContext)();deepGain=deepCtx.createGain();deepGain.gain.value=0;deepGain.connect(deepCtx.destination);[40,80].forEach(f=>{const o=deepCtx.createOscillator(),g=deepCtx.createGain();o.type='sine';o.frequency.value=f;g.gain.value=0.07;o.connect(g);g.connect(deepGain);o.start();});}
+function startDeep(){createDeep();if(deepCtx.state==='suspended')deepCtx.resume();deepGain.gain.cancelScheduledValues(deepCtx.currentTime);deepGain.gain.setValueAtTime(deepGain.gain.value,deepCtx.currentTime);deepGain.gain.linearRampToValueAtTime(0.2,deepCtx.currentTime+10);}
+function stopDeep(){if(!deepCtx||!deepGain)return;const c=deepCtx.currentTime,v=deepGain.gain.value;deepGain.gain.cancelScheduledValues(c);deepGain.gain.setValueAtTime(v,c);deepGain.gain.linearRampToValueAtTime(0,c+(v<0.05?0.3:10));}
+
+window.addEventListener('load',()=>{
+  // 모든 씬 숨기고 s0만 표시
+  document.querySelectorAll('.sc').forEach(s=>{
+    s.style.display='none';
+    s.style.opacity='0';
+  });
+  const s0=document.getElementById('s0');
+  if(s0){
+    s0.style.display='flex';
+    s0.style.flexDirection='column';
+    s0.style.opacity='1';
+    s0.classList.add('on');
+  }
+  setTimeout(runOpeningAnim,300);
+});
 </script>
 </body>
 </html>

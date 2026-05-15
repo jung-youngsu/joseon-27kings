@@ -3,22 +3,39 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EP03 · 태종 — 왕권을 세우다</title>
-<!-- 게임 본체. 추후 작성. -->
+<title>당신이 이방원이라면? — 결단의 왕</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600;700&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+
+<!-- ① 톤 — cold-iron (차갑고 단단함) -->
+<link rel="stylesheet" href="../../shared/themes/cold-iron.css">
+
+<!-- ② 공통 스타일 -->
+<link rel="stylesheet" href="../../shared/style.css">
+
 </head>
 <body>
-<!-- TODO: 태종(이방원) 게임 콘텐츠 -->
-<!-- 표준 메타데이터 -->
-<script type="application/json" id="meta">
-{
-  "ep": 3,
-  "slug": "taejong",
-  "korName": "태종",
-  "personalName": "이방원",
-  "reign": "1400-1418",
-  "era": "1367-1422",
-  "tagline": "왕권을 세우다"
-}
+
+<div id="game-root"></div>
+
+<script src="../../shared/engine.js"></script>
+
+<script>
+fetch('scenes.json')
+  .then(r => r.json())
+  .then(data => {
+    GameEngine.start(data);
+  })
+  .catch(err => {
+    document.getElementById('game-root').innerHTML = `
+      <div style="padding:40px;text-align:center;color:#c87060;font-family:'Noto Serif KR',serif;">
+        <div style="font-size:18px;margin-bottom:12px;">시나리오 파일을 불러올 수 없습니다.</div>
+        <div style="font-size:13px;opacity:0.6;">scenes.json: ${err.message}</div>
+      </div>
+    `;
+    console.error(err);
+  });
 </script>
+
 </body>
 </html>
