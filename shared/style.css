@@ -134,9 +134,9 @@ body {
 /* ═══ 상단 네비 — 점3개 메뉴 (평상시 숨김, 호버 시 확장) ═══════
    .top-nav 는 높이 0짜리 sticky 앵커. 실제 버튼(.nav-kebab)은
    그 위에 떠서 우상단 구석에 머문다. 평상시엔 점3개 + 현재 위치
-   라벨만 흐릿하게 보이고, 호버/포커스하면 메뉴가 아래로 펼쳐진다.
-   .nav-menu 는 absolute 가 아닌 in-flow(접힘) 라서 호버가 끊기지
-   않고, .nav-kebab 자체가 absolute 라 펼쳐져도 콘텐츠를 밀지 않는다. */
+   라벨만 흐릿하게 보이고, 호버/포커스하면 메뉴가 왼쪽(가로)으로 펼쳐진다.
+   우상단에 고정(right:12px)된 채 폭이 늘어 빈 가로 공간을 채우므로
+   글자끼리 겹치지 않고, 펼쳐져도 아래 콘텐츠를 밀지 않는다. */
 .top-nav {
   position: sticky;
   top: 0;
@@ -149,8 +149,9 @@ body {
   top: 6px;
   right: 12px;
   display: inline-flex;
-  flex-direction: column;
-  align-items: flex-end;
+  flex-direction: row-reverse;    /* 점은 오른쪽 구석, 메뉴는 왼쪽으로 */
+  align-items: center;
+  gap: 6px;
   padding: 5px 9px;
   border-radius: 13px;
   background: var(--bg);          /* 뒤 진행바 선을 가리되 페이지색과 섞임 */
@@ -196,38 +197,39 @@ body {
 /* 펼쳐지는 메뉴 — 평상시 접힘 */
 .nav-menu {
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  width: 138px;
-  max-height: 0;
-  margin-top: 0;
+  flex-direction: row;            /* 가로 펼침 */
+  align-items: center;
+  gap: 4px;
+  max-width: 0;
   opacity: 0;
   overflow: hidden;
-  transition: max-height .2s ease, opacity .2s ease, margin-top .2s ease;
+  white-space: nowrap;
+  transition: max-width .25s ease, opacity .2s ease;
 }
 .nav-kebab:hover .nav-menu,
 .nav-kebab:focus-within .nav-menu {
-  max-height: 160px;
-  margin-top: 8px;
+  max-width: 340px;
   opacity: 1;
 }
 .nav-menu-ep {
   font-size: 10px;
   letter-spacing: 2px;
   color: var(--text3);
-  padding: 2px 8px 6px;
-  border-bottom: 1px solid var(--border2);
-  margin-bottom: 2px;
+  padding: 0 8px 0 2px;
+  border-right: 1px solid var(--border2);
+  margin-right: 2px;
+  flex-shrink: 0;
 }
 .nav-menu a {
   display: block;
-  padding: 7px 8px;
+  padding: 6px 8px;
   font-size: 12px;
   letter-spacing: 1px;
   color: var(--text2);
   text-decoration: none;
   white-space: nowrap;
   border-radius: 7px;
+  flex-shrink: 0;
   transition: background .15s ease, color .15s ease;
 }
 .nav-menu a:hover {

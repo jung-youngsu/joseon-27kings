@@ -37,11 +37,11 @@ body {
   margin: 0 auto;
 }
 
-/* ── 상단 점3개 메뉴 (홈/시리즈 + 탭 전부 접음, 호버 시 확장) ──
-   .ep-kebab 는 우상단 구석에 머무는 sticky 핀. 평상시엔 점3개 +
-   현재 탭 이름만 흐릿하게 보이고, 호버/포커스하면 .ep-menu(EP정보 +
-   탭 + 홈/시리즈)가 아래로 펼쳐진다. 펼쳐짐은 absolute 라 콘텐츠를
-   밀지 않고, ::before 다리로 호버가 끊기지 않는다. */
+/* ── 상단 점3개 메뉴 (홈/시리즈 + 탭 전부 접음, 호버 시 가로 확장) ──
+   .ep-kebab 는 우상단 구석에 고정된 sticky 핀. 평상시엔 점3개 + 현재 탭
+   이름만 흐릿하게 보이고, 호버/포커스하면 .ep-menu(EP정보 + 탭 + 홈/시리즈)
+   가 왼쪽으로(가로) 펼쳐진다. in-flow 폭 확장이라 호버가 끊기지 않고,
+   비어 있는 상단 가로 공간을 채운다(아래 콘텐츠는 안 밀림). */
 .ep-kebab {
   position: sticky;
   top: 6px;
@@ -55,6 +55,11 @@ body {
   color: var(--text3);
   cursor: pointer;
   outline: none;
+  display: flex;
+  flex-direction: row-reverse;     /* 점은 오른쪽, 메뉴는 왼쪽으로 */
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100vw - 24px);
   transition: background .2s ease, border-color .2s ease, color .2s ease;
 }
 .ep-kebab:hover,
@@ -68,6 +73,7 @@ body {
   flex-direction: row-reverse;   /* 점은 구석에, 라벨은 그 왼쪽 */
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
 }
 .kebab-dots {
   display: inline-flex;
@@ -88,66 +94,51 @@ body {
   white-space: nowrap;
   color: inherit;
 }
-/* 펼쳐지는 메뉴 */
+/* 펼쳐지는 메뉴 — 평상시 폭 0, 호버 시 가로로 */
 .ep-menu {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  width: 210px;
-  margin-top: 7px;
-  padding: 10px;
-  background: var(--bg2);
-  border: 1px solid var(--border2);
-  border-radius: 12px;
-  box-shadow: 0 12px 32px rgba(0,0,0,.55);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 5px;
+  max-width: 0;
   opacity: 0;
-  transform: translateY(-6px);
-  pointer-events: none;
-  transition: opacity .18s ease, transform .18s ease;
-}
-.ep-menu::before {            /* head ↔ menu 사이 호버 다리 */
-  content: "";
-  position: absolute;
-  top: -9px;
-  left: 0;
-  right: 0;
-  height: 9px;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: max-width .28s ease, opacity .2s ease;
 }
 .ep-kebab:hover .ep-menu,
-.ep-kebab:focus-within .ep-menu,
-.ep-menu:hover {
+.ep-kebab:focus-within .ep-menu {
+  max-width: 80vw;
   opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
 }
-.ep-menu-info {
-  padding: 2px 6px 8px;
-  border-bottom: 1px solid var(--border2);
-  margin-bottom: 7px;
+.ep-info-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-shrink: 0;
+  padding: 0 2px;
 }
 .ep-num {
   font-family: 'Noto Serif KR', serif;
   font-size: 11px;
   color: var(--accent3);
-  letter-spacing: 2px;
+  letter-spacing: 1px;
   font-weight: 600;
 }
 .ep-title {
   font-family: 'Noto Serif KR', serif;
-  font-size: 13px;
-  color: var(--text);
-  margin-top: 2px;
-  font-weight: 500;
+  font-size: 11px;
+  color: var(--text3);
 }
-.ep-menu-tabs {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  margin-bottom: 7px;
+.ep-menu-div {
+  width: 1px;
+  align-self: stretch;
+  background: var(--border2);
+  margin: 3px 3px;
+  flex-shrink: 0;
 }
 .ep-tab {
-  padding: 8px 10px;
-  text-align: left;
+  padding: 6px 10px;
   font-family: 'Noto Sans KR', sans-serif;
   font-size: 12px;
   color: var(--text2);
@@ -157,6 +148,7 @@ body {
   cursor: pointer;
   letter-spacing: 1px;
   white-space: nowrap;
+  flex-shrink: 0;
   transition: all .15s;
 }
 .ep-tab:hover { color: var(--text); border-color: var(--border2); }
@@ -165,20 +157,18 @@ body {
   border-color: var(--accent2);
   background: var(--bg2);
 }
-.ep-menu-links {
-  display: flex;
-  justify-content: space-between;
-  padding-top: 8px;
-  border-top: 1px solid var(--border2);
-}
-.ep-menu-links a {
+.ep-menu a {
   color: var(--text3);
   text-decoration: none;
   font-size: 11px;
   letter-spacing: 1px;
-  transition: color .15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: color .15s, background .15s;
 }
-.ep-menu-links a:hover { color: var(--accent3); }
+.ep-menu a:hover { color: var(--accent3); background: var(--bg2); }
 
 /* ── 탭 컨텐츠 ── */
 .tab-pane {
@@ -669,21 +659,19 @@ body {
     <span class="ep-here" id="ep-here">게임</span>
   </div>
   <div class="ep-menu" role="menu">
-    <div class="ep-menu-info">
-      <div class="ep-num" id="ep-num">EP--</div>
-      <div class="ep-title" id="ep-title">로딩 중...</div>
-    </div>
-    <div class="ep-menu-tabs">
-      <button class="ep-tab active" data-tab="game">게임</button>
-      <button class="ep-tab" data-tab="novel">소설</button>
-      <button class="ep-tab" data-tab="quiz">퀴즈</button>
-      <button class="ep-tab" data-tab="study">심화</button>
-      <button class="ep-tab" data-tab="reviews">후기</button>
-    </div>
-    <div class="ep-menu-links">
-      <a href="index.html">← 홈</a>
-      <a href="joseon-kings.html">시리즈 →</a>
-    </div>
+    <span class="ep-info-chip">
+      <span class="ep-num" id="ep-num">EP--</span>
+      <span class="ep-title" id="ep-title">로딩 중...</span>
+    </span>
+    <span class="ep-menu-div"></span>
+    <button class="ep-tab active" data-tab="game">게임</button>
+    <button class="ep-tab" data-tab="novel">소설</button>
+    <button class="ep-tab" data-tab="quiz">퀴즈</button>
+    <button class="ep-tab" data-tab="study">심화</button>
+    <button class="ep-tab" data-tab="reviews">후기</button>
+    <span class="ep-menu-div"></span>
+    <a href="index.html">← 홈</a>
+    <a href="joseon-kings.html">시리즈 →</a>
   </div>
 </div>
 
