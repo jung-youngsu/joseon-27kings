@@ -198,6 +198,72 @@ body {
   background: var(--bg);
 }
 
+/* 이벤트 코드 게이트 */
+.game-gate {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 600px;
+  padding: 40px 20px;
+}
+.gate-card {
+  width: 100%;
+  max-width: 340px;
+  text-align: center;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+  padding: 36px 26px;
+}
+.gate-glyph { font-size: 38px; line-height: 1; }
+.gate-title {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 18px;
+  color: var(--accent3);
+  letter-spacing: 1px;
+  margin-top: 14px;
+  font-weight: 600;
+}
+.gate-sub { font-size: 12px; color: var(--text3); margin-top: 8px; line-height: 1.6; }
+.gate-input {
+  width: 100%;
+  margin-top: 20px;
+  padding: 13px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border3);
+  border-radius: 9px;
+  color: var(--text);
+  font-family: 'Noto Serif KR', serif;
+  font-size: 20px;
+  letter-spacing: 5px;
+  text-align: center;
+  text-transform: uppercase;
+  outline: none;
+}
+.gate-input:focus { border-color: var(--accent3); }
+.gate-btn {
+  width: 100%;
+  margin-top: 12px;
+  padding: 13px;
+  background: var(--accent2);
+  color: #1a1206;
+  border: none;
+  border-radius: 9px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: filter .15s;
+}
+.gate-btn:hover { filter: brightness(1.12); }
+.gate-btn:disabled { opacity: .5; cursor: default; }
+.gate-msg { font-size: 12px; margin-top: 12px; min-height: 16px; letter-spacing: .5px; }
+.gate-msg.ok { color: var(--accent3); }
+.gate-msg.err { color: #f07060; }
+.gate-hint { font-size: 11px; color: var(--text3); margin-top: 14px; line-height: 1.6; }
+
 /* 텍스트 컨텐츠 (소설, 자료) */
 .content-body {
   padding: 32px 24px;
@@ -623,6 +689,17 @@ body {
 
 <!-- ═══ 탭 컨텐츠 ═══════════════════════════════════════════ -->
 <div class="tab-pane active" id="pane-game">
+  <div class="game-gate" id="game-gate" style="display:none;">
+    <div class="gate-card">
+      <div class="gate-glyph">🎟</div>
+      <div class="gate-title">이벤트 접속 코드</div>
+      <div class="gate-sub" id="gate-sub">이 게임은 이벤트 코드로 입장할 수 있어요.</div>
+      <input type="text" id="gate-input" class="gate-input" placeholder="코드 입력" autocomplete="off" autocapitalize="characters" spellcheck="false">
+      <button class="gate-btn" id="gate-btn">입장하기</button>
+      <div class="gate-msg" id="gate-msg"></div>
+      <div class="gate-hint">코드를 입력하면 이 기기에서 <b>7일간</b> 접속됩니다.</div>
+    </div>
+  </div>
   <iframe class="game-frame" id="game-frame" src="about:blank"></iframe>
 </div>
 
@@ -686,6 +763,81 @@ function getEpFromURL() {
   return ep ? parseInt(ep) : 1;
 }
 
+// ═══ 이벤트 접속 코드 게이트 ═══════════════════════════════════
+//   - 이 기기에 유효한 해제기록(7일)이 있으면 바로 게임 로드
+//   - 없으면 이 게임이 '코드 전용'인지 Supabase에 묻고(is_ep_gated),
+//     전용이면 코드 입력창을 띄움. 코드가 맞으면 7일 해제 후 로드.
+//   - Supabase가 없거나 오류면 게이트 없이 로드(fail-open).
+const UNLOCK_DAYS = 7;
+function unlockKey(ep){ return 'j27_unlock_ep' + ep; }
+function deviceUnlockValid(ep){
+  try{
+    const o = JSON.parse(localStorage.getItem(unlockKey(ep)) || 'null');
+    return !!(o && o.until && o.until > Date.now());
+  }catch(e){ return false; }
+}
+function setDeviceUnlock(ep){
+  const until = Date.now() + UNLOCK_DAYS*24*60*60*1000;
+  try{ localStorage.setItem(unlockKey(ep), JSON.stringify({until})); }catch(e){}
+}
+
+async function gateOrLoadGame(ep, gameUrl){
+  const frame = document.getElementById('game-frame');
+  const gate  = document.getElementById('game-gate');
+  const reveal = () => {
+    if(gate) gate.style.display = 'none';
+    frame.style.display = '';
+    frame.src = gameUrl;
+  };
+
+  // 이미 이 기기에서 해제됨
+  if(deviceUnlockValid(ep)){ reveal(); return; }
+
+  // 이 게임이 코드 전용인가?
+  let gated = false;
+  if(window.sb){
+    try{
+      const { data, error } = await window.sb.rpc('is_ep_gated', { p_ep: ep });
+      if(!error) gated = !!data;
+    }catch(e){ /* fail-open */ }
+  }
+  if(!gated){ reveal(); return; }
+
+  // 게이트 표시
+  frame.style.display = 'none';
+  frame.src = 'about:blank';
+  gate.style.display = '';
+  const input = document.getElementById('gate-input');
+  const btn   = document.getElementById('gate-btn');
+  const msg   = document.getElementById('gate-msg');
+  input.value = '';
+  msg.textContent = ''; msg.className = 'gate-msg';
+
+  async function tryCode(){
+    const code = (input.value || '').trim().toUpperCase();
+    if(!code) return;
+    btn.disabled = true; msg.textContent = '확인 중...'; msg.className = 'gate-msg';
+    let ok = false;
+    try{
+      const { data, error } = await window.sb.rpc('check_access_code', { p_code: code, p_ep: ep });
+      ok = !error && !!data;
+    }catch(e){}
+    if(ok){
+      setDeviceUnlock(ep);
+      msg.textContent = '입장합니다 — 이 기기에서 7일간 접속 가능';
+      msg.className = 'gate-msg ok';
+      setTimeout(reveal, 700);
+    }else{
+      btn.disabled = false;
+      msg.textContent = '코드가 올바르지 않거나 만료됐어요.';
+      msg.className = 'gate-msg err';
+    }
+  }
+  btn.onclick = tryCode;
+  input.onkeydown = (e) => { if(e.key === 'Enter') tryCode(); };
+  input.focus();
+}
+
 // kings.json 읽고 해당 EP 찾기
 async function loadEpisode() {
   const ep = getEpFromURL();
@@ -713,8 +865,8 @@ async function loadEpisode() {
 
   // 게임 iframe 로드
   const slugFolder = `kings/ep${epStr}_${king.slug}`;
-  const gameFrame = document.getElementById('game-frame');
-  gameFrame.src = `${slugFolder}/game.html`;
+  const gameUrl = `${slugFolder}/game.html`;
+  gateOrLoadGame(ep, gameUrl);
 
   // 소설 로드
   loadMarkdownIfExists(`${slugFolder}/novel.md`, 'novel-content');

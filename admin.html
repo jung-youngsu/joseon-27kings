@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<title>관리자 — 이벤트 코드 발급</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:#0a0604; --bg2:#0f0906; --bg3:#140c08;
+  --accent2:#8a5e1a; --accent3:#e0b060;
+  --text:#ece0d0; --text2:#c8b89a; --text3:#907860;
+  --border:#1e1408; --border2:#2e1e0c; --border3:#4e3418;
+  --good3:#70f080; --bad3:#f07060;
+}
+html,body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-serif;min-height:100vh;}
+body{max-width:680px;margin:0 auto;padding:24px 18px 80px;}
+h1{font-family:'Noto Serif KR',serif;font-size:20px;letter-spacing:1px;color:var(--accent3);font-weight:700;}
+.sub{font-size:12px;color:var(--text3);margin-top:6px;letter-spacing:.5px;line-height:1.6;}
+.card{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:18px;margin-top:18px;}
+label{display:block;font-size:12px;color:var(--text2);letter-spacing:1px;margin:0 0 6px;}
+input,select{width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--border3);border-radius:8px;
+  color:var(--text);font-family:inherit;font-size:14px;outline:none;}
+input:focus,select:focus{border-color:var(--accent3);}
+.row{margin-bottom:14px;}
+.btn{display:inline-block;width:100%;padding:12px;background:var(--accent2);color:#1a1206;border:none;border-radius:8px;
+  font-family:inherit;font-size:14px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:filter .15s;}
+.btn:hover{filter:brightness(1.12);}
+.btn:disabled{opacity:.5;cursor:default;}
+.btn-ghost{background:transparent;border:1px solid var(--border3);color:var(--text3);}
+.msg{font-size:12px;margin-top:10px;letter-spacing:.5px;min-height:16px;}
+.msg.ok{color:var(--good3);} .msg.err{color:var(--bad3);}
+.hint{font-size:11px;color:var(--text3);margin-top:6px;line-height:1.6;}
+.codebox{display:flex;align-items:center;gap:10px;background:var(--bg3);border:1px dashed var(--accent2);border-radius:10px;
+  padding:14px 16px;margin-top:12px;}
+.codebox .code{font-family:'Noto Serif KR',serif;font-size:24px;letter-spacing:4px;color:var(--accent3);font-weight:700;flex:1;}
+.codebox .copy{padding:8px 12px;font-size:12px;}
+table{width:100%;border-collapse:collapse;margin-top:8px;font-size:12px;}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--border2);}
+th{color:var(--text3);font-weight:500;letter-spacing:1px;}
+td .code{font-family:'Noto Serif KR',serif;color:var(--accent3);letter-spacing:2px;font-weight:600;}
+.del{background:transparent;border:1px solid var(--border3);color:var(--bad3);border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;}
+.del:hover{border-color:var(--bad3);}
+.expired{opacity:.45;}
+.topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
+.who{font-size:11px;color:var(--text3);text-align:right;white-space:nowrap;}
+.who a{color:var(--text3);}
+.hidden{display:none;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <h1>🎟 이벤트 코드 발급</h1>
+    <div class="sub">마스터(pigi00@naver.com) 전용. 게임별 1주일 접속 코드를 만들고 관리합니다.</div>
+  </div>
+  <div class="who" id="who"></div>
+</div>
+
+<!-- 로그인 -->
+<div class="card" id="login-card">
+  <div class="row">
+    <label>이메일</label>
+    <input type="email" id="email" placeholder="pigi00@naver.com" autocomplete="username">
+  </div>
+  <div class="row">
+    <label>비밀번호</label>
+    <input type="password" id="pw" placeholder="비밀번호" autocomplete="current-password">
+  </div>
+  <button class="btn" id="login-btn">로그인</button>
+  <button class="btn btn-ghost" id="signup-btn" style="margin-top:8px;">이 계정으로 가입(최초 1회)</button>
+  <div class="msg" id="login-msg"></div>
+  <div class="hint">마스터 이메일(pigi00@naver.com)로만 발급 기능이 열립니다.</div>
+</div>
+
+<!-- 발급 -->
+<div class="card hidden" id="issue-card">
+  <div class="row">
+    <label>게임 선택</label>
+    <select id="ep-select"></select>
+  </div>
+  <div class="row">
+    <label>메모 (이벤트명 — 선택)</label>
+    <input type="text" id="label-input" placeholder="예: 6월 오픈 이벤트">
+  </div>
+  <div class="row">
+    <label>코드 사용 마감 (오늘부터 며칠 동안 입력 가능)</label>
+    <input type="number" id="days-input" value="30" min="1" max="365">
+    <div class="hint">이건 <b>코드를 입력할 수 있는 기간</b>입니다. 코드를 입력한 사람은 그 시점부터 <b>각자 7일</b> 접속됩니다.</div>
+  </div>
+  <button class="btn" id="issue-btn">코드 발급</button>
+  <div class="msg" id="issue-msg"></div>
+  <div class="codebox hidden" id="codebox">
+    <span class="code" id="new-code"></span>
+    <button class="btn copy" id="copy-btn">복사</button>
+  </div>
+  <div class="hint" style="margin-top:14px;">
+    ⚠️ 어떤 게임에 코드를 발급하면 그 게임은 <b>코드 전용</b>이 됩니다(코드 없으면 입장 불가).
+    이벤트가 끝나면 아래 목록에서 코드를 <b>삭제</b>하거나 마감일이 지나면 다시 누구나 입장 가능해집니다.
+  </div>
+</div>
+
+<!-- 목록 -->
+<div class="card hidden" id="list-card">
+  <div class="topbar" style="margin-bottom:8px;">
+    <label style="margin:0;">발급된 코드</label>
+    <button class="del" id="logout-btn" style="color:var(--text3);">로그아웃</button>
+  </div>
+  <table>
+    <thead><tr><th>게임</th><th>코드</th><th>메모</th><th>마감</th><th></th></tr></thead>
+    <tbody id="code-rows"></tbody>
+  </table>
+  <div class="msg" id="list-msg"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const MASTER_EMAIL = 'pigi00@naver.com';
+const SUPA_URL = 'https://qwsjofkabllbnbsgndun.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3c2pvZmthYmxsYm5ic2duZHVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNDc1NTYsImV4cCI6MjA5MTcyMzU1Nn0.2ryUWHRVqNuJ2ylHYr9tvgFwGK_EsVM7KMeuOpgLnks';
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+const $ = id => document.getElementById(id);
+
+// 혼동되는 글자 제외한 코드 알파벳
+const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function genCode(len){
+  let s='';
+  const a = new Uint32Array(len);
+  (window.crypto||window.msCrypto).getRandomValues(a);
+  for(let i=0;i<len;i++) s += ALPHABET[a[i] % ALPHABET.length];
+  return s;
+}
+
+// ── 게임 목록 채우기 (kings.json) ──
+async function fillGames(){
+  const sel = $('ep-select');
+  try{
+    const kings = await (await fetch('kings.json')).json();
+    sel.innerHTML = kings.map(k =>
+      `<option value="${k.ep}">EP${k.ep<10?'0'+k.ep:k.ep} · ${k.korName} ${k.personalName||''}</option>`
+    ).join('');
+  }catch(e){
+    sel.innerHTML = Array.from({length:27},(_,i)=>`<option value="${i+1}">EP${i+1<10?'0'+(i+1):i+1}</option>`).join('');
+  }
+}
+
+// ── 인증 상태 반영 ──
+async function refresh(){
+  const { data:{ session } } = await sb.auth.getSession();
+  const email = session?.user?.email || null;
+  if(!email){
+    $('login-card').classList.remove('hidden');
+    $('issue-card').classList.add('hidden');
+    $('list-card').classList.add('hidden');
+    $('who').textContent = '';
+    return;
+  }
+  $('who').innerHTML = email + (email===MASTER_EMAIL?' · <span style="color:var(--accent3)">마스터</span>':'');
+  if(email !== MASTER_EMAIL){
+    $('login-card').classList.remove('hidden');
+    $('login-msg').textContent = '이 계정은 마스터가 아닙니다. (pigi00@naver.com 만 발급 가능)';
+    $('login-msg').className = 'msg err';
+    $('issue-card').classList.add('hidden');
+    $('list-card').classList.add('hidden');
+    return;
+  }
+  // 마스터
+  $('login-card').classList.add('hidden');
+  $('issue-card').classList.remove('hidden');
+  $('list-card').classList.remove('hidden');
+  await loadCodes();
+}
+
+// ── 로그인/가입/로그아웃 ──
+$('login-btn').onclick = async () => {
+  const email=$('email').value.trim(), pw=$('pw').value;
+  $('login-msg').textContent='로그인 중...'; $('login-msg').className='msg';
+  const { error } = await sb.auth.signInWithPassword({ email, password:pw });
+  if(error){ $('login-msg').textContent='로그인 실패: '+error.message; $('login-msg').className='msg err'; return; }
+  refresh();
+};
+$('signup-btn').onclick = async () => {
+  const email=$('email').value.trim(), pw=$('pw').value;
+  if(pw.length<6){ $('login-msg').textContent='비밀번호는 6자 이상.'; $('login-msg').className='msg err'; return; }
+  $('login-msg').textContent='가입 중...'; $('login-msg').className='msg';
+  const { error } = await sb.auth.signUp({ email, password:pw });
+  if(error){ $('login-msg').textContent='가입 실패: '+error.message; $('login-msg').className='msg err'; return; }
+  $('login-msg').textContent='가입 완료. 이제 로그인하세요. (이메일 인증이 켜져 있으면 메일 확인 필요)';
+  $('login-msg').className='msg ok';
+};
+$('logout-btn').onclick = async () => { await sb.auth.signOut(); refresh(); };
+
+// ── 코드 발급 ──
+$('issue-btn').onclick = async () => {
+  const ep = parseInt($('ep-select').value);
+  const label = $('label-input').value.trim() || null;
+  const days = Math.max(1, parseInt($('days-input').value)||30);
+  const expires = new Date(Date.now() + days*24*60*60*1000).toISOString();
+  const code = genCode(6);
+  $('issue-msg').textContent='발급 중...'; $('issue-msg').className='msg';
+  const { error } = await sb.from('access_codes').insert({ code, ep, label, expires_at: expires });
+  if(error){ $('issue-msg').textContent='발급 실패: '+error.message; $('issue-msg').className='msg err'; return; }
+  $('issue-msg').textContent='발급 완료!'; $('issue-msg').className='msg ok';
+  $('new-code').textContent = code;
+  $('codebox').classList.remove('hidden');
+  await loadCodes();
+};
+$('copy-btn').onclick = () => {
+  const c = $('new-code').textContent;
+  navigator.clipboard?.writeText(c);
+  $('copy-btn').textContent='복사됨';
+  setTimeout(()=>$('copy-btn').textContent='복사', 1200);
+};
+
+// ── 코드 목록 ──
+async function loadCodes(){
+  const { data, error } = await sb.from('access_codes').select('*').order('created_at',{ascending:false});
+  const tb = $('code-rows');
+  if(error){ $('list-msg').textContent='목록 로드 실패: '+error.message; $('list-msg').className='msg err'; return; }
+  $('list-msg').textContent='';
+  if(!data || !data.length){ tb.innerHTML='<tr><td colspan="5" style="color:var(--text3);padding:14px 6px;">아직 발급된 코드가 없습니다.</td></tr>'; return; }
+  tb.innerHTML = data.map(r=>{
+    const expired = r.expires_at && new Date(r.expires_at) < new Date();
+    const exp = r.expires_at ? new Date(r.expires_at).toLocaleDateString('ko-KR',{month:'numeric',day:'numeric'}) : '무기한';
+    return `<tr class="${expired?'expired':''}">
+      <td>EP${r.ep<10?'0'+r.ep:r.ep}</td>
+      <td><span class="code">${r.code}</span></td>
+      <td>${r.label?escapeHtml(r.label):'-'}</td>
+      <td>${exp}${expired?' (만료)':''}</td>
+      <td><button class="del" data-code="${r.code}">삭제</button></td>
+    </tr>`;
+  }).join('');
+  tb.querySelectorAll('.del').forEach(b=>{
+    b.onclick = async () => {
+      if(!confirm('이 코드를 삭제할까요? (사용자 접속이 즉시 막힐 수 있음)')) return;
+      const { error } = await sb.from('access_codes').delete().eq('code', b.dataset.code);
+      if(error){ $('list-msg').textContent='삭제 실패: '+error.message; $('list-msg').className='msg err'; return; }
+      await loadCodes();
+    };
+  });
+}
+
+function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// 시작
+fillGames();
+refresh();
+sb.auth.onAuthStateChange(()=>refresh());
+</script>
+</body>
+</html>
