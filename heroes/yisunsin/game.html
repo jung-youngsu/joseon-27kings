@@ -1451,6 +1451,7 @@ body {
       .replace(/\[i\](.+?)\[\/i\]/g,   '<em>$1</em>')
       .replace(/\[em\](.+?)\[\/em\]/g, '<em>$1</em>')
       .replace(/\*\*(.+?)\*\*/g,        '<strong>$1</strong>')
+      .replace(/\*([^*\n]+?)\*/g,       '<em>$1</em>')
       .replace(/__(.+?)__/g,            '<em>$1</em>')
       .replace(/\n/g, '<br>');
   }
