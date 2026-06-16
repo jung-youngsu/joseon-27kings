@@ -45,7 +45,7 @@
       ],
       "choice": {
         "type": "reflection",
-        "label": "지금 싸우시겠습니까?",
+        "label": "당신이라면 지금 동료들과 함께 싸우시겠습니까?",
         "flag": "act0_choice",
         "options": [
           {
