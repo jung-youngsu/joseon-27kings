@@ -385,7 +385,8 @@
       // 선택의 결과 메시지
       const msgEl = sceneEl.querySelector('#no-answer-msg');
       if (msgEl) {
-        msgEl.textContent = opt.feedback || '당신의 선택이 기록되었습니다.';
+        // [b]/[em] 같은 인라인 마크업이 그대로 보이지 않게 파싱해서 넣는다
+        msgEl.innerHTML = parseInline(opt.feedback || '당신의 선택이 기록되었습니다.');
         msgEl.classList.add('on');
       }
 
@@ -418,7 +419,7 @@
       setTimeout(() => btn.classList.remove('wrong-shake'), 400);
 
       const msgEl = sceneEl.querySelector('#block-msg');
-      msgEl.textContent = opt.blockMessage || '다시 생각해보세요.';
+      msgEl.innerHTML = parseInline(opt.blockMessage || '다시 생각해보세요.');
       msgEl.classList.add('on');
       return;
     }
