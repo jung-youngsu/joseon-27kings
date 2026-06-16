@@ -284,6 +284,30 @@ body {
   background: var(--bg3);
   color: var(--accent3);
 }
+/* 모바일 — 가로 공간이 좁으면 세로 펼침으로 자동 전환 */
+@media (max-width: 600px) {
+  .nav-kebab { flex-direction: column; align-items: flex-end; gap: 0; }
+  .nav-menu {
+    flex-direction: column;
+    align-items: flex-end;
+    max-width: none;
+    max-height: 0;
+    transition: max-height .22s ease, opacity .2s ease, margin-top .2s ease;
+  }
+  .nav-kebab:hover .nav-menu,
+  .nav-kebab:focus-within .nav-menu {
+    max-width: none;
+    max-height: 220px;
+    margin-top: 8px;
+  }
+  .nav-menu-ep {
+    border-right: none;
+    border-bottom: 1px solid var(--border2);
+    padding: 2px 8px 6px;
+    margin: 0 0 2px;
+  }
+  .nav-menu a { width: 100%; text-align: right; padding: 7px 8px; }
+}
 
 /* ═══ 나레이션 씬 ═══════════════════════════════════════════ */
 /* narration.svg 필드용 아트워크 컨테이너 (EP1 5막 실루엣 등) */
