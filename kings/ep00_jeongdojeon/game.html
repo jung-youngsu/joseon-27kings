@@ -1342,6 +1342,10 @@ body {
   // 구석(우상단)에 점3개 + 현재 위치 라벨만 둔다.
   // 호버/포커스하면 홈·시리즈 링크가 아래로 펼쳐진다.
   function headerNav() {
+    // episode.html 등 프레임(iframe) 안에서 실행되면 프레임이 자체 메뉴를
+    // 제공하므로 게임 내부 메뉴는 숨긴다(중복 방지). 단독으로 game.html을
+    // 직접 열었을 때만 점3개 메뉴를 그린다.
+    try { if (window.self !== window.top) return ''; } catch (e) { return ''; }
     const ep = state.data.ep || '';
     const epLabel = 'EP' + (ep < 10 ? '0' + ep : ep);
     const scene = state.data.scenes[state.currentSceneIdx];
