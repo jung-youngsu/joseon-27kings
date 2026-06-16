@@ -130,36 +130,109 @@ body {
   background: var(--accent2);
   transition: width .6s ease;
 }
-.prog-lbl {
+
+/* ═══ 상단 네비 — 점3개 메뉴 (평상시 숨김, 호버 시 확장) ═══════
+   .top-nav 는 높이 0짜리 sticky 앵커. 실제 버튼(.nav-kebab)은
+   그 위에 떠서 우상단 구석에 머문다. 평상시엔 점3개 + 현재 위치
+   라벨만 흐릿하게 보이고, 호버/포커스하면 메뉴가 아래로 펼쳐진다.
+   .nav-menu 는 absolute 가 아닌 in-flow(접힘) 라서 호버가 끊기지
+   않고, .nav-kebab 자체가 absolute 라 펼쳐져도 콘텐츠를 밀지 않는다. */
+.top-nav {
+  position: sticky;
+  top: 0;
+  height: 0;
+  overflow: visible;
+  z-index: 30;
+}
+.nav-kebab {
+  position: absolute;
+  top: 6px;
+  right: 12px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 5px 9px;
+  border-radius: 13px;
+  background: var(--bg);          /* 뒤 진행바 선을 가리되 페이지색과 섞임 */
+  border: 1px solid transparent;
+  color: var(--text3);            /* 평상시 흐릿 */
+  cursor: pointer;
+  outline: none;
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+  transition: background .2s ease, border-color .2s ease, color .2s ease;
+}
+.nav-kebab:hover,
+.nav-kebab:focus-within {
+  background: var(--bg2);
+  border-color: var(--border3);
+  color: var(--text2);
+}
+.nav-kebab-head {
+  display: flex;
+  flex-direction: row-reverse;    /* 점은 구석에, 라벨은 그 왼쪽 */
+  align-items: center;
+  gap: 8px;
+}
+.kebab-dots {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2.5px;
+  flex-shrink: 0;
+}
+.kebab-dots i {
+  display: block;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.nav-here {
   font-size: 11px;
-  color: var(--accent3);
   letter-spacing: 1px;
   white-space: nowrap;
+  color: inherit;
 }
-
-/* ═══ 상단 네비 (홈/시리즈로 가기) ═══════════════════════════ */
-.top-nav {
-  flex-shrink: 0;
+/* 펼쳐지는 메뉴 — 평상시 접힘 */
+.nav-menu {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 20px;
-  background: var(--bg);
-  border-bottom: 1px solid var(--border);
-  font-family: var(--font-sans);
-  font-size: 11px;
+  flex-direction: column;
+  align-items: stretch;
+  width: 138px;
+  max-height: 0;
+  margin-top: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height .2s ease, opacity .2s ease, margin-top .2s ease;
 }
-.top-nav a {
-  color: var(--text3);
-  text-decoration: none;
-  letter-spacing: 1px;
-  transition: color .15s;
+.nav-kebab:hover .nav-menu,
+.nav-kebab:focus-within .nav-menu {
+  max-height: 160px;
+  margin-top: 8px;
+  opacity: 1;
 }
-.top-nav a:hover { color: var(--accent3); }
-.top-nav .ep-label {
-  color: var(--text2);
+.nav-menu-ep {
+  font-size: 10px;
   letter-spacing: 2px;
-  font-weight: 500;
+  color: var(--text3);
+  padding: 2px 8px 6px;
+  border-bottom: 1px solid var(--border2);
+  margin-bottom: 2px;
+}
+.nav-menu a {
+  display: block;
+  padding: 7px 8px;
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: var(--text2);
+  text-decoration: none;
+  white-space: nowrap;
+  border-radius: 7px;
+  transition: background .15s ease, color .15s ease;
+}
+.nav-menu a:hover {
+  background: var(--bg3);
+  color: var(--accent3);
 }
 
 /* ═══ 나레이션 씬 ═══════════════════════════════════════════ */

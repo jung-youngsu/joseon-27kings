@@ -542,30 +542,41 @@
     fill.style.width = (cur / total * 100) + '%';
   }
 
-  // ─── 헤더 네비 (홈/시리즈 링크) ───────────────────────────
+  // ─── 헤더 네비 (점3개 메뉴 — 평상시 숨김, 호버 시 확장) ─────
+  // 구석(우상단)에 점3개 + 현재 위치 라벨만 둔다.
+  // 호버/포커스하면 홈·시리즈 링크가 아래로 펼쳐진다.
   function headerNav() {
     const ep = state.data.ep || '';
-    const title = state.data.title || '';
+    const epLabel = 'EP' + (ep < 10 ? '0' + ep : ep);
+    const scene = state.data.scenes[state.currentSceneIdx];
+    const here = (scene && scene.progLabel) ? scene.progLabel : '';
     return `
       <div class="top-nav">
-        <a href="../../index.html" target="_top">← 홈</a>
-        <span class="ep-label">${escapeHTML('EP' + (ep < 10 ? '0' + ep : ep))}</span>
-        <a href="../../joseon-kings.html" target="_top">시리즈로 →</a>
+        <div class="nav-kebab" tabindex="0" role="button" aria-haspopup="true"
+             aria-label="메뉴 열기${here ? ' · 현재 ' + escapeHTML(here) : ''}">
+          <div class="nav-kebab-head">
+            <span class="kebab-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            ${here ? `<span class="nav-here">${escapeHTML(here)}</span>` : ''}
+          </div>
+          <div class="nav-menu" role="menu">
+            <span class="nav-menu-ep">${escapeHTML(epLabel)}</span>
+            <a href="../../index.html" target="_top" role="menuitem">← 홈으로</a>
+            <a href="../../joseon-kings.html" target="_top" role="menuitem">시리즈 목록 →</a>
+          </div>
+        </div>
       </div>
     `;
   }
 
   function progressBar() {
-    const scene = state.data.scenes[state.currentSceneIdx];
-    const label = scene.progLabel || '';
     const canGoBack = canGoBackFromHere();
+    // 현재 위치 라벨은 점3개 메뉴(headerNav) 옆으로 옮겼다.
     return `
       <div class="prog">
         ${canGoBack ? '<button class="prog-back" id="prog-back" title="이전 화면으로">↶</button>' : '<span class="prog-back-spacer"></span>'}
         <div class="prog-bar">
           <div class="prog-fill" style="width:0%;"></div>
         </div>
-        <span class="prog-lbl">${escapeHTML(label)}</span>
       </div>
     `;
   }
