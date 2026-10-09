@@ -15,8 +15,10 @@ joseon/
 ├── index.html              ← 메인 허브 (kings.json + heroes.json 둘 다 읽어 카드 자동 갱신)
 ├── joseon-kings.html       ← 27왕 시리즈 페이지 (가계도 + 모달 + Supabase)
 ├── heroes.html             ← 영웅편 시리즈 페이지 (세로 카드)
-├── episode.html            ← 에피소드 프레임 (게임/소설/심화/퀴즈 탭)
+├── episode.html            ← 에피소드 프레임 (게임/퀴즈/심화/후기 탭)
 ├── extractor.html          ← HTML → JSON 텍스트 추출기 (단일 HTML 다듬기용)
+│
+├── EDITORIAL.md            ← ★ 집필 규범 — 모든 편에 적용되는 상위 규칙
 │
 ├── kings.json              ← 27왕 마스터 데이터 (slug·theme·status 등)
 ├── heroes.json             ← 영웅편 4슬롯 데이터
@@ -28,9 +30,10 @@ joseon/
 │       ├── cold-iron.css   ← 차가운 톤 (태조·태종·연산군 등)
 │       └── warm-quiet.css  ← 따뜻한 톤 (정종·문종·정조 등)
 │
-├── tools/                  ← 분리 구조 → 자족 단일 HTML 빌드
-│   ├── build_single.js     ← Node 버전
-│   └── build_single.py     ← 같은 로직의 Python 버전
+├── tools/                  ← 빌드·점검 도구
+│   ├── build_single.js     ← 분리 구조 → 자족 단일 HTML (Node)
+│   ├── build_single.py     ← 같은 로직의 Python 버전
+│   └── check_scenes.js     ← scenes.json 집필 규범 점검 (EDITORIAL.md 5장)
 │
 ├── generate-kings.ps1      ← (레거시) 27왕 폴더 골격 일괄 생성 PowerShell
 │
@@ -51,9 +54,28 @@ joseon/
 |---|---|
 | `scenes.json` | ★ 게임 콘텐츠 전체 — **글만 다듬으면 됨** |
 | `game.html` | 얇은 페이지 (engine + theme + scenes 결합) 또는 자족 단일 HTML |
-| `novel.md` | 소설 학습자료 |
 | `study.md` | 심화 자료 |
 | `quiz.json` | 퀴즈 문제 |
+
+---
+
+## ✍️ 글을 쓰기 전에 — [EDITORIAL.md](EDITORIAL.md)
+
+새 편을 쓰거나 기존 편의 문장을 다듬기 전에 **[`EDITORIAL.md`](EDITORIAL.md)를 먼저
+읽습니다.** 이 시리즈가 무엇을 알려주려는 작품인지, 그래서 각 막과 선택지를 어떻게
+설계해야 하는지가 거기에 있습니다. 개별 편의 `scenes.json`은 그 문서를 어길 수 없습니다.
+
+요지만 적으면 — 플레이어가 **선택지 자체를 의심하게** 만들고(*찾으려 한 사람에게만
+솟아날 구멍이 보인다*), 그 왕의 **강점이 곧 그를 무너뜨린 지점**을 축으로 삼고, 왕을
+**당신과 같은 사람**으로 그리고, 정책을 외울 사건이 아니라 **그 사람의 결과**로
+이해시키는 것입니다.
+
+저장 전에는 점검 스크립트를 돌립니다.
+
+```bash
+node tools/check_scenes.js                        # 전 편
+node tools/check_scenes.js kings/ep01_taejo/scenes.json
+```
 
 ---
 
