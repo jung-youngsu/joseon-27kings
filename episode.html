@@ -283,7 +283,7 @@ body {
 .gate-msg.err { color: #f07060; }
 .gate-hint { font-size: 11px; color: var(--text3); margin-top: 14px; line-height: 1.6; }
 
-/* 텍스트 컨텐츠 (소설, 자료) */
+/* 텍스트 컨텐츠 (심화·후기 자료) */
 .content-body {
   padding: 32px 24px;
   font-family: 'Noto Serif KR', serif;
@@ -680,7 +680,7 @@ body {
 <body>
 
 <!-- ═══ 상단 점3개 메뉴 (평상시 숨김, 호버 시 확장) ═══════════
-     홈/시리즈 + 탭(게임·소설·퀴즈·심화·후기)을 모두 한 곳으로 접음.
+     홈/시리즈 + 탭(게임·퀴즈·심화·후기)을 모두 한 곳으로 접음.
      평상시엔 구석에 점3개 + 현재 탭 이름만 흐릿하게 보인다. -->
 <div class="ep-kebab" tabindex="0" role="button" aria-haspopup="true" aria-label="메뉴 열기">
   <div class="ep-kebab-head">
@@ -694,7 +694,6 @@ body {
     </span>
     <span class="ep-menu-div"></span>
     <button class="ep-tab active" data-tab="game">게임</button>
-    <button class="ep-tab" data-tab="novel">소설</button>
     <button class="ep-tab" data-tab="quiz">퀴즈</button>
     <button class="ep-tab" data-tab="study">심화</button>
     <button class="ep-tab" data-tab="reviews">후기</button>
@@ -718,16 +717,6 @@ body {
     </div>
   </div>
   <iframe class="game-frame" id="game-frame" src="about:blank"></iframe>
-</div>
-
-<div class="tab-pane" id="pane-novel">
-  <div class="content-body" id="novel-content">
-    <div class="empty-state">
-      <div class="empty-state-glyph">⌛</div>
-      <div class="empty-state-title">소설 준비 중</div>
-      <div class="empty-state-sub">곧 공개됩니다</div>
-    </div>
-  </div>
 </div>
 
 <div class="tab-pane" id="pane-quiz">
@@ -785,6 +774,10 @@ function getEpFromURL() {
 //   - 없으면 이 게임이 '코드 전용'인지 Supabase에 묻고(is_ep_gated),
 //     전용이면 코드 입력창을 띄움. 코드가 맞으면 7일 해제 후 로드.
 //   - Supabase가 없거나 오류면 게이트 없이 로드(fail-open).
+// ★ 무료 개방 스위치 — true면 코드 게이트를 아예 건너뜁니다.
+//   이벤트용 코드 전용 운영으로 되돌리려면 false로만 바꾸면 됩니다.
+const FREE_OPEN = true;
+
 const UNLOCK_DAYS = 7;
 function unlockKey(ep){ return 'j27_unlock_ep' + ep; }
 function deviceUnlockValid(ep){
@@ -807,12 +800,15 @@ async function gateOrLoadGame(ep, gameUrl){
     frame.src = gameUrl;
   };
 
+  // 무료 개방 중 — 코드 없이 바로 입장
+  if(FREE_OPEN){ reveal(); return; }
+
   // 이미 이 기기에서 해제됨
   if(deviceUnlockValid(ep)){ reveal(); return; }
 
   // 이 게임이 코드 전용인가?
   let gated = false;
-  if(window.sb){
+  if(window.sb && typeof ep === 'number'){
     try{
       const { data, error } = await window.sb.rpc('is_ep_gated', { p_ep: ep });
       if(!error) gated = !!data;
@@ -856,37 +852,69 @@ async function gateOrLoadGame(ep, gameUrl){
 }
 
 // kings.json 읽고 해당 EP 찾기
-async function loadEpisode() {
-  const ep = getEpFromURL();
-  let king;
+// 영웅편(heroes.json)은 ep 번호가 없고 폴더 위치도 편마다 다르다.
+// ?hero=<slug> 로 들어오면 heroes.json에서 찾아 같은 프레임에 올린다.
+async function loadHero(slug) {
+  let hero;
+  try {
+    const res = await fetch('heroes.json');
+    hero = (await res.json()).find(h => h.slug === slug);
+  } catch (e) {
+    console.error('heroes.json 읽기 실패', e);
+  }
+  if (!hero || !hero.href) return null;
+  return {
+    label: `HEROES · ${hero.korName}`,
+    tagline: hero.tagline || hero.role || '',
+    korName: hero.korName,
+    // href가 ".../game.html" 이므로 그 폴더를 자료 경로로 쓴다
+    folder: hero.href.replace(/\/[^/]*$/, ''),
+    gateKey: 'hero_' + slug,
+  };
+}
 
+async function loadKing(ep) {
+  let king;
   try {
     const res = await fetch('kings.json');
-    const kings = await res.json();
-    king = kings.find(k => k.ep === ep);
+    king = (await res.json()).find(k => k.ep === ep);
   } catch (e) {
     console.error('kings.json 읽기 실패', e);
   }
+  if (!king) return null;
+  const epStr = ep < 10 ? '0' + ep : ep;
+  return {
+    label: `EP${epStr} · ${king.korName}`,
+    tagline: king.tagline || '',
+    korName: king.korName,
+    folder: `kings/ep${epStr}_${king.slug}`,
+    gateKey: ep,
+  };
+}
 
-  if (!king) {
-    document.getElementById('ep-num').textContent = 'EP' + (ep < 10 ? '0' + ep : ep);
+async function loadEpisode() {
+  const params = new URLSearchParams(window.location.search);
+  const heroSlug = params.get('hero');
+  const ep = getEpFromURL();
+
+  const target = heroSlug ? await loadHero(heroSlug) : await loadKing(ep);
+
+  if (!target) {
+    document.getElementById('ep-num').textContent =
+      heroSlug ? 'HEROES' : 'EP' + (ep < 10 ? '0' + ep : ep);
     document.getElementById('ep-title').textContent = '에피소드 정보를 찾을 수 없습니다';
     return;
   }
 
   // 헤더 갱신
-  const epStr = ep < 10 ? '0' + ep : ep;
-  document.getElementById('ep-num').textContent = `EP${epStr} · ${king.korName}`;
-  document.getElementById('ep-title').textContent = king.tagline || '';
-  document.title = `EP${epStr} · ${king.korName} — ${king.tagline || ''}`;
+  document.getElementById('ep-num').textContent = target.label;
+  document.getElementById('ep-title').textContent = target.tagline;
+  document.title = `${target.label} — ${target.tagline}`;
 
   // 게임 iframe 로드
-  const slugFolder = `kings/ep${epStr}_${king.slug}`;
+  const slugFolder = target.folder;
   const gameUrl = `${slugFolder}/game.html`;
-  gateOrLoadGame(ep, gameUrl);
-
-  // 소설 로드
-  loadMarkdownIfExists(`${slugFolder}/novel.md`, 'novel-content');
+  gateOrLoadGame(target.gateKey, gameUrl);
 
   // 심화 로드
   loadMarkdownIfExists(`${slugFolder}/study.md`, 'study-content');
@@ -1251,7 +1279,7 @@ function escapeHTML(s) {
 }
 
 // 탭 전환
-const TAB_LABELS = { game:'게임', novel:'소설', quiz:'퀴즈', study:'심화', reviews:'후기' };
+const TAB_LABELS = { game:'게임', quiz:'퀴즈', study:'심화', reviews:'후기' };
 document.querySelectorAll('.ep-tab').forEach(tab => {
   tab.onclick = () => {
     document.querySelectorAll('.ep-tab').forEach(t => t.classList.remove('active'));

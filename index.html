@@ -252,7 +252,7 @@ footer{position:relative;z-index:1;padding:40px 20px;text-align:center;
   <p class="hero-sub">역사 속 그 사람이었다면<br>당신은 어떤 선택을 했겠는가</p>
   <div class="hero-cta">
     <button class="btn-primary" onclick="smoothTo('catalog')">시리즈 보기</button>
-    <button class="btn-secondary" onclick="goFreePlay()">무료 체험 →</button>
+    <button class="btn-secondary" onclick="goFreePlay()">바로 플레이 →</button>
   </div>
 </section>
 
@@ -275,8 +275,8 @@ footer{position:relative;z-index:1;padding:40px 20px;text-align:center;
     <div class="steps">
       <div class="step reveal">
         <div class="step-num">01</div>
-        <div class="step-title">회원가입</div>
-        <div class="step-desc">가입 즉시 환생포인트 10 지급.<br>이성계편 무료 체험 시작.</div>
+        <div class="step-title">바로 시작</div>
+        <div class="step-desc">가입 없이 전편 무료 플레이.<br>가입하면 진행도가 저장됩니다.</div>
       </div>
       <div class="step reveal" style="transition-delay:.1s">
         <div class="step-num">02</div>
@@ -821,13 +821,9 @@ function togglePw(id, btn) {
   if (input.type === 'password') { input.type = 'text'; btn.textContent = '🙈'; }
   else { input.type = 'password'; btn.textContent = '👁'; }
 }
-async function goFreePlay() {
-  const { data: { session } } = await sb.auth.getSession();
-  if (session) {
-    location.href = 'kings/yiseonggye.html';
-  } else {
-    openModal('signup');
-  }
+function goFreePlay() {
+  // ★ 전편 무료 개방 — 로그인·가입 없이 1화(태조)로 바로 입장
+  location.href = 'episode.html?ep=1';
 }
 function showErr(el, msg) { el.textContent = msg; el.style.display = 'block'; }
 function smoothTo(id) { document.getElementById(id).scrollIntoView({behavior:'smooth'}); }

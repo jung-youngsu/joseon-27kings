@@ -54,12 +54,13 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 .hero-card.soon{opacity:.4;cursor:default;}
 
 .hero-card-head{
-  display:grid;grid-template-columns:60px 1fr auto;
+  display:grid;grid-template-columns:max-content 1fr auto;
   align-items:center;gap:18px;padding:22px 24px;
 }
 .hero-card-num{
   font-family:'Noto Sans KR',sans-serif;font-size:32px;font-weight:900;
   color:var(--gold-dim);line-height:1;letter-spacing:-.02em;
+  white-space:nowrap;
 }
 .hero-card-body{min-width:0;}
 .hero-card-meta{
@@ -142,7 +143,7 @@ footer{padding:28px 20px;text-align:center;border-top:1px solid rgba(201,168,76,
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
 @media(max-width:480px){
-  .hero-card-head{grid-template-columns:48px 1fr auto;gap:12px;padding:18px 16px;}
+  .hero-card-head{grid-template-columns:max-content 1fr auto;gap:12px;padding:18px 16px;}
   .hero-card-num{font-size:24px;}
   .hero-card-body-inner{padding:0 16px 18px;}
 }
@@ -274,7 +275,7 @@ function renderHeroes(heroes) {
             ${h.personalName ? `<span class="hero-chip">${escapeHTML(h.personalName)}</span>` : ''}
           </div>
           <div class="hero-card-footer">
-            <button class="btn-action" onclick="event.stopPropagation();goPlay('${h.href}')">▶ 시작하기 →</button>
+            <button class="btn-action" onclick="event.stopPropagation();goPlay('${h.href}','${h.slug}')">▶ 시작하기 →</button>
           </div>
         </div>
       </div>`;
@@ -288,7 +289,10 @@ function toggleHero(num) {
   });
 }
 
-function goPlay(href) {
+function goPlay(href, slug) {
+  // game.html로 바로 가면 심화·퀴즈 탭이 없는 맨 게임만 열린다.
+  // episode.html 프레임을 거쳐 자료 탭까지 함께 띄운다.
+  if (slug) { location.href = 'episode.html?hero=' + encodeURIComponent(slug); return; }
   if (!href) return;
   location.href = href;
 }
