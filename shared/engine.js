@@ -269,6 +269,9 @@
     (s.dialogues || []).forEach(d => {
       if (d.type === 'inner') {
         html += `<div class="inner-voice">${parseInline(d.text)}</div>`;
+      } else if (d.type === 'narration') {
+        // 게임 씬 안의 지문. 말풍선으로 그리면 익명 화자의 대사로 읽힌다.
+        html += `<div class="dial-narr">${parseInline(d.text)}</div>`;
       } else {
         const cls = d.role || 'npc-a';
         html += `
@@ -625,9 +628,11 @@
   function parseInline(text) {
     if (!text) return '';
     return escapeHTML(text)
-      .replace(/\[b\](.+?)\[\/b\]/g,   '<strong>$1</strong>')
-      .replace(/\[i\](.+?)\[\/i\]/g,   '<em>$1</em>')
-      .replace(/\[em\](.+?)\[\/em\]/g, '<em>$1</em>')
+      // 줄바꿈을 품은 태그도 처리 — (.+?)는 개행을 못 먹어서
+      // 태그가 화면에 그대로 노출되던 문제가 있었다.
+      .replace(/\[b\]([\s\S]+?)\[\/b\]/g,   '<strong>$1</strong>')
+      .replace(/\[i\]([\s\S]+?)\[\/i\]/g,   '<em>$1</em>')
+      .replace(/\[em\]([\s\S]+?)\[\/em\]/g, '<em>$1</em>')
       .replace(/\*\*(.+?)\*\*/g,        '<strong>$1</strong>')
       .replace(/\*([^*\n]+?)\*/g,       '<em>$1</em>')
       .replace(/__(.+?)__/g,            '<em>$1</em>')

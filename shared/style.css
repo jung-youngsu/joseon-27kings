@@ -403,6 +403,18 @@ body {
   line-height: 2;
 }
 
+/* 게임 씬 안의 지문 — 말풍선이 아니라 그냥 글. 대사와 구별되어야 한다. */
+.dial-narr {
+  padding: 2px 2px 2px 0;
+  font-family: var(--font-serif);
+  font-size: 13.5px;
+  color: var(--text2);
+  line-height: 2.05;
+  animation: fi .4s ease;
+}
+.dial-narr em     { color: var(--text); font-style: italic; }
+.dial-narr strong { color: var(--text); font-weight: 600; }
+
 /* 내면 독백 (방과의 시선) */
 .inner-voice {
   margin: 0 0 14px;
