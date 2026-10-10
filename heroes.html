@@ -222,7 +222,7 @@ const sb=supabase.createClient(SUPA_URL,SUPA_KEY);
 // ── 카드 리스트 빌드 ──────────────────────────────────────
 async function buildHeroes() {
   try {
-    const res = await fetch('heroes.json');
+    const res = await fetch('heroes.json', { cache: 'no-cache' });
     const heroes = await res.json();
     renderHeroes(heroes);
   } catch (e) {

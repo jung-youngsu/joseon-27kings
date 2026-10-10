@@ -545,8 +545,8 @@ function buildSeriesList() {
 
   // kings.json + heroes.json을 함께 읽어 각 시리즈 desc/epCount 자동 갱신
   Promise.all([
-    fetch('kings.json').then(r => r.json()).catch(() => []),
-    fetch('heroes.json').then(r => r.json()).catch(() => []),
+    fetch('kings.json', { cache: 'no-cache' }).then(r => r.json()).catch(() => []),
+    fetch('heroes.json', { cache: 'no-cache' }).then(r => r.json()).catch(() => []),
   ]).then(([kings, heroes]) => {
     // 조선의 왕 시리즈
     const liveKings = (kings || []).filter(k => k.status === 'live');

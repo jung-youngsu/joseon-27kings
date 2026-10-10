@@ -257,6 +257,19 @@ opening(프롤로그) → [ narration → context → game → deep ] × N → e
   `style.css`에서 전용 배경·테두리를 받습니다. 신하·전령·병사는 `npc-a`.
 - 테마는 `kings.json`의 `theme`이 정합니다. 편 안에서 색을 직접 지정하지 않습니다.
 
+### 엔진·스타일을 고쳤다면 — 버전 올리기
+
+브라우저는 주소가 같으면 옛 `engine.js`를 캐시에서 꺼내 씁니다. 공용 파일
+(`shared/engine.js` · `style.css` · `themes/`)을 고친 뒤에는 반드시:
+
+```bash
+node tools/bump_version.js                 # 각 game.html의 ?v= 와 episode.html의 ASSET_V
+node tools/build_single.js kings/ep00_jeongdojeon   # 엔진을 품은 단일 HTML은 다시 빌드
+node tools/build_single.js heroes/yisunsin
+```
+
+`scenes.json` · `study.md` · `quiz.json`은 매번 서버에 새 버전을 확인하므로 따로 할 일이 없습니다.
+
 ### 저장 전 자동 점검
 
 ```bash

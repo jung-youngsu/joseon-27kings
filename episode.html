@@ -778,6 +778,11 @@ function getEpFromURL() {
 //   이벤트용 코드 전용 운영으로 되돌리려면 false로만 바꾸면 됩니다.
 const FREE_OPEN = true;
 
+// ★ 자산 버전 — 엔진·스타일·게임 페이지를 고치면 올린다.
+//   브라우저가 옛 engine.js를 붙들고 있지 않도록 주소에 붙는다.
+//   손으로 고치지 말고: node tools/bump_version.js
+const ASSET_V = '202610101';
+
 const UNLOCK_DAYS = 7;
 function unlockKey(ep){ return 'j27_unlock_ep' + ep; }
 function deviceUnlockValid(ep){
@@ -797,7 +802,7 @@ async function gateOrLoadGame(ep, gameUrl){
   const reveal = () => {
     if(gate) gate.style.display = 'none';
     frame.style.display = '';
-    frame.src = gameUrl;
+    frame.src = gameUrl + '?v=' + ASSET_V;
   };
 
   // 무료 개방 중 — 코드 없이 바로 입장
@@ -857,7 +862,7 @@ async function gateOrLoadGame(ep, gameUrl){
 async function loadHero(slug) {
   let hero;
   try {
-    const res = await fetch('heroes.json');
+    const res = await fetch('heroes.json', { cache: 'no-cache' });
     hero = (await res.json()).find(h => h.slug === slug);
   } catch (e) {
     console.error('heroes.json 읽기 실패', e);
@@ -876,7 +881,7 @@ async function loadHero(slug) {
 async function loadKing(ep) {
   let king;
   try {
-    const res = await fetch('kings.json');
+    const res = await fetch('kings.json', { cache: 'no-cache' });
     king = (await res.json()).find(k => k.ep === ep);
   } catch (e) {
     console.error('kings.json 읽기 실패', e);
@@ -929,7 +934,7 @@ async function loadEpisode() {
 // 마크다운 파일 있으면 표시
 async function loadMarkdownIfExists(url, targetId) {
   try {
-    const res = await fetch(url);
+    const res = await fetch(url, { cache: 'no-cache' });
     if (!res.ok) return; // 파일 없으면 빈 상태 유지
     const text = await res.text();
     if (!text.trim() || text.length < 30) return; // 거의 빈 템플릿이면 표시 안 함
@@ -958,7 +963,7 @@ const quizState = {
 
 async function loadQuizIfExists(url) {
   try {
-    const res = await fetch(url);
+    const res = await fetch(url, { cache: 'no-cache' });
     if (!res.ok) return;
     const data = await res.json();
     if (!data.questions || !data.questions.length) return;
