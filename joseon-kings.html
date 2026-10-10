@@ -211,6 +211,7 @@ async function showProgressBanner(){
     {ep:1, title:'태조 이성계',  file:'episode.html?ep=1'},
     {ep:2, title:'정종 이방과',  file:'episode.html?ep=2'},
     {ep:3, title:'태종 이방원',  file:'episode.html?ep=3'},
+    {ep:4, title:'세종 이도',    file:'episode.html?ep=4'},
     {ep:10,title:'연산군 이융',  file:'episode.html?ep=10'},
     {ep:14,title:'선조 이연',    file:'episode.html?ep=14'},
     {ep:22,title:'정조 이산',    file:'episode.html?ep=22'},
@@ -348,6 +349,7 @@ async function showLoggedIn(){
     {ep:1, title:'태조 이성계',  theme:'의리의 왕'},
     {ep:2, title:'정종 이방과',  theme:'이해의 왕'},
     {ep:3, title:'태종 이방원',  theme:'결단의 왕'},
+    {ep:4, title:'세종 이도',    theme:'즐거움의 왕'},
     {ep:10,title:'연산군 이융',  theme:'분노의 왕'},
     {ep:14,title:'선조 이연',    theme:'두려움의 왕'},
     {ep:22,title:'정조 이산',    theme:'복수의 왕'},
@@ -396,7 +398,9 @@ const KINGS=[
   {row:3,  x:CM,title:'태종',  name:'이방원',reign:'1400–18',  kw:'왕권 강화',
    series:true,ep:3,theme:'결단의 왕',sub:'쥐는 자의 외로움',
    desc:'다섯째 아들로 태어나 — 칼을 든 사람.<br>아버지를 왕으로 만들었고, 형제를 베어냈고, 자기 처남들까지 정리했다.<br>모든 것을 가졌고 — 모든 것을 잃었다.<br><br><em>※ EP2 정종편(이방과)과 한 쌍입니다. 같은 마당, 같은 아버지, 다르게 본 형제의 이야기.</em>'},
-  {row:4,  x:CM,title:'세종',  name:'이도',  reign:'1418–50',  kw:'한글 창제'},
+  {row:4,  x:CM,title:'세종',  name:'이도',  reign:'1418–50',  kw:'한글 창제',
+   series:true,ep:4,theme:'즐거움의 왕',sub:'일을 즐긴 사람',
+   desc:'왕이 될 자리가 아니었던 셋째 왕자.<br>세금도, 시간도, 글자도 — 모두 주어진 숙제였다.<br>그는 그 숙제를 궁금해했다. 천재여서가 아니라, 즐길 줄 알았기에.'},
   {row:5,  x:CL,title:'문종',  name:'이향',  reign:'1450–52',  kw:'학문·문치'},
   {row:6,  x:CL,title:'단종',  name:'이홍위',reign:'1452–55',  kw:'폐위·사사',deposed:true},
   {row:7,  x:CM,title:'세조',  name:'이유',  reign:'1455–68',  kw:'계유정난'},
@@ -651,7 +655,7 @@ async function toggleDetail(king){
   activeKing=king;
   wrap.style.display='block';
 
-  const gameFiles={1:'episode.html?ep=1', 2:'episode.html?ep=2', 3:'episode.html?ep=3', 10:'episode.html?ep=10', 14:'episode.html?ep=14', 22:'episode.html?ep=22'};
+  const gameFiles={1:'episode.html?ep=1', 2:'episode.html?ep=2', 3:'episode.html?ep=3', 4:'episode.html?ep=4', 10:'episode.html?ep=10', 14:'episode.html?ep=14', 22:'episode.html?ep=22'};
   const playable=!!gameFiles[king.ep];
   const tickets=userProfile?.rebirth_tickets||0;
 
@@ -669,7 +673,7 @@ async function toggleDetail(king){
     :'';
 
   const seriesOrder=`<div style="font-family:'Noto Sans KR',sans-serif;font-size:11px;color:var(--text-muted);margin-bottom:12px;line-height:2;">
-    공개된 편&nbsp;&nbsp;1화 태조 → 2화 정종 → 3화 태종 → 10화 연산군 → 14화 선조 → 22화 정조<br>
+    공개된 편&nbsp;&nbsp;1화 태조 → 2화 정종 → 3화 태종 → 4화 세종 → 10화 연산군 → 14화 선조 → 22화 정조<br>
     <span style="color:var(--gold);">전편 무료 — 로그인 없이 바로 플레이할 수 있어요.</span>
   </div>`;
 
