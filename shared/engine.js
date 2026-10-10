@@ -21,6 +21,7 @@
     data: null,           // scenes.json 전체
     currentSceneIdx: 0,   // 현재 씬 인덱스
     flags: {},            // 학생의 선택 기록
+    answers: {},          // 씬 인덱스 → { kind: 'option', idx } | { kind: 'free', text }
     actsCompleted: [],    // 완료한 막 ID 목록
     lockedScenes: new Set(),  // 선택을 이미 한 씬 (뒤로가기 제한용)
     visitedScenes: new Set()  // 이미 본 씬 (타이핑 스킵용)
@@ -31,6 +32,7 @@
     state.data = scenesData;
     state.currentSceneIdx = 0;
     state.flags = {};
+    state.answers = {};
     state.actsCompleted = [];
     state.lockedScenes = new Set();
     state.visitedScenes = new Set();
@@ -295,6 +297,15 @@
               <button class="ch" data-idx="${i}">${parseInline(opt.text)}</button>
             `).join('')}
           </div>
+          ${allowsFree(s.choice) ? `
+          <button class="ch ch-free" id="ch-free-open">✎ 다른 길이 있다 — 직접 쓰기</button>
+          <div class="free-wrap" id="free-wrap">
+            <textarea class="free-input" id="free-input" maxlength="300" rows="3"
+              placeholder="당신이라면 어떻게 하겠습니까? 위에 없는 길을 적어 보세요."></textarea>
+            <div class="free-actions">
+              <button class="btn-p solid" id="free-submit">이 길로 간다 →</button>
+            </div>
+          </div>` : ''}
           <div class="block-msg" id="block-msg"></div>
           <div class="no-answer-msg" id="no-answer-msg"></div>
           <div class="no-answer-nav" id="no-answer-nav">
@@ -313,13 +324,18 @@
 
     if (s.choice) {
       // 선택지 클릭 가능하게 바인딩
-      el.querySelectorAll('.ch').forEach(btn => {
+      el.querySelectorAll('.ch[data-idx]').forEach(btn => {
         btn.onclick = () => handleChoice(s, parseInt(btn.dataset.idx), btn, el);
       });
 
+      bindFreeAnswer(s, el);
+
       // 이전 선택이 있으면 표시 (해당 버튼만 강조, 나머지는 그대로 클릭 가능)
-      if (wasLocked && previousChoiceIdx !== undefined) {
-        const prevBtn = el.querySelectorAll('.ch')[previousChoiceIdx];
+      const prev = state.answers[state.currentSceneIdx];
+      if (wasLocked && prev && prev.kind === 'free') {
+        el.querySelector('#ch-free-open')?.classList.add('previously-chosen');
+      } else if (wasLocked && previousChoiceIdx !== undefined) {
+        const prevBtn = el.querySelectorAll('.ch[data-idx]')[previousChoiceIdx];
         if (prevBtn) prevBtn.classList.add('previously-chosen');
       }
     } else {
@@ -397,6 +413,8 @@
       if (scene.choice.flag) {
         state.flags[scene.choice.flag] = idx;
       }
+      state.answers[state.currentSceneIdx] = { kind: 'option', idx };
+      sceneEl.querySelector('#free-wrap')?.classList.remove('on');
 
       // 다음 버튼 표시 (라벨 동적)
       const navEl = sceneEl.querySelector('#no-answer-nav');
@@ -488,6 +506,59 @@
     }
   }
 
+  // ─── 직접 쓰기 ──────────────────────────────────────────
+  // 이 게임의 선택지는 일부러 좁다. 그 왕이 실제로 낸 길은 선택지에 없다.
+  // 그 길을 선택지에 넣으면 선택지가 의미를 잃으므로, 대신 플레이어가
+  // 선택지 밖의 길을 직접 적을 수 있게 한다. choice.freeText: false 로 끈다.
+  function allowsFree(choice) {
+    return choice && choice.type === 'reflection' && choice.freeText !== false;
+  }
+
+  function bindFreeAnswer(scene, sceneEl) {
+    const openBtn = sceneEl.querySelector('#ch-free-open');
+    const wrap = sceneEl.querySelector('#free-wrap');
+    const input = sceneEl.querySelector('#free-input');
+    const submit = sceneEl.querySelector('#free-submit');
+    if (!openBtn || !wrap || !input || !submit) return;
+
+    const prev = state.answers[state.currentSceneIdx];
+    if (prev && prev.kind === 'free') input.value = prev.text;
+
+    openBtn.onclick = () => {
+      wrap.classList.add('on');
+      input.focus();
+    };
+    submit.onclick = () => {
+      const text = input.value.trim();
+      if (!text) { input.focus(); return; }
+
+      state.lockedScenes.add(state.currentSceneIdx);
+      state.answers[state.currentSceneIdx] = { kind: 'free', text };
+      if (scene.choice.flag) state.flags[scene.choice.flag] = 'free';
+
+      sceneEl.querySelectorAll('.ch').forEach(b => b.classList.remove('locked', 'previously-chosen'));
+      openBtn.classList.add('locked');
+      wrap.classList.remove('on');
+
+      const msgEl = sceneEl.querySelector('#no-answer-msg');
+      if (msgEl) {
+        msgEl.innerHTML =
+          `<div class="free-echo">${escapeHTML(text).replace(/\n/g, '<br>')}</div>` +
+          parseInline(scene.choice.freeFeedback ||
+            '당신이 낸 길을 적어 두었습니다.\n이제 [b]그가 실제로 걸은 길[/b]과 견주어 보세요.');
+        msgEl.classList.add('on');
+      }
+
+      const navEl = sceneEl.querySelector('#no-answer-nav');
+      if (navEl) navEl.classList.add('on');
+      const nextBtn = sceneEl.querySelector('#ch-next');
+      if (nextBtn) {
+        nextBtn.textContent = getNextLabel();
+        nextBtn.onclick = nextScene;
+      }
+    };
+  }
+
   // ─── 씬 이동 ────────────────────────────────────────────
   function nextScene() {
     state.currentSceneIdx++;
@@ -507,6 +578,7 @@
         type: 'game-complete',
         ep: state.data.ep,
         flags: state.flags,
+        answers: summarizeAnswers().map(a => ({ act: a.act, question: a.question, answer: a.answerText, free: a.free })),
         actsCompleted: state.actsCompleted,
         timestamp: Date.now()
       }, '*');
@@ -514,26 +586,74 @@
       console.warn('postMessage failed', e);
     }
 
-    // 최종 화면
+    // 최종 화면 — 플레이어가 막마다 고른 길을 한 장으로 돌려준다
+    const rows = summarizeAnswers();
+    const list = rows.map(r => `
+      <li class="mychoice">
+        ${r.act ? `<div class="mychoice-act">${escapeHTML(r.act)}</div>` : ''}
+        <div class="mychoice-q">${parseInline(r.question)}</div>
+        <div class="mychoice-a${r.free ? ' free' : ''}">
+          ${r.free ? '<span class="mychoice-mark">✎ 직접 쓴 길</span>' : ''}
+          ${r.answerHTML}
+        </div>
+        ${r.history ? `<div class="mychoice-h">깊게 살펴보기 「${parseInline(r.history)}」</div>` : ''}
+      </li>`).join('');
+    const freeCount = rows.filter(r => r.free).length;
+
     const root = document.getElementById('game-root');
     root.innerHTML = `
       <div class="sc on">
         ${headerNav()}
-        <div class="epi-body" style="text-align:center;padding-top:80px;">
-          <div class="epi-big">완료</div>
-          <div class="epi-text">${escapeHTML(state.data.title || '에피소드')}를 마쳤습니다.</div>
-          <div class="nav-area" style="justify-content:center;margin-top:32px;">
+        <div class="epi-body mychoice-body">
+          <div class="epi-year">${escapeHTML(state.data.title || '')}</div>
+          <div class="epi-big">당신의 선택은 이러했습니다</div>
+          ${rows.length ? `<ol class="mychoice-list">${list}</ol>` : ''}
+          ${freeCount ? `<div class="epi-text">${rows.length}번의 갈림길 가운데 ${freeCount}번, 당신은 주어진 선택지 밖에서 길을 찾았습니다.</div>` : ''}
+          <div class="nav-area" style="justify-content:center;margin-top:24px;">
             <button class="btn-p solid" onclick="GameEngine.restart()">다시 보기</button>
           </div>
         </div>
       </div>
     `;
+    window.scrollTo(0, 0);
+  }
+
+  // 막마다 [질문 · 내 답 · 그 막의 깊게 살펴보기 제목]을 모은다.
+  function summarizeAnswers() {
+    const scenes = state.data.scenes;
+    const rows = [];
+    scenes.forEach((s, i) => {
+      if (s.type !== 'game' || !s.choice) return;
+      const a = state.answers[i];
+      const deep = scenes.slice(i + 1).find(x => x.type === 'deep' || x.type === 'game');
+      const row = {
+        act: (s.progLabel || '').trim(),
+        question: s.choice.label || '',
+        history: deep && deep.type === 'deep' ? deep.title : '',
+        free: !!(a && a.kind === 'free'),
+      };
+      if (!a) {
+        row.answerText = '';
+        row.answerHTML = '<span class="mychoice-none">고르지 않고 지나갔습니다</span>';
+      } else if (a.kind === 'free') {
+        row.answerText = a.text;
+        row.answerHTML = escapeHTML(a.text).replace(/\n/g, '<br>');
+      } else {
+        const opt = s.choice.options[a.idx] || {};
+        row.answerText = String(opt.text || '').replace(/\[\/?[a-z]+\]/g, '');
+        row.answerHTML = parseInline(opt.text || '');
+      }
+      rows.push(row);
+    });
+    return rows;
   }
 
   function restart() {
     state.currentSceneIdx = 0;
     state.flags = {};
+    state.answers = {};
     state.actsCompleted = [];
+    state.lockedScenes = new Set();
     renderScene();
   }
 

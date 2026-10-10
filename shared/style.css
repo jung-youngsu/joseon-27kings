@@ -522,6 +522,55 @@ body {
 .no-answer-nav { display: none; margin-top: 12px; }
 .no-answer-nav.on { display: flex; gap: 8px; }
 
+/* 직접 쓰기 — 선택지 밖의 길 */
+.ch.ch-free {
+  margin-top: 7px;
+  background: transparent;
+  border-style: dashed;
+  color: var(--text3);
+}
+.free-wrap { display: none; margin-top: 8px; animation: fi .3s ease; }
+.free-wrap.on { display: block; }
+.free-input {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 84px;
+  padding: 12px 14px;
+  background: var(--bg2);
+  border: 1px solid var(--border3);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: var(--font-serif);
+  font-size: 14px;
+  line-height: 1.8;
+}
+.free-input:focus { outline: none; border-color: var(--accent2); }
+.free-input::placeholder { color: var(--text3); }
+.free-actions { display: flex; justify-content: flex-end; margin-top: 8px; }
+.free-echo {
+  margin-bottom: 10px;
+  padding-left: 10px;
+  border-left: 2px solid var(--accent3);
+  color: var(--text);
+}
+
+/* 마지막 화면 — 당신의 선택 */
+.mychoice-list { list-style: none; padding: 0; margin: 8px 0 18px; }
+.mychoice {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border2);
+  font-family: var(--font-serif);
+}
+.mychoice:last-child { border-bottom: none; }
+.mychoice-act { font-size: 11px; letter-spacing: 2px; color: var(--accent3); margin-bottom: 6px; }
+.mychoice-q { font-size: 13px; color: var(--text3); line-height: 1.7; margin-bottom: 6px; }
+.mychoice-a { font-size: 15px; color: var(--text); line-height: 1.8; }
+.mychoice-a.free { padding-left: 10px; border-left: 2px solid var(--accent3); }
+.mychoice-mark { display: block; font-size: 11px; color: var(--accent3); letter-spacing: 1px; margin-bottom: 2px; }
+.mychoice-none { color: var(--text3); font-style: italic; }
+.mychoice-h { margin-top: 8px; font-size: 12.5px; color: var(--text2); line-height: 1.7; }
+
 /* ═══ 깊게 살펴보기 (게임 씬 안에서 펼쳐짐) ═══════════════════ */
 .deep-reveal {
   max-height: 0;

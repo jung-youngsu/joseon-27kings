@@ -451,6 +451,18 @@ body {
   line-height: 2;
 }
 
+/* 게임 씬 안의 지문 — 말풍선이 아니라 그냥 글. 대사와 구별되어야 한다. */
+.dial-narr {
+  padding: 2px 2px 2px 0;
+  font-family: var(--font-serif);
+  font-size: 13.5px;
+  color: var(--text2);
+  line-height: 2.05;
+  animation: fi .4s ease;
+}
+.dial-narr em     { color: var(--text); font-style: italic; }
+.dial-narr strong { color: var(--text); font-weight: 600; }
+
 /* 내면 독백 (방과의 시선) */
 .inner-voice {
   margin: 0 0 14px;
@@ -557,6 +569,55 @@ body {
 .no-answer-msg.on { display: block; }
 .no-answer-nav { display: none; margin-top: 12px; }
 .no-answer-nav.on { display: flex; gap: 8px; }
+
+/* 직접 쓰기 — 선택지 밖의 길 */
+.ch.ch-free {
+  margin-top: 7px;
+  background: transparent;
+  border-style: dashed;
+  color: var(--text3);
+}
+.free-wrap { display: none; margin-top: 8px; animation: fi .3s ease; }
+.free-wrap.on { display: block; }
+.free-input {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 84px;
+  padding: 12px 14px;
+  background: var(--bg2);
+  border: 1px solid var(--border3);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: var(--font-serif);
+  font-size: 14px;
+  line-height: 1.8;
+}
+.free-input:focus { outline: none; border-color: var(--accent2); }
+.free-input::placeholder { color: var(--text3); }
+.free-actions { display: flex; justify-content: flex-end; margin-top: 8px; }
+.free-echo {
+  margin-bottom: 10px;
+  padding-left: 10px;
+  border-left: 2px solid var(--accent3);
+  color: var(--text);
+}
+
+/* 마지막 화면 — 당신의 선택 */
+.mychoice-list { list-style: none; padding: 0; margin: 8px 0 18px; }
+.mychoice {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border2);
+  font-family: var(--font-serif);
+}
+.mychoice:last-child { border-bottom: none; }
+.mychoice-act { font-size: 11px; letter-spacing: 2px; color: var(--accent3); margin-bottom: 6px; }
+.mychoice-q { font-size: 13px; color: var(--text3); line-height: 1.7; margin-bottom: 6px; }
+.mychoice-a { font-size: 15px; color: var(--text); line-height: 1.8; }
+.mychoice-a.free { padding-left: 10px; border-left: 2px solid var(--accent3); }
+.mychoice-mark { display: block; font-size: 11px; color: var(--accent3); letter-spacing: 1px; margin-bottom: 2px; }
+.mychoice-none { color: var(--text3); font-style: italic; }
+.mychoice-h { margin-top: 8px; font-size: 12.5px; color: var(--text2); line-height: 1.7; }
 
 /* ═══ 깊게 살펴보기 (게임 씬 안에서 펼쳐짐) ═══════════════════ */
 .deep-reveal {
@@ -843,6 +904,7 @@ body {
     data: null,           // scenes.json 전체
     currentSceneIdx: 0,   // 현재 씬 인덱스
     flags: {},            // 학생의 선택 기록
+    answers: {},          // 씬 인덱스 → { kind: 'option', idx } | { kind: 'free', text }
     actsCompleted: [],    // 완료한 막 ID 목록
     lockedScenes: new Set(),  // 선택을 이미 한 씬 (뒤로가기 제한용)
     visitedScenes: new Set()  // 이미 본 씬 (타이핑 스킵용)
@@ -853,6 +915,7 @@ body {
     state.data = scenesData;
     state.currentSceneIdx = 0;
     state.flags = {};
+    state.answers = {};
     state.actsCompleted = [];
     state.lockedScenes = new Set();
     state.visitedScenes = new Set();
@@ -1091,6 +1154,9 @@ body {
     (s.dialogues || []).forEach(d => {
       if (d.type === 'inner') {
         html += `<div class="inner-voice">${parseInline(d.text)}</div>`;
+      } else if (d.type === 'narration') {
+        // 게임 씬 안의 지문. 말풍선으로 그리면 익명 화자의 대사로 읽힌다.
+        html += `<div class="dial-narr">${parseInline(d.text)}</div>`;
       } else {
         const cls = d.role || 'npc-a';
         html += `
@@ -1114,6 +1180,15 @@ body {
               <button class="ch" data-idx="${i}">${parseInline(opt.text)}</button>
             `).join('')}
           </div>
+          ${allowsFree(s.choice) ? `
+          <button class="ch ch-free" id="ch-free-open">✎ 다른 길이 있다 — 직접 쓰기</button>
+          <div class="free-wrap" id="free-wrap">
+            <textarea class="free-input" id="free-input" maxlength="300" rows="3"
+              placeholder="당신이라면 어떻게 하겠습니까? 위에 없는 길을 적어 보세요."></textarea>
+            <div class="free-actions">
+              <button class="btn-p solid" id="free-submit">이 길로 간다 →</button>
+            </div>
+          </div>` : ''}
           <div class="block-msg" id="block-msg"></div>
           <div class="no-answer-msg" id="no-answer-msg"></div>
           <div class="no-answer-nav" id="no-answer-nav">
@@ -1132,13 +1207,18 @@ body {
 
     if (s.choice) {
       // 선택지 클릭 가능하게 바인딩
-      el.querySelectorAll('.ch').forEach(btn => {
+      el.querySelectorAll('.ch[data-idx]').forEach(btn => {
         btn.onclick = () => handleChoice(s, parseInt(btn.dataset.idx), btn, el);
       });
 
+      bindFreeAnswer(s, el);
+
       // 이전 선택이 있으면 표시 (해당 버튼만 강조, 나머지는 그대로 클릭 가능)
-      if (wasLocked && previousChoiceIdx !== undefined) {
-        const prevBtn = el.querySelectorAll('.ch')[previousChoiceIdx];
+      const prev = state.answers[state.currentSceneIdx];
+      if (wasLocked && prev && prev.kind === 'free') {
+        el.querySelector('#ch-free-open')?.classList.add('previously-chosen');
+      } else if (wasLocked && previousChoiceIdx !== undefined) {
+        const prevBtn = el.querySelectorAll('.ch[data-idx]')[previousChoiceIdx];
         if (prevBtn) prevBtn.classList.add('previously-chosen');
       }
     } else {
@@ -1216,6 +1296,8 @@ body {
       if (scene.choice.flag) {
         state.flags[scene.choice.flag] = idx;
       }
+      state.answers[state.currentSceneIdx] = { kind: 'option', idx };
+      sceneEl.querySelector('#free-wrap')?.classList.remove('on');
 
       // 다음 버튼 표시 (라벨 동적)
       const navEl = sceneEl.querySelector('#no-answer-nav');
@@ -1307,6 +1389,59 @@ body {
     }
   }
 
+  // ─── 직접 쓰기 ──────────────────────────────────────────
+  // 이 게임의 선택지는 일부러 좁다. 그 왕이 실제로 낸 길은 선택지에 없다.
+  // 그 길을 선택지에 넣으면 선택지가 의미를 잃으므로, 대신 플레이어가
+  // 선택지 밖의 길을 직접 적을 수 있게 한다. choice.freeText: false 로 끈다.
+  function allowsFree(choice) {
+    return choice && choice.type === 'reflection' && choice.freeText !== false;
+  }
+
+  function bindFreeAnswer(scene, sceneEl) {
+    const openBtn = sceneEl.querySelector('#ch-free-open');
+    const wrap = sceneEl.querySelector('#free-wrap');
+    const input = sceneEl.querySelector('#free-input');
+    const submit = sceneEl.querySelector('#free-submit');
+    if (!openBtn || !wrap || !input || !submit) return;
+
+    const prev = state.answers[state.currentSceneIdx];
+    if (prev && prev.kind === 'free') input.value = prev.text;
+
+    openBtn.onclick = () => {
+      wrap.classList.add('on');
+      input.focus();
+    };
+    submit.onclick = () => {
+      const text = input.value.trim();
+      if (!text) { input.focus(); return; }
+
+      state.lockedScenes.add(state.currentSceneIdx);
+      state.answers[state.currentSceneIdx] = { kind: 'free', text };
+      if (scene.choice.flag) state.flags[scene.choice.flag] = 'free';
+
+      sceneEl.querySelectorAll('.ch').forEach(b => b.classList.remove('locked', 'previously-chosen'));
+      openBtn.classList.add('locked');
+      wrap.classList.remove('on');
+
+      const msgEl = sceneEl.querySelector('#no-answer-msg');
+      if (msgEl) {
+        msgEl.innerHTML =
+          `<div class="free-echo">${escapeHTML(text).replace(/\n/g, '<br>')}</div>` +
+          parseInline(scene.choice.freeFeedback ||
+            '당신이 낸 길을 적어 두었습니다.\n이제 [b]그가 실제로 걸은 길[/b]과 견주어 보세요.');
+        msgEl.classList.add('on');
+      }
+
+      const navEl = sceneEl.querySelector('#no-answer-nav');
+      if (navEl) navEl.classList.add('on');
+      const nextBtn = sceneEl.querySelector('#ch-next');
+      if (nextBtn) {
+        nextBtn.textContent = getNextLabel();
+        nextBtn.onclick = nextScene;
+      }
+    };
+  }
+
   // ─── 씬 이동 ────────────────────────────────────────────
   function nextScene() {
     state.currentSceneIdx++;
@@ -1326,6 +1461,7 @@ body {
         type: 'game-complete',
         ep: state.data.ep,
         flags: state.flags,
+        answers: summarizeAnswers().map(a => ({ act: a.act, question: a.question, answer: a.answerText, free: a.free })),
         actsCompleted: state.actsCompleted,
         timestamp: Date.now()
       }, '*');
@@ -1333,26 +1469,74 @@ body {
       console.warn('postMessage failed', e);
     }
 
-    // 최종 화면
+    // 최종 화면 — 플레이어가 막마다 고른 길을 한 장으로 돌려준다
+    const rows = summarizeAnswers();
+    const list = rows.map(r => `
+      <li class="mychoice">
+        ${r.act ? `<div class="mychoice-act">${escapeHTML(r.act)}</div>` : ''}
+        <div class="mychoice-q">${parseInline(r.question)}</div>
+        <div class="mychoice-a${r.free ? ' free' : ''}">
+          ${r.free ? '<span class="mychoice-mark">✎ 직접 쓴 길</span>' : ''}
+          ${r.answerHTML}
+        </div>
+        ${r.history ? `<div class="mychoice-h">깊게 살펴보기 「${parseInline(r.history)}」</div>` : ''}
+      </li>`).join('');
+    const freeCount = rows.filter(r => r.free).length;
+
     const root = document.getElementById('game-root');
     root.innerHTML = `
       <div class="sc on">
         ${headerNav()}
-        <div class="epi-body" style="text-align:center;padding-top:80px;">
-          <div class="epi-big">완료</div>
-          <div class="epi-text">${escapeHTML(state.data.title || '에피소드')}를 마쳤습니다.</div>
-          <div class="nav-area" style="justify-content:center;margin-top:32px;">
+        <div class="epi-body mychoice-body">
+          <div class="epi-year">${escapeHTML(state.data.title || '')}</div>
+          <div class="epi-big">당신의 선택은 이러했습니다</div>
+          ${rows.length ? `<ol class="mychoice-list">${list}</ol>` : ''}
+          ${freeCount ? `<div class="epi-text">${rows.length}번의 갈림길 가운데 ${freeCount}번, 당신은 주어진 선택지 밖에서 길을 찾았습니다.</div>` : ''}
+          <div class="nav-area" style="justify-content:center;margin-top:24px;">
             <button class="btn-p solid" onclick="GameEngine.restart()">다시 보기</button>
           </div>
         </div>
       </div>
     `;
+    window.scrollTo(0, 0);
+  }
+
+  // 막마다 [질문 · 내 답 · 그 막의 깊게 살펴보기 제목]을 모은다.
+  function summarizeAnswers() {
+    const scenes = state.data.scenes;
+    const rows = [];
+    scenes.forEach((s, i) => {
+      if (s.type !== 'game' || !s.choice) return;
+      const a = state.answers[i];
+      const deep = scenes.slice(i + 1).find(x => x.type === 'deep' || x.type === 'game');
+      const row = {
+        act: (s.progLabel || '').trim(),
+        question: s.choice.label || '',
+        history: deep && deep.type === 'deep' ? deep.title : '',
+        free: !!(a && a.kind === 'free'),
+      };
+      if (!a) {
+        row.answerText = '';
+        row.answerHTML = '<span class="mychoice-none">고르지 않고 지나갔습니다</span>';
+      } else if (a.kind === 'free') {
+        row.answerText = a.text;
+        row.answerHTML = escapeHTML(a.text).replace(/\n/g, '<br>');
+      } else {
+        const opt = s.choice.options[a.idx] || {};
+        row.answerText = String(opt.text || '').replace(/\[\/?[a-z]+\]/g, '');
+        row.answerHTML = parseInline(opt.text || '');
+      }
+      rows.push(row);
+    });
+    return rows;
   }
 
   function restart() {
     state.currentSceneIdx = 0;
     state.flags = {};
+    state.answers = {};
     state.actsCompleted = [];
+    state.lockedScenes = new Set();
     renderScene();
   }
 
@@ -1447,9 +1631,11 @@ body {
   function parseInline(text) {
     if (!text) return '';
     return escapeHTML(text)
-      .replace(/\[b\](.+?)\[\/b\]/g,   '<strong>$1</strong>')
-      .replace(/\[i\](.+?)\[\/i\]/g,   '<em>$1</em>')
-      .replace(/\[em\](.+?)\[\/em\]/g, '<em>$1</em>')
+      // 줄바꿈을 품은 태그도 처리 — (.+?)는 개행을 못 먹어서
+      // 태그가 화면에 그대로 노출되던 문제가 있었다.
+      .replace(/\[b\]([\s\S]+?)\[\/b\]/g,   '<strong>$1</strong>')
+      .replace(/\[i\]([\s\S]+?)\[\/i\]/g,   '<em>$1</em>')
+      .replace(/\[em\]([\s\S]+?)\[\/em\]/g, '<em>$1</em>')
       .replace(/\*\*(.+?)\*\*/g,        '<strong>$1</strong>')
       .replace(/\*([^*\n]+?)\*/g,       '<em>$1</em>')
       .replace(/__(.+?)__/g,            '<em>$1</em>')
@@ -1474,7 +1660,7 @@ body {
 <!-- scenes data (inlined from scenes.json) -->
 <script>
 (function(){
-  var data = {"ep":2,"slug":"yisunsin","korName":"이순신","personalName":"충무공","title":"이순신 — 결단의 사람","tagline":"신에게는 아직 열두 척의 배가 있사옵니다","theme":"cold-iron","scenes":[{"type":"opening","question":"1597년, 조선의 바다.\n남은 배는 열두 척.\n적은 삼백삼십 척.","glyph":"海","series":"역사체험 교육 게임 · 영웅편 2화 · 이순신","lines":["누군가는 포기했고, 누군가는 다시 바다로 나갔다.","[em]그 사람이 — 지금 당신이다.[/em]"],"portal":true,"progLabel":"프롤로그"},{"type":"narration","era":"0막 · 1576년 · 한성 · 서른둘","text":"열 살 어린 동기들 사이에 서 있다.\n\n누군가 말했다.\n\"이 나이에 첫 급제라니.\"\n\n당신은 대꾸하지 않았다.","svg":"<svg viewBox=\"0 0 640 220\" xmlns=\"http://www.w3.org/2000/svg\"><rect width=\"640\" height=\"220\" fill=\"#040302\"/><path d=\"M0 120 L80 85 L160 100 L240 75 L320 90 L400 72 L480 86 L560 74 L640 88 L640 120Z\" fill=\"#0a0806\"/><rect x=\"0\" y=\"120\" width=\"640\" height=\"100\" fill=\"#060402\"/><rect x=\"80\" y=\"65\" width=\"6\" height=\"75\" fill=\"#1a1208\" rx=\"1\"/><rect x=\"280\" y=\"55\" width=\"6\" height=\"85\" fill=\"#1a1208\" rx=\"1\"/><rect x=\"480\" y=\"60\" width=\"6\" height=\"80\" fill=\"#1a1208\" rx=\"1\"/><g fill=\"#100e08\"><circle cx=\"200\" cy=\"140\" r=\"7\"/><rect x=\"193\" y=\"147\" width=\"14\" height=\"22\" rx=\"2\"/><circle cx=\"260\" cy=\"142\" r=\"7\"/><rect x=\"253\" y=\"149\" width=\"14\" height=\"22\" rx=\"2\"/><circle cx=\"380\" cy=\"140\" r=\"7\"/><rect x=\"373\" y=\"147\" width=\"14\" height=\"22\" rx=\"2\"/><circle cx=\"440\" cy=\"142\" r=\"7\"/><rect x=\"433\" y=\"149\" width=\"14\" height=\"22\" rx=\"2\"/></g><circle cx=\"100\" cy=\"138\" r=\"8\" fill=\"#1e1a10\"/><rect x=\"92\" y=\"146\" width=\"16\" height=\"26\" fill=\"#1e1a10\" rx=\"2\"/><line x1=\"100\" y1=\"114\" x2=\"100\" y2=\"138\" stroke=\"#5a3808\" stroke-width=\"2\"/><polygon points=\"100,112 112,118 100,124\" fill=\"#a06010\" opacity=\".8\"/></svg>","progLabel":"0막 · 늦깎이"},{"type":"game","dialogues":[{"type":"inner","text":"\"늦었다\"는 말 앞에서 — [b]당신은 무엇을 느꼈나.[/b]"}],"choice":{"type":"reflection","label":"당신은 무엇을 느꼈나?","flag":"act0_emotion","options":[{"text":"치욕이다 — 열 살 아래 동기들 앞에서 이게 뭔가","feedback":"치욕은 사실이었다. 이순신은 그것을 외면하지 않았다. [em]난중일기[/em]에 자신의 감정을 숨기지 않고 기록했다. [b]느끼는 것과 무너지는 것은 다르다.[/b]"},{"text":"고집이었다 — 포기하지 않았을 뿐이다","feedback":"이유 없는 고집이 아니었다. 그는 그 10년을 허비하지 않았다. 병법을 읽고 전쟁을 생각했다. [b]포기하지 않은 것은 — 해야 할 일을 알았기 때문이다.[/b]"},{"text":"확신이 있었다 — 늦은 게 아니라 제대로 준비한 것이다","feedback":"전라좌수사로 부임한 1591년, 첫날부터 전쟁을 준비했다. 그 확신이 [b]거북선을 만들게 했고[/b] — 임진왜란 당일, 유일하게 준비된 장수로 만들었다."}]},"progLabel":"0막 · 늦깎이"},{"type":"narration","era":"1막 · 1583년 · 함경도 녹둔도 · 서른아홉","text":"단 한 번의 패배였다.\n기습이었고, 병력도 부족했다.\n\n조정은 파직을 명했다.\n단 한 번 졌다는 이유만으로.\n\n당신은 죄인처럼 한성으로 끌려갔다.\n억울한가.\n그래도 — 그 억울함 뒤에\n무엇이 남아야 하는가.","svg":"<svg viewBox=\"0 0 640 200\" xmlns=\"http://www.w3.org/2000/svg\"><rect width=\"640\" height=\"200\" fill=\"#030204\"/><path d=\"M0 100 Q160 80 320 95 Q480 110 640 88 L640 100Z\" fill=\"#080606\"/><rect x=\"0\" y=\"100\" width=\"640\" height=\"100\" fill=\"#060404\"/><g stroke=\"#1a2030\" stroke-width=\".6\" opacity=\".4\"><line x1=\"80\" y1=\"0\" x2=\"74\" y2=\"80\"/><line x1=\"220\" y1=\"5\" x2=\"214\" y2=\"85\"/><line x1=\"380\" y1=\"0\" x2=\"374\" y2=\"80\"/><line x1=\"520\" y1=\"8\" x2=\"514\" y2=\"88\"/></g><ellipse cx=\"130\" cy=\"155\" rx=\"22\" ry=\"5\" fill=\"#100808\" opacity=\".7\" transform=\"rotate(-8,130,155)\"/><ellipse cx=\"300\" cy=\"160\" rx=\"18\" ry=\"5\" fill=\"#100808\" opacity=\".7\" transform=\"rotate(12,300,160)\"/><circle cx=\"320\" cy=\"128\" r=\"8\" fill=\"#1a1208\"/><rect x=\"312\" y=\"136\" width=\"16\" height=\"24\" fill=\"#1a1208\" rx=\"2\"/></svg>","progLabel":"1막 · 첫 패배"},{"type":"game","dialogues":[{"type":"inner","text":"억울하다.\n기습이었다. 병력도 부족했다.\n그래도 — [b]진 것은 사실이다.[/b]"}],"choice":{"label":"당신이라면 이 패배 앞에서","flag":"act1_response","options":[{"text":"어쩔 수 없었음을 주장한다 — 기습이었고 병력이 부족했다. 상황이 문제였다.","correct":false,"blockMessage":"상황이 불리했던 것은 사실이다. 그러나 상황에 집중하면 [em]내가 바꿀 수 있는 것[/em]이 보이지 않는다. [b]같은 상황에서 또 진다.[/b]"},{"text":"패배의 원인을 기록한다 — 무엇이 틀렸는지 써둔다. 다시는 같은 방식으로 지지 않겠다.","correct":true},{"text":"잊기로 한다 — 이미 지난 일이다. 다음을 생각해야 한다.","correct":false,"blockMessage":"다음을 생각하는 것은 맞다. 그러나 [b]과거를 기록하지 않으면 다음에도 같은 실수를 한다.[/b] 이순신이 위대한 것은 — [em]잊지 않았기 때문이다.[/em]"}]},"progLabel":"1막 · 첫 패배"},{"type":"narration","era":"2막 · 1590~1592년 · 조선과 일본","text":"1590년, 조선 통신사가 일본에서 돌아왔다.\n정사 황윤길이 보고했다:\n\"히데요시는 이미 전국을 통일했습니다.\n조선 침략의 의도가 분명합니다.\n반드시 전쟁이 있을 것입니다.\"\n\n조정은 이 보고를 무시했다.\n민심이 흔들릴 것을 걱정했다.\n\n[b]당신은 무시하지 않았다.[/b]","svg":"<svg viewBox=\"0 0 640 200\" xmlns=\"http://www.w3.org/2000/svg\"><rect width=\"640\" height=\"200\" fill=\"#030408\"/><path d=\"M0 90 Q160 70 320 85 Q480 100 640 78 L640 90Z\" fill=\"#050810\"/><rect x=\"0\" y=\"90\" width=\"640\" height=\"110\" fill=\"#040608\"/><path d=\"M80 120 Q200 100 320 120 L323 138 Q200 150 77 138Z\" fill=\"#0c1008\"/><path d=\"M82 120 Q200 102 318 120 L314 108 Q200 88 86 108Z\" fill=\"#0a0e08\"/><line x1=\"145\" y1=\"103\" x2=\"148\" y2=\"120\" stroke=\"#141e10\" stroke-width=\"1\"/><line x1=\"200\" y1=\"97\" x2=\"200\" y2=\"120\" stroke=\"#141e10\" stroke-width=\"1\"/><line x1=\"255\" y1=\"103\" x2=\"252\" y2=\"120\" stroke=\"#141e10\" stroke-width=\"1\"/><line x1=\"85\" y1=\"112\" x2=\"315\" y2=\"112\" stroke=\"#141e10\" stroke-width=\"1\"/><rect x=\"295\" y=\"130\" width=\"14\" height=\"5\" fill=\"#141e18\" rx=\"2\"/><rect x=\"100\" y=\"131\" width=\"14\" height=\"5\" fill=\"#141e18\" rx=\"2\"/><circle cx=\"420\" cy=\"118\" r=\"6\" fill=\"#181408\"/><rect x=\"414\" y=\"124\" width=\"12\" height=\"18\" fill=\"#181408\" rx=\"2\"/></svg>","progLabel":"2막 · 준비한 자"},{"type":"game","dialogues":[{"type":"inner","text":"조정은 무시했다.\n당신은 무시하지 않았다.\n[b]왜인가.[/b]"}],"choice":{"type":"reflection","label":"당신이 전쟁을 확신한 이유는?","flag":"act2_reason","options":[{"text":"특별히 똑똑했기 때문이다 — 상황을 남들보다 더 잘 읽었다.","feedback":"조정에도 똑똑한 사람은 많았다. 그들도 황윤길의 보고를 들었다. [b]차이는 지능이 아니라 경험이었다.[/b]"},{"text":"히데요시가 전국을 통일한 순간, 그 군사력이 향할 곳은 하나였다 — 통일된 군사력은 반드시 출구를 찾는다.","feedback":"도요토미 히데요시가 전국을 통일한 순간, 수십 년 내전으로 단련된 대규모 군사력이 갈 곳을 잃었다. [em]그 힘은 반드시 바깥으로 향한다.[/em] 이순신은 그 논리를 읽었다."},{"text":"녹둔도의 패배에서 배웠다 — 기습을 당한 자는 다음 기습을 두려워하며 준비한다.","feedback":"녹둔도에서 기습을 당한 이순신은 패배를 기록했다. 그 기록이 이후 [em]'적이 언제 어디서 올 수 있는가'[/em]를 끊임없이 생각하게 했다. [b]현명한 사람은 패배에서 지혜를 얻는다.[/b]"}]},"progLabel":"2막 · 준비한 자"},{"type":"narration","era":"3막 · 1597년 봄 · 한성 형장","text":"원균의 모함으로 통제사에서 파직되고\n형장으로 끌려갔다.\n매를 맞았다.\n\n죄명 없는 파직.\n명령: [em]백의종군.[/em]\n흰 옷을 입고 전쟁에 나가라.\n\n난중일기에 기록을 남겼다.\n\"천지가 캄캄하다.\"","svg":"<svg viewBox=\"0 0 640 200\" xmlns=\"http://www.w3.org/2000/svg\"><rect width=\"640\" height=\"200\" fill=\"#030204\"/><path d=\"M0 100 Q320 82 640 96 L640 100Z\" fill=\"#080606\"/><rect x=\"0\" y=\"100\" width=\"640\" height=\"100\" fill=\"#060404\"/><g stroke=\"#1a2030\" stroke-width=\".6\" opacity=\".35\"><line x1=\"80\" y1=\"0\" x2=\"75\" y2=\"65\"/><line x1=\"200\" y1=\"8\" x2=\"195\" y2=\"73\"/><line x1=\"380\" y1=\"0\" x2=\"375\" y2=\"65\"/><line x1=\"520\" y1=\"5\" x2=\"515\" y2=\"70\"/></g><circle cx=\"320\" cy=\"128\" r=\"8\" fill=\"#1c1c18\"/><rect x=\"312\" y=\"136\" width=\"16\" height=\"26\" fill=\"#1e1e1c\" rx=\"2\"/><circle cx=\"260\" cy=\"135\" r=\"6\" fill=\"#0e0c08\"/><rect x=\"254\" y=\"141\" width=\"12\" height=\"18\" rx=\"1\" fill=\"#0e0c08\"/><circle cx=\"380\" cy=\"135\" r=\"6\" fill=\"#0e0c08\"/><rect x=\"374\" y=\"141\" width=\"12\" height=\"18\" rx=\"1\" fill=\"#0e0c08\"/></svg>","progLabel":"3막 · 모함"},{"type":"game","dialogues":[{"type":"inner","text":"모든 것을 빼앗겼다.\n그 앞에서 — [b]무엇이 남았나.[/b]"}],"choice":{"type":"reflection","label":"모든 것을 빼앗겼다. 그 앞에서 무엇이 남았나?","flag":"act3_remain","options":[{"text":"분노한다 — 나라를 위해 싸웠는데 이게 무슨 대우인가.","feedback":"분노는 당연했다. 이순신은 이 감정을 [em]난중일기[/em]에 기록했다. 그러나 그는 분노에 머물지 않았다. [b]불의에 분노하는 것과 그 분노로 해야 할 일을 놓치는 것은 다르다.[/b]"},{"text":"허탈하다 — 다 이렇게 끝나는 건가. 싸울 이유가 있는가.","feedback":"허탈함은 진짜였다. 그러나 이순신은 '나라를 위해서'가 아니라 [b]'백성을 위해서'[/b]라는 다른 이유를 붙들었다. 충성의 대상이 달랐다. [em]나라가 그를 버려도 자리를 지킬 수 있었던 이유다.[/em]"},{"text":"각오를 다진다 — 그래도 바다는 지켜야 한다.","feedback":"백의종군 중에도 이순신은 [b]지형을 관찰하고 남은 병력을 파악했다.[/b] 각오는 감정이 아니라 행동이었다. 그는 길 위에서도 멈추지 않았다."}]},"progLabel":"3막 · 모함"},{"type":"narration","era":"4막 · 1597년 8월 · 칠천량 패전 소식","text":"칠천량 해전.\n원균이 이끄는 조선 수군이 전멸했다.\n원균, 전사.\n\n남은 배 — [b]열두 척.[/b]\n\n조정이 명령했다:\n\"수군을 폐하고 육군에 합류하라.\"","svg":"<svg viewBox=\"0 0 640 200\" xmlns=\"http://www.w3.org/2000/svg\"><rect width=\"640\" height=\"200\" fill=\"#030408\"/><path d=\"M0 95 Q320 75 640 90 L640 95Z\" fill=\"#050810\"/><rect x=\"0\" y=\"95\" width=\"640\" height=\"105\" fill=\"#04060c\"/><path d=\"M0 120 Q80 114 160 120 Q240 126 320 118 Q400 110 480 118 Q560 126 640 120\" stroke=\"#0a1828\" stroke-width=\"2\" fill=\"none\"/><g fill=\"#0a1018\" opacity=\".8\"><path d=\"M30 105 Q60 97 90 105 L92 113 Q60 117 28 113Z\"/><path d=\"M100 103 Q128 96 156 103 L157 110 Q128 114 99 110Z\"/><path d=\"M166 106 Q190 99 214 106 L215 112 Q190 116 165 112Z\"/><path d=\"M224 104 Q246 97 268 104 L269 110 Q246 114 223 110Z\"/><path d=\"M278 106 Q298 99 318 106 L319 112 Q298 116 277 112Z\"/><path d=\"M328 104 Q346 98 364 104 L365 110 Q346 114 327 110Z\"/><path d=\"M374 106 Q390 100 406 106 L407 111 Q390 115 373 111Z\"/><path d=\"M416 104 Q430 99 444 104 L445 109 Q430 113 415 109Z\"/><path d=\"M454 106 Q466 101 478 106 L479 111 Q466 115 453 111Z\"/><path d=\"M488 104 Q499 100 510 104 L511 109 Q499 113 487 109Z\"/><path d=\"M520 106 Q530 102 540 106 L541 110 Q530 114 519 110Z\"/><path d=\"M550 104 Q559 100 568 104 L569 109 Q559 113 549 109Z\"/></g><text x=\"320\" y=\"155\" text-anchor=\"middle\" fill=\"#c8a020\" font-size=\"13\" font-family=\"serif\" opacity=\".35\">十二</text></svg>","progLabel":"4막 · 열두 척"},{"type":"game","dialogues":[{"type":"inner","text":"조정의 명령은 합리적이었다.\n12척으로는 330척을 막을 수 없다.\n모두가 알고 있었다.\n[em]당신도 알고 있었다.[/em]"}],"choice":{"label":"당신은 장계를 올린다. 무슨 말을 쓰겠는가?","flag":"act4_jangye","options":[{"text":"수군을 육군에 합류시키겠습니다 — 합리적인 명령에 따르겠습니다.","correct":false,"blockMessage":"수군이 없으면 왜군은 서해를 통해 보급로를 열고 수도까지 올라온다. [b]이순신은 그 지도를 알았다.[/b] 합리적인 명령이 — 전략적으로는 틀릴 수 있다."},{"text":"신에게는 아직 열두 척의 배가 있사옵니다 — 죽기를 각오하고 싸우면 능히 이길 수 있습니다.","correct":true},{"text":"더 많은 병력과 물자를 보내주십시오 — 지원이 있어야 싸울 수 있습니다.","correct":false,"blockMessage":"지원은 오지 않는다. [em]가진 것으로 싸워야 한다.[/em] 없는 것을 기다리는 사람은 싸우지 못한다. 이순신은 [b]있는 것으로 계산했다.[/b]"}]},"progLabel":"4막 · 열두 척"},{"type":"narration","era":"5막 · 1597년 9월 · 명량해협 · 전투 전","text":"울돌목.\n명량해협의 가장 좁은 물길.\n\n당신은 지형을 알고 있었다.\n조류는 여섯 시간마다 방향을 바꾼다.\n좁은 물길에서는 330척도\n한 번에 열 척씩밖에 들어오지 못한다.\n\n준비는 이미 되어 있었다.\n[b]싸움은 싸우기 전에 이미 결정된다.[/b]","svg":"<svg viewBox=\"0 0 640 200\" xmlns=\"http://www.w3.org/2000/svg\"><rect width=\"640\" height=\"200\" fill=\"#030408\"/><rect x=\"0\" y=\"0\" width=\"640\" height=\"85\" fill=\"#040610\"/><g fill=\"#c0b060\" opacity=\".1\"><circle cx=\"80\" cy=\"18\" r=\"1\"/><circle cx=\"320\" cy=\"12\" r=\"1.2\"/><circle cx=\"540\" cy=\"16\" r=\"1\"/></g><path d=\"M0 85 Q160 68 320 80 Q480 92 640 72 L640 85Z\" fill=\"#050810\"/><rect x=\"0\" y=\"85\" width=\"640\" height=\"115\" fill=\"#04060c\"/><path d=\"M0 115 Q60 108 100 120 Q130 128 160 115 Q200 100 220 115 Q240 125 260 115 Q300 100 340 115 Q370 126 400 115 Q440 100 480 115 Q520 128 560 115 Q600 105 640 118\" stroke=\"#0a1828\" stroke-width=\"2\" fill=\"none\"/><rect x=\"220\" y=\"90\" width=\"80\" height=\"4\" fill=\"#c8a020\" opacity=\".2\" rx=\"2\"/><text x=\"260\" y=\"108\" text-anchor=\"middle\" fill=\"#c8a020\" font-size=\"9\" font-family=\"sans-serif\" opacity=\".5\">울돌목</text><g fill=\"#1a2818\" opacity=\".9\"><path d=\"M80 128 Q120 118 160 128 L162 140 Q120 148 78 140Z\"/><path d=\"M170 126 Q200 117 230 126 L232 137 Q200 145 168 137Z\"/><path d=\"M240 130 Q265 122 290 130 L291 140 Q265 147 239 140Z\"/></g><circle cx=\"420\" cy=\"118\" r=\"7\" fill=\"#181408\"/><rect x=\"413\" y=\"125\" width=\"14\" height=\"22\" fill=\"#181408\" rx=\"2\"/><rect x=\"450\" y=\"110\" width=\"22\" height=\"28\" fill=\"#0c1408\" stroke=\"#203818\" stroke-width=\"1\" rx=\"1\"/><line x1=\"454\" y1=\"116\" x2=\"468\" y2=\"116\" stroke=\"#304828\" stroke-width=\".8\"/><line x1=\"454\" y1=\"120\" x2=\"468\" y2=\"120\" stroke=\"#304828\" stroke-width=\".8\"/><line x1=\"454\" y1=\"124\" x2=\"468\" y2=\"124\" stroke=\"#304828\" stroke-width=\".8\"/><line x1=\"454\" y1=\"128\" x2=\"468\" y2=\"128\" stroke=\"#304828\" stroke-width=\".6\"/></svg>","progLabel":"5막 · 싸움의 준비"},{"type":"game","dialogues":[{"type":"inner","text":"330척이 온다.\n열두 척으로 — [b]어디서 싸울 것인가.[/b]"}],"choice":{"label":"어디서 싸울 것인가","flag":"act5_where","options":[{"text":"넓은 바다에서 — 기동력을 최대한 살린다.","correct":false,"blockMessage":"넓은 바다에서는 [em]330척의 수적 우위가 그대로 살아난다.[/em] 열두 척은 사방에서 포위된다. [b]기동력만으로는 수적 열세를 극복할 수 없다.[/b]"},{"text":"울돌목 좁은 물길에서 — 적이 한 번에 열 척밖에 못 들어오는 곳.","correct":true},{"text":"항구 안에서 방어한다 — 병사들을 보호하며 버틴다.","correct":false,"blockMessage":"항구 안에서 버티면 왜군이 서해를 지나간다. [b]바다를 내주면 전쟁을 잃는다.[/b] 이순신은 지키는 것이 아니라 — [em]막는 것[/em]을 택했다."}]},"progLabel":"5막 · 싸움의 준비"},{"type":"narration","era":"6막 · 1597년 9월 15일 밤 · 명량 앞바다","text":"밤이다.\n내일이면 싸운다.\n\n배 안의 병사들이 잠든 척을 한다.\n그들이 두려워하고 있다는 것을 안다.\n\n[em]당신도 두렵다.[/em]\n그런데 — [b]결단은 흔들리지 않는다.[/b]","svg":"<svg viewBox=\"0 0 640 220\" xmlns=\"http://www.w3.org/2000/svg\"><rect width=\"640\" height=\"220\" fill=\"#020406\"/><rect x=\"0\" y=\"0\" width=\"640\" height=\"110\" fill=\"#030510\"/><circle cx=\"480\" cy=\"38\" r=\"22\" fill=\"#c8b020\" opacity=\".1\"/><g fill=\"#c0b060\" opacity=\".1\"><circle cx=\"60\" cy=\"18\" r=\"1.2\"/><circle cx=\"200\" cy=\"12\" r=\"1\"/><circle cx=\"320\" cy=\"20\" r=\"1.3\"/></g><path d=\"M0 110 Q160 92 320 105 Q480 118 640 95 L640 110Z\" fill=\"#040810\"/><rect x=\"0\" y=\"110\" width=\"640\" height=\"110\" fill=\"#03050e\"/><path d=\"M0 135 Q80 128 160 135 Q240 142 320 132 Q400 122 480 132 Q560 142 640 135\" stroke=\"#0a1828\" stroke-width=\"1.5\" fill=\"none\"/><circle cx=\"200\" cy=\"118\" r=\"8\" fill=\"#12100c\"/><rect x=\"192\" y=\"126\" width=\"16\" height=\"26\" fill=\"#12100c\" rx=\"2\"/><path d=\"M100 130 Q200 114 300 130 L302 144 Q200 152 98 144Z\" fill=\"#080c10\" opacity=\".7\"/><line x1=\"200\" y1=\"96\" x2=\"200\" y2=\"118\" stroke=\"#2a1e08\" stroke-width=\"1.5\"/><g fill=\"#0a0c10\" opacity=\".6\"><ellipse cx=\"360\" cy=\"162\" rx=\"28\" ry=\"7\" transform=\"rotate(-3,360,162)\"/><ellipse cx=\"430\" cy=\"168\" rx=\"24\" ry=\"6\" transform=\"rotate(5,430,168)\"/><ellipse cx=\"500\" cy=\"160\" rx=\"22\" ry=\"6\" transform=\"rotate(-5,500,160)\"/><ellipse cx=\"560\" cy=\"166\" rx=\"20\" ry=\"6\" transform=\"rotate(2,560,166)\"/></g></svg>","progLabel":"6막 · 결단은 이미"},{"type":"game","dialogues":[{"type":"inner","text":"그 두려움 안에 — [b]무엇이 있었나.[/b]"}],"choice":{"type":"reflection","label":"그 두려움 안에 무엇이 있었나?","flag":"act6_fear","options":[{"text":"죽음이 두렵다 — 내일 내가 죽을 수도 있다.","feedback":"이순신은 죽음을 각오했다. [em]\"죽기를 각오하면 살고, 살기를 꾀하면 죽는다.\"[/em] 이것은 용감한 말이 아니다. [b]두려움을 인정한 말이다.[/b] 그는 신이 아니었다."},{"text":"실패가 두렵다 — 지면 조선이 없다.","feedback":"명량에서 지면 서해가 열리고 왜군이 수도를 향해 올라온다. 이순신은 [b]그 지도를 알았다.[/b] 개인의 죽음보다 더 큰 두려움이었다."},{"text":"병사들이 두렵다 — 내 명령에 이 사람들이 죽는다.","feedback":"배 안의 병사들이 [em]잠든 척하고 있다는 것을 안다.[/em] 두려운 것이다. 그 두려움을 이순신도 안다. 전날 밤 그는 직접 병사들을 찾아다녔다. [b]\"내일 죽지 않을 것이다. 내가 있다.\"[/b]"}]},"progLabel":"6막 · 결단은 이미"},{"type":"epilogue","year":"에필로그 · 1597.9.16 — 1598.11.19","title":"결단은 이미 내려져 있었다","paragraphs":["명량 — 12척 대 330척.\n[b]31척 격침. 아군 피해 없음.[/b]","노량 — 마지막 전투.\n[em]\"지금 싸움이 급하니 내가 죽었다 하지 마라.\"[/em]","그 결단은 [b]그날 내려진 것이 아니었다.[/b]\n그가 살아온 모든 순간의 합이었다.","0막 · 서른둘의 늦깎이 — 치욕과 고집과 확신.\n1막 · 녹둔도의 패배 — 패배에서 지혜를 얻는다.\n2막 · 혼자 준비한 자 — 위기 전에 준비한다.\n3막 · 백의종군의 굴욕 — 충성의 대상은 백성.\n4막 · 열두 척 — 가진 것으로 계산한다.\n5막 · 싸움의 준비 — 울돌목을 골랐다.\n6막 · 명량 전야 — [b]결단은 이미 내려져 있었다.[/b]"],"quote":"必死卽生 必生卽死\n[em]죽기를 각오하면 살고, 살기를 꾀하면 죽는다.[/em]","progLabel":"에필로그"}]};
+  var data = {"ep":2,"slug":"yisunsin","korName":"이순신","personalName":"충무공","title":"이순신 — 결단의 사람","tagline":"신에게는 아직 열두 척의 배가 있사옵니다","theme":"cold-iron","scenes":[{"type":"opening","question":"1597년, 조선의 바다.\n남은 배는 열두 척.\n적은 삼백삼십 척.","glyph":"海","series":"역사체험 교육 게임 · 영웅편 2화 · 이순신","lines":["누군가는 포기했고, 누군가는 다시 바다로 나갔다.","[em]그 사람이 — 지금 당신이다.[/em]"],"portal":true,"progLabel":"프롤로그"},{"type":"narration","era":"0막 · 1576년 · 한성 · 서른하나","text":"열 살 어린 동기들 사이에 서 있다.\n\n누군가 말했다.\n\"이 나이에 첫 급제라니.\"\n\n당신은 대꾸하지 않았다.","svg":"<svg viewBox=\"0 0 640 220\" xmlns=\"http://www.w3.org/2000/svg\"><rect width=\"640\" height=\"220\" fill=\"#040302\"/><path d=\"M0 120 L80 85 L160 100 L240 75 L320 90 L400 72 L480 86 L560 74 L640 88 L640 120Z\" fill=\"#0a0806\"/><rect x=\"0\" y=\"120\" width=\"640\" height=\"100\" fill=\"#060402\"/><rect x=\"80\" y=\"65\" width=\"6\" height=\"75\" fill=\"#1a1208\" rx=\"1\"/><rect x=\"280\" y=\"55\" width=\"6\" height=\"85\" fill=\"#1a1208\" rx=\"1\"/><rect x=\"480\" y=\"60\" width=\"6\" height=\"80\" fill=\"#1a1208\" rx=\"1\"/><g fill=\"#100e08\"><circle cx=\"200\" cy=\"140\" r=\"7\"/><rect x=\"193\" y=\"147\" width=\"14\" height=\"22\" rx=\"2\"/><circle cx=\"260\" cy=\"142\" r=\"7\"/><rect x=\"253\" y=\"149\" width=\"14\" height=\"22\" rx=\"2\"/><circle cx=\"380\" cy=\"140\" r=\"7\"/><rect x=\"373\" y=\"147\" width=\"14\" height=\"22\" rx=\"2\"/><circle cx=\"440\" cy=\"142\" r=\"7\"/><rect x=\"433\" y=\"149\" width=\"14\" height=\"22\" rx=\"2\"/></g><circle cx=\"100\" cy=\"138\" r=\"8\" fill=\"#1e1a10\"/><rect x=\"92\" y=\"146\" width=\"16\" height=\"26\" fill=\"#1e1a10\" rx=\"2\"/><line x1=\"100\" y1=\"114\" x2=\"100\" y2=\"138\" stroke=\"#5a3808\" stroke-width=\"2\"/><polygon points=\"100,112 112,118 100,124\" fill=\"#a06010\" opacity=\".8\"/></svg>","progLabel":"0막 · 늦깎이"},{"type":"game","dialogues":[{"type":"inner","text":"\"늦었다\"는 말 앞에서 — [b]당신은 무엇을 느꼈나.[/b]"}],"choice":{"type":"reflection","label":"당신은 무엇을 느꼈나?","flag":"act0_emotion","options":[{"text":"치욕이다 — 열 살 아래 동기들 앞에서 이게 뭔가","feedback":"치욕은 사실이었다. 이순신은 그것을 외면하지 않았다. [em]난중일기[/em]에 자신의 감정을 숨기지 않고 기록했다. [b]느끼는 것과 무너지는 것은 다르다.[/b]"},{"text":"고집이었다 — 포기하지 않았을 뿐이다","feedback":"이유 없는 고집이 아니었다. 그는 그 10년을 허비하지 않았다. 병법을 읽고 전쟁을 생각했다. [b]포기하지 않은 것은 — 해야 할 일을 알았기 때문이다.[/b]"},{"text":"확신이 있었다 — 늦은 게 아니라 제대로 준비한 것이다","feedback":"전라좌수사로 부임한 1591년, 첫날부터 전쟁을 준비했다. 그 확신이 [b]거북선을 만들게 했고[/b] — 임진왜란 당일, 유일하게 준비된 장수로 만들었다."}]},"progLabel":"0막 · 늦깎이"},{"type":"narration","era":"1막 · 1587년 · 함경도 녹둔도 · 마흔둘","text":"단 한 번의 패배였다.\n기습이었고, 병력도 부족했다.\n\n조정은 파직을 명했다.\n단 한 번 졌다는 이유만으로.\n\n당신은 죄인처럼 한성으로 끌려갔다.\n억울한가.\n그래도 — 그 억울함 뒤에\n무엇이 남아야 하는가.","svg":"<svg viewBox=\"0 0 640 200\" xmlns=\"http://www.w3.org/2000/svg\"><rect width=\"640\" height=\"200\" fill=\"#030204\"/><path d=\"M0 100 Q160 80 320 95 Q480 110 640 88 L640 100Z\" fill=\"#080606\"/><rect x=\"0\" y=\"100\" width=\"640\" height=\"100\" fill=\"#060404\"/><g stroke=\"#1a2030\" stroke-width=\".6\" opacity=\".4\"><line x1=\"80\" y1=\"0\" x2=\"74\" y2=\"80\"/><line x1=\"220\" y1=\"5\" x2=\"214\" y2=\"85\"/><line x1=\"380\" y1=\"0\" x2=\"374\" y2=\"80\"/><line x1=\"520\" y1=\"8\" x2=\"514\" y2=\"88\"/></g><ellipse cx=\"130\" cy=\"155\" rx=\"22\" ry=\"5\" fill=\"#100808\" opacity=\".7\" transform=\"rotate(-8,130,155)\"/><ellipse cx=\"300\" cy=\"160\" rx=\"18\" ry=\"5\" fill=\"#100808\" opacity=\".7\" transform=\"rotate(12,300,160)\"/><circle cx=\"320\" cy=\"128\" r=\"8\" fill=\"#1a1208\"/><rect x=\"312\" y=\"136\" width=\"16\" height=\"24\" fill=\"#1a1208\" rx=\"2\"/></svg>","progLabel":"1막 · 첫 패배"},{"type":"game","dialogues":[{"type":"inner","text":"억울하다.\n기습이었다. 병력도 부족했다.\n그래도 — [b]진 것은 사실이다.[/b]"}],"choice":{"label":"당신이라면 이 패배 앞에서 무엇을 하겠는가?","flag":"act1_response","options":[{"text":"어쩔 수 없었음을 주장한다 — 기습이었고 병력이 부족했다","feedback":"상황이 불리했던 것은 사실이다. 억울함을 말하는 것도 사람의 일이다.\n다만 상황에 머물면 — [em]내가 바꿀 수 있는 것[/em]이 보이지 않는다."},{"text":"패배의 원인을 기록한다 — 무엇이 틀렸는지 써둔다","feedback":"이순신이 한 것이 이것이었다.\n억울함을 호소하는 대신 — [b]무엇이 틀렸는지 적었다.[/b]\n\n그 기록이 10년 뒤 *\"적이 언제 어디서 올 수 있는가\"* 를 끊임없이 묻게 했다."},{"text":"잊기로 한다 — 이미 지난 일이다","feedback":"잊는 것도 살아가는 방법이다. 그편이 덜 아프다.\n다만 — [em]적어 두지 않은 패배는 교훈이 되지 않는다.[/em]\n\n이순신은 잊지 않는 쪽을 골랐다. 그것이 『난중일기』다."}],"type":"reflection"},"progLabel":"1막 · 첫 패배"},{"type":"narration","era":"2막 · 1591~1592년 · 조선과 일본","text":"1591년, 일본에 보낸 통신사가 돌아왔다.\n정사 황윤길이 보고했다:\n\"히데요시는 이미 전국을 통일했습니다.\n조선 침략의 의도가 분명합니다.\n반드시 전쟁이 있을 것입니다.\"\n\n조정은 이 보고를 무시했다.\n민심이 흔들릴 것을 걱정했다.\n\n[b]당신은 무시하지 않았다.[/b]","svg":"<svg viewBox=\"0 0 640 200\" xmlns=\"http://www.w3.org/2000/svg\"><rect width=\"640\" height=\"200\" fill=\"#030408\"/><path d=\"M0 90 Q160 70 320 85 Q480 100 640 78 L640 90Z\" fill=\"#050810\"/><rect x=\"0\" y=\"90\" width=\"640\" height=\"110\" fill=\"#040608\"/><path d=\"M80 120 Q200 100 320 120 L323 138 Q200 150 77 138Z\" fill=\"#0c1008\"/><path d=\"M82 120 Q200 102 318 120 L314 108 Q200 88 86 108Z\" fill=\"#0a0e08\"/><line x1=\"145\" y1=\"103\" x2=\"148\" y2=\"120\" stroke=\"#141e10\" stroke-width=\"1\"/><line x1=\"200\" y1=\"97\" x2=\"200\" y2=\"120\" stroke=\"#141e10\" stroke-width=\"1\"/><line x1=\"255\" y1=\"103\" x2=\"252\" y2=\"120\" stroke=\"#141e10\" stroke-width=\"1\"/><line x1=\"85\" y1=\"112\" x2=\"315\" y2=\"112\" stroke=\"#141e10\" stroke-width=\"1\"/><rect x=\"295\" y=\"130\" width=\"14\" height=\"5\" fill=\"#141e18\" rx=\"2\"/><rect x=\"100\" y=\"131\" width=\"14\" height=\"5\" fill=\"#141e18\" rx=\"2\"/><circle cx=\"420\" cy=\"118\" r=\"6\" fill=\"#181408\"/><rect x=\"414\" y=\"124\" width=\"12\" height=\"18\" fill=\"#181408\" rx=\"2\"/></svg>","progLabel":"2막 · 준비한 자"},{"type":"game","dialogues":[{"type":"inner","text":"조정은 무시했다.\n당신은 무시하지 않았다.\n[b]왜인가.[/b]"}],"choice":{"type":"reflection","label":"당신이 전쟁을 확신한 이유는?","flag":"act2_reason","options":[{"text":"특별히 똑똑했기 때문이다 — 상황을 남들보다 더 잘 읽었다.","feedback":"조정에도 똑똑한 사람은 많았다. 그들도 황윤길의 보고를 들었다. [b]차이는 지능이 아니라 경험이었다.[/b]"},{"text":"히데요시가 전국을 통일한 순간, 그 군사력이 향할 곳은 하나였다 — 통일된 군사력은 반드시 출구를 찾는다.","feedback":"도요토미 히데요시가 전국을 통일한 순간, 수십 년 내전으로 단련된 대규모 군사력이 갈 곳을 잃었다. [em]그 힘은 반드시 바깥으로 향한다.[/em] 이순신은 그 논리를 읽었다."},{"text":"녹둔도의 패배에서 배웠다 — 기습을 당한 자는 다음 기습을 두려워하며 준비한다.","feedback":"녹둔도에서 기습을 당한 이순신은 패배를 기록했다. 그 기록이 이후 [em]'적이 언제 어디서 올 수 있는가'[/em]를 끊임없이 생각하게 했다. [b]현명한 사람은 패배에서 지혜를 얻는다.[/b]"}]},"progLabel":"2막 · 준비한 자"},{"type":"narration","era":"3막 · 1597년 봄 · 한성 형장","text":"원균의 모함으로 통제사에서 파직되고\n형장으로 끌려갔다.\n매를 맞았다.\n\n죄명 없는 파직.\n명령: [em]백의종군.[/em]\n흰 옷을 입고 전쟁에 나가라.\n\n난중일기에 기록을 남겼다.\n\"천지가 캄캄하다.\"","svg":"<svg viewBox=\"0 0 640 200\" xmlns=\"http://www.w3.org/2000/svg\"><rect width=\"640\" height=\"200\" fill=\"#030204\"/><path d=\"M0 100 Q320 82 640 96 L640 100Z\" fill=\"#080606\"/><rect x=\"0\" y=\"100\" width=\"640\" height=\"100\" fill=\"#060404\"/><g stroke=\"#1a2030\" stroke-width=\".6\" opacity=\".35\"><line x1=\"80\" y1=\"0\" x2=\"75\" y2=\"65\"/><line x1=\"200\" y1=\"8\" x2=\"195\" y2=\"73\"/><line x1=\"380\" y1=\"0\" x2=\"375\" y2=\"65\"/><line x1=\"520\" y1=\"5\" x2=\"515\" y2=\"70\"/></g><circle cx=\"320\" cy=\"128\" r=\"8\" fill=\"#1c1c18\"/><rect x=\"312\" y=\"136\" width=\"16\" height=\"26\" fill=\"#1e1e1c\" rx=\"2\"/><circle cx=\"260\" cy=\"135\" r=\"6\" fill=\"#0e0c08\"/><rect x=\"254\" y=\"141\" width=\"12\" height=\"18\" rx=\"1\" fill=\"#0e0c08\"/><circle cx=\"380\" cy=\"135\" r=\"6\" fill=\"#0e0c08\"/><rect x=\"374\" y=\"141\" width=\"12\" height=\"18\" rx=\"1\" fill=\"#0e0c08\"/></svg>","progLabel":"3막 · 모함"},{"type":"game","dialogues":[{"type":"inner","text":"모든 것을 빼앗겼다.\n그 앞에서 — [b]무엇이 남았나.[/b]"}],"choice":{"type":"reflection","label":"모든 것을 빼앗겼다. 그 앞에서 무엇이 남았나?","flag":"act3_remain","options":[{"text":"분노한다 — 나라를 위해 싸웠는데 이게 무슨 대우인가.","feedback":"분노는 당연했다. 이순신은 이 감정을 [em]난중일기[/em]에 기록했다. 그러나 그는 분노에 머물지 않았다. [b]불의에 분노하는 것과 그 분노로 해야 할 일을 놓치는 것은 다르다.[/b]"},{"text":"허탈하다 — 다 이렇게 끝나는 건가. 싸울 이유가 있는가.","feedback":"허탈함은 진짜였다. 그러나 이순신은 '나라를 위해서'가 아니라 [b]'백성을 위해서'[/b]라는 다른 이유를 붙들었다. 충성의 대상이 달랐다. [em]나라가 그를 버려도 자리를 지킬 수 있었던 이유다.[/em]"},{"text":"각오를 다진다 — 그래도 바다는 지켜야 한다.","feedback":"백의종군 중에도 이순신은 [b]지형을 관찰하고 남은 병력을 파악했다.[/b] 각오는 감정이 아니라 행동이었다. 그는 길 위에서도 멈추지 않았다."}]},"progLabel":"3막 · 모함"},{"type":"narration","era":"4막 · 1597년 8월 · 칠천량 패전 소식","text":"칠천량 해전.\n원균이 이끄는 조선 수군이 전멸했다.\n원균, 전사.\n\n남은 배 — [b]열두 척.[/b]\n\n조정이 명령했다:\n\"수군을 폐하고 육군에 합류하라.\"","svg":"<svg viewBox=\"0 0 640 200\" xmlns=\"http://www.w3.org/2000/svg\"><rect width=\"640\" height=\"200\" fill=\"#030408\"/><path d=\"M0 95 Q320 75 640 90 L640 95Z\" fill=\"#050810\"/><rect x=\"0\" y=\"95\" width=\"640\" height=\"105\" fill=\"#04060c\"/><path d=\"M0 120 Q80 114 160 120 Q240 126 320 118 Q400 110 480 118 Q560 126 640 120\" stroke=\"#0a1828\" stroke-width=\"2\" fill=\"none\"/><g fill=\"#0a1018\" opacity=\".8\"><path d=\"M30 105 Q60 97 90 105 L92 113 Q60 117 28 113Z\"/><path d=\"M100 103 Q128 96 156 103 L157 110 Q128 114 99 110Z\"/><path d=\"M166 106 Q190 99 214 106 L215 112 Q190 116 165 112Z\"/><path d=\"M224 104 Q246 97 268 104 L269 110 Q246 114 223 110Z\"/><path d=\"M278 106 Q298 99 318 106 L319 112 Q298 116 277 112Z\"/><path d=\"M328 104 Q346 98 364 104 L365 110 Q346 114 327 110Z\"/><path d=\"M374 106 Q390 100 406 106 L407 111 Q390 115 373 111Z\"/><path d=\"M416 104 Q430 99 444 104 L445 109 Q430 113 415 109Z\"/><path d=\"M454 106 Q466 101 478 106 L479 111 Q466 115 453 111Z\"/><path d=\"M488 104 Q499 100 510 104 L511 109 Q499 113 487 109Z\"/><path d=\"M520 106 Q530 102 540 106 L541 110 Q530 114 519 110Z\"/><path d=\"M550 104 Q559 100 568 104 L569 109 Q559 113 549 109Z\"/></g><text x=\"320\" y=\"155\" text-anchor=\"middle\" fill=\"#c8a020\" font-size=\"13\" font-family=\"serif\" opacity=\".35\">十二</text></svg>","progLabel":"4막 · 열두 척"},{"type":"game","dialogues":[{"type":"inner","text":"조정의 명령은 합리적이었다.\n12척으로는 330척을 막을 수 없다.\n모두가 알고 있었다.\n[em]당신도 알고 있었다.[/em]"}],"choice":{"label":"당신은 장계를 올린다. 무슨 말을 쓰겠는가?","flag":"act4_jangye","options":[{"text":"수군을 육군에 합류시키겠습니다 — 합리적인 명령에 따릅니다","feedback":"합리적인 판단이다. 열두 척으로 수백 척을 막는다는 것은 산술이 아니다.\n\n다만 수군이 사라지면 왜군은 서해로 보급로를 열고 수도까지 올라온다.\n[b]이순신은 그 지도를 알았다.[/b] 합리적인 명령이 — 전략적으로는 틀릴 수 있다."},{"text":"신에게는 아직 열두 척의 배가 있사옵니다","feedback":"이순신이 쓴 말이 이것이었다.\n[i]\"죽기를 각오하고 싸우면 능히 이길 수 있습니다.\"[/i]\n\n없는 것을 세지 않았다. [b]있는 것으로 계산했다.[/b]"},{"text":"더 많은 병력과 물자를 보내주십시오 — 지원이 있어야 싸웁니다","feedback":"당연한 요청이다. 그리고 — [em]지원은 오지 않았다.[/em]\n\n조정에는 보낼 배가 없었다. 기다리는 쪽을 택하면 그 사이에 바다가 열린다."}],"type":"reflection"},"progLabel":"4막 · 열두 척"},{"type":"narration","era":"5막 · 1597년 9월 · 명량해협 · 전투 전","text":"울돌목.\n명량해협의 가장 좁은 물길.\n\n당신은 지형을 알고 있었다.\n조류는 여섯 시간마다 방향을 바꾼다.\n좁은 물길에서는 수백 척이 와도\n한 번에 열 척씩밖에 들어오지 못한다.\n\n준비는 이미 되어 있었다.\n[b]싸움은 싸우기 전에 이미 결정된다.[/b]","svg":"<svg viewBox=\"0 0 640 200\" xmlns=\"http://www.w3.org/2000/svg\"><rect width=\"640\" height=\"200\" fill=\"#030408\"/><rect x=\"0\" y=\"0\" width=\"640\" height=\"85\" fill=\"#040610\"/><g fill=\"#c0b060\" opacity=\".1\"><circle cx=\"80\" cy=\"18\" r=\"1\"/><circle cx=\"320\" cy=\"12\" r=\"1.2\"/><circle cx=\"540\" cy=\"16\" r=\"1\"/></g><path d=\"M0 85 Q160 68 320 80 Q480 92 640 72 L640 85Z\" fill=\"#050810\"/><rect x=\"0\" y=\"85\" width=\"640\" height=\"115\" fill=\"#04060c\"/><path d=\"M0 115 Q60 108 100 120 Q130 128 160 115 Q200 100 220 115 Q240 125 260 115 Q300 100 340 115 Q370 126 400 115 Q440 100 480 115 Q520 128 560 115 Q600 105 640 118\" stroke=\"#0a1828\" stroke-width=\"2\" fill=\"none\"/><rect x=\"220\" y=\"90\" width=\"80\" height=\"4\" fill=\"#c8a020\" opacity=\".2\" rx=\"2\"/><text x=\"260\" y=\"108\" text-anchor=\"middle\" fill=\"#c8a020\" font-size=\"9\" font-family=\"sans-serif\" opacity=\".5\">울돌목</text><g fill=\"#1a2818\" opacity=\".9\"><path d=\"M80 128 Q120 118 160 128 L162 140 Q120 148 78 140Z\"/><path d=\"M170 126 Q200 117 230 126 L232 137 Q200 145 168 137Z\"/><path d=\"M240 130 Q265 122 290 130 L291 140 Q265 147 239 140Z\"/></g><circle cx=\"420\" cy=\"118\" r=\"7\" fill=\"#181408\"/><rect x=\"413\" y=\"125\" width=\"14\" height=\"22\" fill=\"#181408\" rx=\"2\"/><rect x=\"450\" y=\"110\" width=\"22\" height=\"28\" fill=\"#0c1408\" stroke=\"#203818\" stroke-width=\"1\" rx=\"1\"/><line x1=\"454\" y1=\"116\" x2=\"468\" y2=\"116\" stroke=\"#304828\" stroke-width=\".8\"/><line x1=\"454\" y1=\"120\" x2=\"468\" y2=\"120\" stroke=\"#304828\" stroke-width=\".8\"/><line x1=\"454\" y1=\"124\" x2=\"468\" y2=\"124\" stroke=\"#304828\" stroke-width=\".8\"/><line x1=\"454\" y1=\"128\" x2=\"468\" y2=\"128\" stroke=\"#304828\" stroke-width=\".6\"/></svg>","progLabel":"5막 · 싸움의 준비"},{"type":"game","dialogues":[{"type":"inner","text":"330척이 온다.\n열두 척으로 — [b]어디서 싸울 것인가.[/b]"}],"choice":{"label":"어디서 싸울 것인가","flag":"act5_where","options":[{"text":"넓은 바다에서 — 기동력을 최대한 살린다","feedback":"열두 척은 빠르다. 넓은 바다라면 치고 빠질 수 있다.\n\n다만 넓은 바다에서는 [em]적의 수적 우위가 그대로 살아난다.[/em] 사방에서 포위된다."},{"text":"울돌목 좁은 물길에서 — 적이 한 번에 열 척밖에 못 들어오는 곳","feedback":"이순신이 고른 자리가 이것이었다.\n조류는 여섯 시간마다 방향을 바꾼다. 물길이 좁아 배가 한 번에 몇 척씩만 들어온다.\n\n[b]수를 줄일 수 없으면 — 들어오는 길을 줄인다.[/b]"},{"text":"항구 안에서 방어한다 — 병사들을 보호하며 버틴다","feedback":"사람을 아끼는 선택이다. 버티면 당장은 죽지 않는다.\n\n다만 버티는 사이 왜군이 서해를 지나간다. [em]바다를 내주면 전쟁을 잃는다.[/em]\n이순신은 지키는 것이 아니라 — [b]막는 것[/b]을 택했다."}],"type":"reflection"},"progLabel":"5막 · 싸움의 준비"},{"type":"narration","era":"6막 · 1597년 9월 15일 밤 · 명량 앞바다","text":"밤이다.\n내일이면 싸운다.\n\n배 안의 병사들이 잠든 척을 한다.\n그들이 두려워하고 있다는 것을 안다.\n\n[em]당신도 두렵다.[/em]\n그런데 — [b]결단은 흔들리지 않는다.[/b]","svg":"<svg viewBox=\"0 0 640 220\" xmlns=\"http://www.w3.org/2000/svg\"><rect width=\"640\" height=\"220\" fill=\"#020406\"/><rect x=\"0\" y=\"0\" width=\"640\" height=\"110\" fill=\"#030510\"/><circle cx=\"480\" cy=\"38\" r=\"22\" fill=\"#c8b020\" opacity=\".1\"/><g fill=\"#c0b060\" opacity=\".1\"><circle cx=\"60\" cy=\"18\" r=\"1.2\"/><circle cx=\"200\" cy=\"12\" r=\"1\"/><circle cx=\"320\" cy=\"20\" r=\"1.3\"/></g><path d=\"M0 110 Q160 92 320 105 Q480 118 640 95 L640 110Z\" fill=\"#040810\"/><rect x=\"0\" y=\"110\" width=\"640\" height=\"110\" fill=\"#03050e\"/><path d=\"M0 135 Q80 128 160 135 Q240 142 320 132 Q400 122 480 132 Q560 142 640 135\" stroke=\"#0a1828\" stroke-width=\"1.5\" fill=\"none\"/><circle cx=\"200\" cy=\"118\" r=\"8\" fill=\"#12100c\"/><rect x=\"192\" y=\"126\" width=\"16\" height=\"26\" fill=\"#12100c\" rx=\"2\"/><path d=\"M100 130 Q200 114 300 130 L302 144 Q200 152 98 144Z\" fill=\"#080c10\" opacity=\".7\"/><line x1=\"200\" y1=\"96\" x2=\"200\" y2=\"118\" stroke=\"#2a1e08\" stroke-width=\"1.5\"/><g fill=\"#0a0c10\" opacity=\".6\"><ellipse cx=\"360\" cy=\"162\" rx=\"28\" ry=\"7\" transform=\"rotate(-3,360,162)\"/><ellipse cx=\"430\" cy=\"168\" rx=\"24\" ry=\"6\" transform=\"rotate(5,430,168)\"/><ellipse cx=\"500\" cy=\"160\" rx=\"22\" ry=\"6\" transform=\"rotate(-5,500,160)\"/><ellipse cx=\"560\" cy=\"166\" rx=\"20\" ry=\"6\" transform=\"rotate(2,560,166)\"/></g></svg>","progLabel":"6막 · 결단은 이미"},{"type":"game","dialogues":[{"type":"inner","text":"그 두려움 안에 — [b]무엇이 있었나.[/b]"}],"choice":{"type":"reflection","label":"그 두려움 안에 무엇이 있었나?","flag":"act6_fear","options":[{"text":"죽음이 두렵다 — 내일 내가 죽을 수도 있다.","feedback":"이순신은 죽음을 각오했다. [em]\"죽기를 각오하면 살고, 살기를 꾀하면 죽는다.\"[/em] 이것은 용감한 말이 아니다. [b]두려움을 인정한 말이다.[/b] 그는 신이 아니었다."},{"text":"실패가 두렵다 — 지면 조선이 없다.","feedback":"명량에서 지면 서해가 열리고 왜군이 수도를 향해 올라온다. 이순신은 [b]그 지도를 알았다.[/b] 개인의 죽음보다 더 큰 두려움이었다."},{"text":"병사들이 두렵다 — 내 명령에 이 사람들이 죽는다.","feedback":"배 안의 병사들이 [em]잠든 척하고 있다는 것을 안다.[/em] 두려운 것이다. 그 두려움을 이순신도 안다. 전날 밤 그는 직접 병사들을 찾아다녔다. [b]\"내일 죽지 않을 것이다. 내가 있다.\"[/b]"}]},"progLabel":"6막 · 결단은 이미"},{"type":"epilogue","year":"에필로그 · 1597.9.16 — 1598.11.19","title":"결단은 이미 내려져 있었다","paragraphs":["명량 — 12척 대 330척.\n[b]31척 격침. 아군 피해 없음.[/b]","노량 — 마지막 전투.\n[em]\"지금 싸움이 급하니 내가 죽었다 하지 마라.\"[/em]","그 결단은 [b]그날 내려진 것이 아니었다.[/b]\n그가 살아온 모든 순간의 합이었다.","0막 · 서른하나의 늦깎이 — 치욕과 고집과 확신.\n1막 · 녹둔도의 패배(1587) — 패배에서 지혜를 얻는다.\n2막 · 혼자 준비한 자 — 위기 전에 준비한다.\n3막 · 백의종군의 굴욕 — 충성의 대상은 백성.\n4막 · 열두 척 — 가진 것으로 계산한다.\n5막 · 싸움의 준비 — 울돌목을 골랐다.\n6막 · 명량 전야 — [b]결단은 이미 내려져 있었다.[/b]"],"quote":"必死則生 必生則死\n[em]죽기를 각오하면 살고, 살기를 꾀하면 죽는다.[/em]","progLabel":"에필로그"}]};
   if (window.GameEngine && typeof window.GameEngine.start === 'function') {
     window.GameEngine.start(data);
   } else {
