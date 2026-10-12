@@ -22,6 +22,7 @@
     currentSceneIdx: 0,   // 현재 씬 인덱스
     flags: {},            // 학생의 선택 기록
     answers: {},          // 씬 인덱스 → { kind: 'option', idx } | { kind: 'free', text }
+    wanted: {},           // 노란 점 씬에서 플레이어가 고르려 했던 것 (answers와 같은 모양)
     actsCompleted: [],    // 완료한 막 ID 목록
     lockedScenes: new Set(),  // 선택을 이미 한 씬 (뒤로가기 제한용)
     visitedScenes: new Set()  // 이미 본 씬 (타이핑 스킵용)
@@ -33,6 +34,7 @@
     state.currentSceneIdx = 0;
     state.flags = {};
     state.answers = {};
+    state.wanted = {};
     state.actsCompleted = [];
     state.lockedScenes = new Set();
     state.visitedScenes = new Set();
@@ -292,9 +294,13 @@
       html += `
         <div class="ch-area">
           <div class="ch-label">${parseInline(s.choice.label || '')}</div>
+          ${hasMark(s.choice) && s.choice.markBy ? `
+          <div class="ch-markby"><span class="ch-dot"></span>${parseInline(s.choice.markBy)}</div>` : ''}
           <div class="ch-list" id="ch-list">
             ${s.choice.options.map((opt, i) => `
-              <button class="ch" data-idx="${i}">${parseInline(opt.text)}</button>
+              <button class="ch${s.choice.mark === i ? ' marked' : ''}" data-idx="${i}">${
+                s.choice.mark === i ? '<span class="ch-dot" aria-label="노란 점"></span>' : ''
+              }${parseInline(opt.text)}</button>
             `).join('')}
           </div>
           ${allowsFree(s.choice) ? `
@@ -392,6 +398,12 @@
 
     // "정답 없음" 모드 — 어떤 선택이든 코멘트 보여주고 진행
     if (scene.choice.type === 'reflection') {
+      // 노란 점이 찍힌 결재 — 다른 쪽을 고르면 붓이 점으로 되돌아간다
+      if (hasMark(scene.choice) && idx !== scene.choice.mark) {
+        overrule(scene, { kind: 'option', idx }, opt.overrule, btn, sceneEl);
+        return;
+      }
+
       // 이 씬은 선택했음 (뒤로 와도 표시되도록)
       state.lockedScenes.add(state.currentSceneIdx);
 
@@ -514,6 +526,40 @@
     return choice && choice.type === 'reflection' && choice.freeText !== false;
   }
 
+  // ─── 노란 점 ────────────────────────────────────────────
+  // 어린 왕(단종)의 결재처럼, 고를 것이 이미 정해져 있는 씬.
+  // choice.mark = 점이 찍힌 선택지 번호, choice.markBy = 누가 찍었나.
+  // 다른 쪽을 고르거나 직접 써도 기록만 되고(state.wanted), 진행은 점을 따라야 한다.
+  function hasMark(choice) {
+    return !!choice && Number.isInteger(choice.mark);
+  }
+
+  function overrule(scene, wanted, message, btn, sceneEl) {
+    state.wanted[state.currentSceneIdx] = wanted;
+
+    sceneEl.querySelectorAll('.ch').forEach(b => b.classList.remove('locked', 'previously-chosen'));
+    if (btn) {
+      btn.classList.add('overruled', 'wrong-shake');
+      setTimeout(() => btn.classList.remove('wrong-shake'), 400);
+    }
+    const marked = sceneEl.querySelector(`.ch[data-idx="${scene.choice.mark}"]`);
+    if (marked) {
+      marked.classList.remove('beckon');
+      void marked.offsetWidth;  // 애니메이션을 다시 시작
+      marked.classList.add('beckon');
+    }
+
+    const msgEl = sceneEl.querySelector('#no-answer-msg');
+    if (msgEl) {
+      const echo = wanted.kind === 'free'
+        ? `<div class="free-echo">${escapeHTML(wanted.text).replace(/\n/g, '<br>')}</div>` : '';
+      msgEl.innerHTML = echo + parseInline(message || scene.choice.overrule ||
+        '붓이 그쪽으로 가지 않습니다.\n[b]노란 점[/b]이 찍힌 곳에 이름을 적어야 합니다.');
+      msgEl.classList.add('on');
+    }
+    sceneEl.querySelector('#no-answer-nav')?.classList.remove('on');
+  }
+
   function bindFreeAnswer(scene, sceneEl) {
     const openBtn = sceneEl.querySelector('#ch-free-open');
     const wrap = sceneEl.querySelector('#free-wrap');
@@ -531,6 +577,12 @@
     submit.onclick = () => {
       const text = input.value.trim();
       if (!text) { input.focus(); return; }
+
+      if (hasMark(scene.choice)) {
+        wrap.classList.remove('on');
+        overrule(scene, { kind: 'free', text }, scene.choice.freeFeedback, openBtn, sceneEl);
+        return;
+      }
 
       state.lockedScenes.add(state.currentSceneIdx);
       state.answers[state.currentSceneIdx] = { kind: 'free', text };
@@ -578,7 +630,7 @@
         type: 'game-complete',
         ep: state.data.ep,
         flags: state.flags,
-        answers: summarizeAnswers().map(a => ({ act: a.act, question: a.question, answer: a.answerText, free: a.free })),
+        answers: summarizeAnswers().map(a => ({ act: a.act, question: a.question, answer: a.answerText, free: a.free, wanted: a.wantedText || undefined })),
         actsCompleted: state.actsCompleted,
         timestamp: Date.now()
       }, '*');
@@ -592,13 +644,24 @@
       <li class="mychoice">
         ${r.act ? `<div class="mychoice-act">${escapeHTML(r.act)}</div>` : ''}
         <div class="mychoice-q">${parseInline(r.question)}</div>
+        ${r.wantedHTML ? `
+        <div class="mychoice-a wanted">
+          <span class="mychoice-mark">당신이 고르고 싶었던 것</span>
+          <span class="mychoice-struck">${r.wantedHTML}</span>
+        </div>` : ''}
         <div class="mychoice-a${r.free ? ' free' : ''}">
           ${r.free ? '<span class="mychoice-mark">✎ 직접 쓴 길</span>' : ''}
+          ${r.marked ? `<span class="mychoice-mark"><span class="ch-dot"></span>${r.wantedHTML ? '실제로 결재한 것' : '노란 점을 그대로 따랐습니다'}</span>` : ''}
           ${r.answerHTML}
         </div>
         ${r.history ? `<div class="mychoice-h">깊게 살펴보기 「${parseInline(r.history)}」</div>` : ''}
       </li>`).join('');
     const freeCount = rows.filter(r => r.free).length;
+    const markedCount = rows.filter(r => r.marked).length;
+    const wantedCount = rows.filter(r => r.wantedHTML).length;
+
+    // episode.html 안에서 돌 때만 심화 탭으로 넘겨줄 수 있다
+    const framed = window.parent && window.parent !== window;
 
     const root = document.getElementById('game-root');
     root.innerHTML = `
@@ -609,12 +672,23 @@
           <div class="epi-big">당신의 선택은 이러했습니다</div>
           ${rows.length ? `<ol class="mychoice-list">${list}</ol>` : ''}
           ${freeCount ? `<div class="epi-text">${rows.length}번의 갈림길 가운데 ${freeCount}번, 당신은 주어진 선택지 밖에서 길을 찾았습니다.</div>` : ''}
-          <div class="nav-area" style="justify-content:center;margin-top:24px;">
-            <button class="btn-p solid" onclick="GameEngine.restart()">다시 보기</button>
+          ${markedCount ? `<div class="epi-text">${markedCount}번의 결재에서, 붓은 언제나 노란 점을 따라갔습니다.${
+            wantedCount ? `<br>당신은 그중 ${wantedCount}번, 다른 길을 원했습니다.` : ''}</div>` : ''}
+          ${framed ? `
+          <div class="epi-next">
+            <div class="epi-next-lead">게임은 여기까지입니다.<br>게임이 일부러 비워 둔 이야기가 심화에 있습니다.</div>
+            <button class="btn-p solid" id="go-study">심화 읽으러 가기 →</button>
+          </div>` : ''}
+          <div class="nav-area" style="justify-content:center;margin-top:${framed ? 10 : 24}px;">
+            <button class="btn-p" onclick="GameEngine.restart()">↺ 처음부터 다시</button>
           </div>
         </div>
       </div>
     `;
+    const goStudy = document.getElementById('go-study');
+    if (goStudy) goStudy.onclick = () => {
+      try { window.parent.postMessage({ type: 'goto-tab', tab: 'study' }, '*'); } catch (e) {}
+    };
     window.scrollTo(0, 0);
   }
 
@@ -631,7 +705,21 @@
         question: s.choice.label || '',
         history: deep && deep.type === 'deep' ? deep.title : '',
         free: !!(a && a.kind === 'free'),
+        marked: hasMark(s.choice),
+        wantedHTML: '',
+        wantedText: '',
       };
+      const w = state.wanted[i];
+      if (row.marked && w) {
+        if (w.kind === 'free') {
+          row.wantedText = w.text;
+          row.wantedHTML = escapeHTML(w.text).replace(/\n/g, '<br>');
+        } else {
+          const wo = s.choice.options[w.idx] || {};
+          row.wantedText = String(wo.text || '').replace(/\[\/?[a-z]+\]/g, '');
+          row.wantedHTML = parseInline(wo.text || '');
+        }
+      }
       if (!a) {
         row.answerText = '';
         row.answerHTML = '<span class="mychoice-none">고르지 않고 지나갔습니다</span>';
@@ -652,6 +740,7 @@
     state.currentSceneIdx = 0;
     state.flags = {};
     state.answers = {};
+    state.wanted = {};
     state.actsCompleted = [];
     state.lockedScenes = new Set();
     renderScene();

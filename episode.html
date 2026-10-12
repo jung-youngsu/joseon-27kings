@@ -466,6 +466,22 @@ body {
 }
 .quiz-back-btn:hover { color: var(--accent3); border-color: var(--accent3); }
 
+/* 다음 걸음 — 심화 끝, 퀴즈 끝 */
+.next-steps {
+  margin: 40px 0 8px;
+  padding: 24px 18px;
+  border-top: 1px solid var(--border2);
+  text-align: center;
+}
+.next-steps-lead {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 14px;
+  color: var(--text2);
+  line-height: 1.9;
+  margin-bottom: 12px;
+}
+.next-steps a.quiz-back-btn { display: inline-block; text-decoration: none; }
+
 /* 카드 */
 .quiz-card {
   padding: 28px 22px;
@@ -781,7 +797,7 @@ const FREE_OPEN = true;
 // ★ 자산 버전 — 엔진·스타일·게임 페이지를 고치면 올린다.
 //   브라우저가 옛 engine.js를 붙들고 있지 않도록 주소에 붙는다.
 //   손으로 고치지 말고: node tools/bump_version.js
-const ASSET_V = '202610101';
+const ASSET_V = '202610121449';
 
 const UNLOCK_DAYS = 7;
 function unlockKey(ep){ return 'j27_unlock_ep' + ep; }
@@ -869,6 +885,7 @@ async function loadHero(slug) {
   }
   if (!hero || !hero.href) return null;
   return {
+    isHero: true,
     label: `HEROES · ${hero.korName}`,
     tagline: hero.tagline || hero.role || '',
     korName: hero.korName,
@@ -911,6 +928,11 @@ async function loadEpisode() {
     return;
   }
 
+  // 다 보고 돌아갈 곳 — 왕은 가계도, 영웅은 인물 목록
+  HOME = target.isHero
+    ? { href: 'heroes.html#cards', label: '역사를 바꾼 사람들로' }
+    : { href: 'joseon-kings.html#tree-section', label: '왕의 가계도로' };
+
   // 헤더 갱신
   document.getElementById('ep-num').textContent = target.label;
   document.getElementById('ep-title').textContent = target.tagline;
@@ -921,14 +943,37 @@ async function loadEpisode() {
   const gameUrl = `${slugFolder}/game.html`;
   gateOrLoadGame(target.gateKey, gameUrl);
 
-  // 심화 로드
-  loadMarkdownIfExists(`${slugFolder}/study.md`, 'study-content');
-
-  // 퀴즈 로드
-  loadQuizIfExists(`${slugFolder}/quiz.json`);
+  // 심화·퀴즈 로드 — 둘 다 끝난 뒤 심화 끝에 다음 걸음을 붙인다
+  await Promise.all([
+    loadMarkdownIfExists(`${slugFolder}/study.md`, 'study-content'),
+    loadQuizIfExists(`${slugFolder}/quiz.json`),
+  ]);
+  renderStudyNext();
 
   // 후기 로드 (있으면)
   loadMarkdownIfExists(`${slugFolder}/reviews.md`, 'reviews-content');
+}
+
+let HOME = { href: 'joseon-kings.html#tree-section', label: '왕의 가계도로' };
+
+function goTab(name) {
+  const tab = document.querySelector(`.ep-tab[data-tab="${name}"]`);
+  if (tab) tab.click();
+}
+
+// 심화를 다 읽은 뒤 — 복습 퀴즈로 가거나, 목록으로 돌아간다
+function renderStudyNext() {
+  const study = document.getElementById('study-content');
+  if (!study || study.querySelector('.empty-state')) return;
+  const hasQuiz = !!quizState.data;
+  study.insertAdjacentHTML('beforeend', `
+    <div class="next-steps">
+      <div class="next-steps-lead">${hasQuiz
+        ? '여기까지 읽었다면, 문제로 한 번 되짚어 볼까요?'
+        : '이 편은 여기까지입니다.'}</div>
+      ${hasQuiz ? '<button class="quiz-start-btn" onclick="goTab(\'quiz\')">복습 문제 풀기 →</button>' : ''}
+      <a class="quiz-back-btn" href="${HOME.href}">← ${HOME.label}</a>
+    </div>`);
 }
 
 // 마크다운 파일 있으면 표시
@@ -1252,6 +1297,10 @@ function renderQuizResult(elapsed, isNewBest) {
         <button class="quiz-back-btn" onclick="renderQuizIntro()">← 시작 화면</button>
       </div>
       ${renderLeaderboard()}
+      <div class="next-steps">
+        <div class="next-steps-lead">이 편을 모두 마쳤습니다.</div>
+        <a class="quiz-start-btn" style="display:inline-block;text-decoration:none;" href="${HOME.href}">${HOME.label} →</a>
+      </div>
     </div>`;
 }
 
@@ -1296,6 +1345,7 @@ document.querySelectorAll('.ep-tab').forEach(tab => {
     if (here) here.textContent = TAB_LABELS[tab.dataset.tab] || tab.textContent;
     // 선택 후 메뉴 닫기(포커스 해제 — 터치에서도 닫힘)
     if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    window.scrollTo(0, 0);
   };
 });
 
@@ -1303,8 +1353,10 @@ document.querySelectorAll('.ep-tab').forEach(tab => {
 window.addEventListener('message', (e) => {
   if (e.data && e.data.type === 'game-complete') {
     console.log('게임 완료:', e.data);
-    // 자동으로 퀴즈 탭으로 이동? — 일단 비활성. 학생이 자유롭게.
-    // document.querySelector('.ep-tab[data-tab="quiz"]').click();
+  }
+  // 게임 마지막 화면의 '심화 읽으러 가기'
+  if (e.data && e.data.type === 'goto-tab' && ['study', 'quiz'].includes(e.data.tab)) {
+    goTab(e.data.tab);
   }
 });
 
