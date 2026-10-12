@@ -343,6 +343,7 @@
       } else if (wasLocked && previousChoiceIdx !== undefined) {
         const prevBtn = el.querySelectorAll('.ch[data-idx]')[previousChoiceIdx];
         if (prevBtn) prevBtn.classList.add('previously-chosen');
+        showStamp(s.choice, previousChoiceIdx, el);
       }
     } else {
       // 선택지 없는 게임 씬 — 자동 다음
@@ -417,9 +418,11 @@
       const msgEl = sceneEl.querySelector('#no-answer-msg');
       if (msgEl) {
         // [b]/[em] 같은 인라인 마크업이 그대로 보이지 않게 파싱해서 넣는다
-        msgEl.innerHTML = parseInline(opt.feedback || '당신의 선택이 기록되었습니다.');
+        msgEl.innerHTML = parseInline(opt.feedback || '당신의 선택이 기록되었습니다.') +
+          (isStamp(scene.choice, idx) ? `<div class="stamp-note"><span class="ch-dot"></span>${parseInline(scene.choice.stamp)}</div>` : '');
         msgEl.classList.add('on');
       }
+      showStamp(scene.choice, idx, sceneEl);
 
       // flag 기록
       if (scene.choice.flag) {
@@ -534,6 +537,25 @@
     return !!choice && Number.isInteger(choice.mark);
   }
 
+  // 거꾸로 — 플레이어가 노란 점을 찍는 쪽인 씬(세조편).
+  // choice.stamp = 점이 누구 앞에 놓이는지, opt.stamp: true = 그 갈래를 고르면 점이 찍힌다.
+  function isStamp(choice, idx) {
+    return !!(choice && choice.stamp && choice.options[idx] && choice.options[idx].stamp);
+  }
+
+  function showStamp(choice, idx, sceneEl) {
+    if (!choice || !choice.stamp) return;
+    sceneEl.querySelectorAll('.ch[data-idx]').forEach(b => {
+      b.classList.remove('stamped');
+      b.querySelector('.ch-dot.stamp-dot')?.remove();
+    });
+    if (!isStamp(choice, idx)) return;
+    const btn = sceneEl.querySelector(`.ch[data-idx="${idx}"]`);
+    if (!btn) return;
+    btn.classList.add('stamped');
+    btn.insertAdjacentHTML('afterbegin', '<span class="ch-dot stamp-dot" aria-label="당신이 찍은 노란 점"></span>');
+  }
+
   function overrule(scene, wanted, message, btn, sceneEl) {
     state.wanted[state.currentSceneIdx] = wanted;
 
@@ -591,6 +613,7 @@
       sceneEl.querySelectorAll('.ch').forEach(b => b.classList.remove('locked', 'previously-chosen'));
       openBtn.classList.add('locked');
       wrap.classList.remove('on');
+      showStamp(scene.choice, -1, sceneEl);
 
       const msgEl = sceneEl.querySelector('#no-answer-msg');
       if (msgEl) {
@@ -651,6 +674,7 @@
         </div>` : ''}
         <div class="mychoice-a${r.free ? ' free' : ''}">
           ${r.free ? '<span class="mychoice-mark">✎ 직접 쓴 길</span>' : ''}
+          ${r.stamped ? '<span class="mychoice-mark"><span class="ch-dot"></span>당신이 노란 점을 찍은 것</span>' : ''}
           ${r.marked ? `<span class="mychoice-mark"><span class="ch-dot"></span>${r.wantedHTML ? '실제로 결재한 것' : '노란 점을 그대로 따랐습니다'}</span>` : ''}
           ${r.answerHTML}
         </div>
@@ -659,6 +683,8 @@
     const freeCount = rows.filter(r => r.free).length;
     const markedCount = rows.filter(r => r.marked).length;
     const wantedCount = rows.filter(r => r.wantedHTML).length;
+    const stampCount = rows.filter(r => r.stamped).length;
+    const stampTotal = rows.filter(r => r.stampable).length;
 
     // episode.html 안에서 돌 때만 심화 탭으로 넘겨줄 수 있다
     const framed = window.parent && window.parent !== window;
@@ -674,6 +700,9 @@
           ${freeCount ? `<div class="epi-text">${rows.length}번의 갈림길 가운데 ${freeCount}번, 당신은 주어진 선택지 밖에서 길을 찾았습니다.</div>` : ''}
           ${markedCount ? `<div class="epi-text">${markedCount}번의 결재에서, 붓은 언제나 노란 점을 따라갔습니다.${
             wantedCount ? `<br>당신은 그중 ${wantedCount}번, 다른 길을 원했습니다.` : ''}</div>` : ''}
+          ${stampTotal ? `<div class="epi-text">${stampCount
+            ? parseInline((state.data.stampLine || '{n}번, 당신의 뜻이 [b]남의 붓 앞에 노란 점으로[/b] 놓였습니다.').replace('{n}', stampCount))
+            : parseInline(state.data.noStampLine || '당신은 한 번도 노란 점을 찍지 않았습니다.')}</div>` : ''}
           ${framed ? `
           <div class="epi-next">
             <div class="epi-next-lead">게임은 여기까지입니다.<br>게임이 일부러 비워 둔 이야기가 심화에 있습니다.</div>
@@ -706,6 +735,8 @@
         history: deep && deep.type === 'deep' ? deep.title : '',
         free: !!(a && a.kind === 'free'),
         marked: hasMark(s.choice),
+        stamped: !!(a && a.kind === 'option' && isStamp(s.choice, a.idx)),
+        stampable: !!(s.choice.stamp),
         wantedHTML: '',
         wantedText: '',
       };
