@@ -614,6 +614,9 @@ body {
   100% { transform: scale(1); opacity: 1; }
 }
 .stamp-note { margin-top: 10px; font-family: var(--font-serif); font-size: 13px; color: var(--text2); }
+/* 지울 수 있는 점 — 예종편 */
+.ch-dot.erased { background: transparent; box-shadow: 0 0 0 1.5px rgba(226, 185, 59, .55); transition: background .4s ease; }
+.erase-note { margin-top: 10px; font-family: var(--font-serif); font-size: 13px; color: var(--text2); }
 .mychoice-a.wanted { color: var(--text3); margin-bottom: 8px; }
 .mychoice-struck { text-decoration: line-through; text-decoration-color: var(--border3); }
 
