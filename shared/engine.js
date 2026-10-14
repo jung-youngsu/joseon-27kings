@@ -22,7 +22,8 @@
     currentSceneIdx: 0,   // 현재 씬 인덱스
     flags: {},            // 학생의 선택 기록
     answers: {},          // 씬 인덱스 → { kind: 'option', idx } | { kind: 'free', text }
-    wanted: {},           // 노란 점 씬에서 플레이어가 고르려 했던 것 (answers와 같은 모양)
+    wanted: {},
+    asked: {},            // 먼저 묻기 씬에서 물은 사람 (씬 번호 → people 번호, 아무도 없으면 -1)           // 노란 점 씬에서 플레이어가 고르려 했던 것 (answers와 같은 모양)
     actsCompleted: [],    // 완료한 막 ID 목록
     lockedScenes: new Set(),  // 선택을 이미 한 씬 (뒤로가기 제한용)
     visitedScenes: new Set()  // 이미 본 씬 (타이핑 스킵용)
@@ -35,6 +36,7 @@
     state.flags = {};
     state.answers = {};
     state.wanted = {};
+    state.asked = {};
     state.actsCompleted = [];
     state.lockedScenes = new Set();
     state.visitedScenes = new Set();
@@ -292,7 +294,8 @@
     // 선택지
     if (s.choice) {
       html += `
-        <div class="ch-area">
+        <div class="ch-area${hasAsk(s.choice) && askPeople(s.choice).length ? ' asking' : ''}">
+          ${hasAsk(s.choice) ? renderAsk(s.choice) : ''}
           <div class="ch-label">${parseInline(s.choice.label || '')}</div>
           ${hasMark(s.choice) && s.choice.markBy ? `
           <div class="ch-markby"><span class="ch-dot"></span>${parseInline(s.choice.markBy)}</div>` : ''}
@@ -335,6 +338,7 @@
       });
 
       bindFreeAnswer(s, el);
+      bindAsk(s, el);
 
       // 이전 선택이 있으면 표시 (해당 버튼만 강조, 나머지는 그대로 클릭 가능)
       const prev = state.answers[state.currentSceneIdx];
@@ -575,6 +579,69 @@
     if (dot) dot.classList.toggle('erased', isErased(choice, idx));
   }
 
+  // ─── 먼저 묻기 ──────────────────────────────────────────
+  // 경연처럼, 결정하기 전에 한 사람에게 묻는다(성종편).
+  // choice.ask = { label, people: [{ who, role, says, hint?, key? }], emptyNote }
+  // people이 비어 있으면 물을 사람이 없다는 것만 보여 주고 바로 고르게 한다.
+  // people[].absent: true — 있지만 부르지 않은 사람(중종편). 흐리게 보이고 물을 수 없다. 그 아래 ask.absentNote.
+  function hasAsk(choice) {
+    return !!(choice && choice.ask);
+  }
+
+  function askPeople(choice) {
+    return (choice && choice.ask && choice.ask.people) || [];
+  }
+
+  function renderAsk(choice) {
+    const people = askPeople(choice);
+    return `
+          <div class="ask-area">
+            <div class="ask-label">${parseInline(choice.ask.label || '결정하기 전에 — 누구에게 묻겠습니까?')}</div>
+            ${people.length ? `
+            <div class="ch-list ask-list">
+              ${people.map((p, i) => p.absent
+                ? `<button class="ch ask ask-absent" disabled>${escapeHTML(p.who)}</button>`
+                : `<button class="ch ask" data-ask="${i}">${escapeHTML(p.who)}${
+                p.hint ? `<span class="ask-hint">${parseInline(p.hint)}</span>` : ''}</button>`).join('')}
+            </div>
+            ${choice.ask.absentNote && people.some(p => p.absent) ? `<div class="ask-empty">${parseInline(choice.ask.absentNote)}</div>` : ''}` : `<div class="ask-empty">${parseInline(choice.ask.emptyNote || '물을 사람이 없습니다.')}</div>`}
+            <div class="ask-answer" id="ask-answer"></div>
+          </div>`;
+  }
+
+  function bindAsk(scene, sceneEl) {
+    if (!hasAsk(scene.choice)) return;
+    const people = askPeople(scene.choice);
+    if (!people.length) { state.asked[state.currentSceneIdx] = -1; return; }
+    sceneEl.querySelectorAll('.ch[data-ask]').forEach(btn => {
+      btn.onclick = () => {
+        if (state.asked[state.currentSceneIdx] !== undefined) return;  // 한 사람에게만 묻는다
+        state.asked[state.currentSceneIdx] = parseInt(btn.dataset.ask);
+        showAsked(scene, sceneEl);
+      };
+    });
+    if (state.asked[state.currentSceneIdx] !== undefined) showAsked(scene, sceneEl);
+  }
+
+  function showAsked(scene, sceneEl) {
+    const i = state.asked[state.currentSceneIdx];
+    const p = askPeople(scene.choice)[i];
+    if (!p) return;
+    sceneEl.querySelectorAll('.ch[data-ask]').forEach(b => {
+      const mine = parseInt(b.dataset.ask) === i;
+      b.classList.toggle('locked', mine);
+      b.classList.toggle('ask-skipped', !mine);
+      b.disabled = true;
+    });
+    const ans = sceneEl.querySelector('#ask-answer');
+    if (ans) ans.innerHTML = `
+      <div class="dial ${p.role || 'npc-a'}">
+        <div class="dial-who">${escapeHTML(p.who)}</div>
+        <div class="dial-text">${parseInline(p.says || '')}</div>
+      </div>`;
+    sceneEl.querySelector('.ch-area')?.classList.remove('asking');
+  }
+
   function overrule(scene, wanted, message, btn, sceneEl) {
     state.wanted[state.currentSceneIdx] = wanted;
 
@@ -700,6 +767,7 @@
           ${r.marked ? `<span class="mychoice-mark"><span class="ch-dot"></span>${r.wantedHTML ? '실제로 결재한 것' : '노란 점을 그대로 따랐습니다'}</span>` : ''}
           ${r.answerHTML}
         </div>
+        ${r.askable ? `<div class="mychoice-ask">${r.askedWho ? `물은 사람 · ${escapeHTML(r.askedWho)}` : (r.askedNone ? '물을 사람이 없었습니다' : '아무에게도 묻지 않았습니다')}</div>` : ''}
         ${r.history ? `<div class="mychoice-h">깊게 살펴보기 「${parseInline(r.history)}」</div>` : ''}
       </li>`).join('');
     const freeCount = rows.filter(r => r.free).length;
@@ -709,6 +777,14 @@
     const stampTotal = rows.filter(r => r.stampable).length;
     const eraseTotal = rows.filter(r => r.erasable).length;
     const erasedCount = rows.filter(r => r.erased).length;
+    const askTally = {};
+    rows.forEach(r => {
+      if (!r.askedKey) return;
+      askTally[r.askedKey] = askTally[r.askedKey] || { who: r.askedGroup, n: 0 };
+      askTally[r.askedKey].n++;
+    });
+    const askTop = Object.values(askTally).sort((a, b) => b.n - a.n);
+    const askBest = askTop.length ? askTop.filter(t => t.n === askTop[0].n) : [];
 
     // episode.html 안에서 돌 때만 심화 탭으로 넘겨줄 수 있다
     const framed = window.parent && window.parent !== window;
@@ -724,6 +800,7 @@
           ${freeCount ? `<div class="epi-text">${rows.length}번의 갈림길 가운데 ${freeCount}번, 당신은 주어진 선택지 밖에서 길을 찾았습니다.</div>` : ''}
           ${markedCount ? `<div class="epi-text">${markedCount}번의 결재에서, 붓은 언제나 노란 점을 따라갔습니다.${
             wantedCount ? `<br>당신은 그중 ${wantedCount}번, 다른 길을 원했습니다.` : ''}</div>` : ''}
+          ${askBest.length ? `<div class="epi-text">${parseInline(askSummary(askBest))}</div>` : ''}
           ${eraseTotal ? `<div class="epi-text">${erasedCount
             ? parseInline((state.data.eraseLine || '{total}번의 결재 가운데 {n}번, 당신은 [b]노란 점을 지웠습니다.[/b]').replace('{n}', erasedCount).replace('{total}', eraseTotal))
             : parseInline((state.data.keepLine || '{total}번의 결재에서, 당신은 한 번도 노란 점을 지우지 않았습니다.').replace('{total}', eraseTotal))}</div>` : ''}
@@ -749,6 +826,15 @@
   }
 
   // 막마다 [질문 · 내 답 · 그 막의 깊게 살펴보기 제목]을 모은다.
+  // 가장 많이 물은 사람. 모두 한 번씩이면 "막마다 다른 사람"으로 적는다.
+  function askSummary(best) {
+    const line = state.data.askLine || '당신이 가장 많이 물은 사람 — [b]{who}[/b] ({n}번)';
+    if (best[0].n === 1 && best.length > 1) {
+      return line.replace(' ({n}번)', '').replace('{who}', '막마다 다른 사람');
+    }
+    return line.replace('{who}', best.map(t => t.who).join(' · ')).replace('{n}', best[0].n);
+  }
+
   function summarizeAnswers() {
     const scenes = state.data.scenes;
     const rows = [];
@@ -766,9 +852,20 @@
         erased: !!(a && isErased(s.choice, a.kind === 'free' ? 'free' : a.idx)),
         stamped: !!(a && a.kind === 'option' && isStamp(s.choice, a.idx)),
         stampable: !!(s.choice.stamp),
+        askable: hasAsk(s.choice),
+        askedWho: '',
+        askedKey: '',
         wantedHTML: '',
         wantedText: '',
       };
+      if (row.askable) {
+        const ai = state.asked[i];
+        const p = ai >= 0 ? askPeople(s.choice)[ai] : null;
+        row.askedWho = p ? p.who : '';
+        row.askedKey = p ? (p.key || p.who) : '';
+        row.askedGroup = p ? (p.group || p.who) : '';  // 같은 key의 여러 사람을 한 이름으로 셀 때
+        row.askedNone = ai === -1;
+      }
       const w = state.wanted[i];
       if (row.marked && w) {
         if (w.kind === 'free') {
@@ -801,6 +898,7 @@
     state.flags = {};
     state.answers = {};
     state.wanted = {};
+    state.asked = {};
     state.actsCompleted = [];
     state.lockedScenes = new Set();
     renderScene();

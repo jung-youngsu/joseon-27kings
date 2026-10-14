@@ -216,7 +216,9 @@ async function showProgressBanner(){
     {ep:6, title:'단종 이홍위',  file:'episode.html?ep=6'},
     {ep:7, title:'세조 이유',    file:'episode.html?ep=7'},
     {ep:8, title:'예종 이황',    file:'episode.html?ep=8'},
+    {ep:9, title:'성종 이혈',    file:'episode.html?ep=9'},
     {ep:10,title:'연산군 이융',  file:'episode.html?ep=10'},
+    {ep:11,title:'중종 이역',    file:'episode.html?ep=11'},
     {ep:14,title:'선조 이연',    file:'episode.html?ep=14'},
     {ep:22,title:'정조 이산',    file:'episode.html?ep=22'},
   ];
@@ -358,7 +360,9 @@ async function showLoggedIn(){
     {ep:6, title:'단종 이홍위',  theme:'노란 점의 왕'},
     {ep:7, title:'세조 이유',    theme:'할아버지를 닮은 손자'},
     {ep:8, title:'예종 이황',    theme:'점을 지운 왕'},
-    {ep:10,title:'연산군 이융',  theme:'분노의 왕'},
+    {ep:9, title:'성종 이혈',    theme:'묻는 왕'},
+    {ep:10,title:'연산군 이융',  theme:'묻는 자리를 닫은 왕'},
+    {ep:11,title:'중종 이역',    theme:'부르지 않은 왕'},
     {ep:14,title:'선조 이연',    theme:'두려움의 왕'},
     {ep:22,title:'정조 이산',    theme:'복수의 왕'},
   ];
@@ -421,11 +425,15 @@ const KINGS=[
   {row:8,  x:CL,title:'예종',  name:'이황',  reign:'1468–69',  kw:'단명 1년',
    series:true,ep:8,theme:'점을 지운 왕',sub:'아버지의 신하를 물려받은 왕',
    desc:'아버지는 아들 곁에 자기 사람들을 남겼다.<br>그 울타리 안에서, 열여덟 살 왕은 노란 점을 지우기 시작했다.<br>열넉 달 동안 — 세 번.'},
-  {row:9,  x:CM,title:'성종',  name:'이혈',  reign:'1469–94',  kw:'경국대전'},
+  {row:9,  x:CM,title:'성종',  name:'이혈',  reign:'1469–94',  kw:'경국대전',
+   series:true,ep:9,theme:'묻는 왕',sub:'스스로 본을 찾은 왕',
+   desc:'아버지 얼굴을 모르고 자라, 하루 세 번 경연에서 물었다.<br>할아버지가 닫은 자리를 다시 열었다.<br>그러나 한 가지 일만은 — 아무에게도 묻지 못했다.'},
   {row:10, x:CL,title:'연산군',name:'이융',  reign:'1494–1506',kw:'사화·폭정',deposed:true,
-   series:true,ep:10,theme:'분노의 왕',sub:'다섯 번의 기회',
-   desc:'어머니의 죽음, 신하들의 배신, 그리고 다섯 번의 선택.<br>역사는 그를 폭군이라 불렀다.<br>당신도 같은 길을 걸었을까?'},
-  {row:11, x:CM,title:'중종',  name:'이역',  reign:'1506–44',  kw:'반정 집권'},
+   series:true,ep:10,theme:'묻는 자리를 닫은 왕',sub:'어머니의 그림자',
+   desc:'어머니가 있었다는 것을 안 날, 그는 수라를 물렸다.<br>그리고 아버지가 연 묻는 자리를 하나씩 닫았다.<br>마지막에는 — 물을 사람이 아무도 남지 않았다.'},
+  {row:11, x:CM,title:'중종',  name:'이역',  reign:'1506–44',  kw:'반정 집권',
+   series:true,ep:11,theme:'부르지 않은 왕',sub:'잠시 열렸던 자리',
+   desc:'남이 고른 왕은, 누구에게 물을지만 고를 수 있었다.<br>형이 닫은 자리를 다시 열고 조광조를 곁에 두었다.<br>그리고 어느 밤 — 그를 부르지 않았다.'},
   {row:12, x:CL,title:'인종',  name:'이호',  reign:'1544–45',  kw:'8개월 재위'},
   {row:13, x:CR,title:'명종',  name:'이환',  reign:'1545–67',  kw:'을사사화'},
   {row:14, x:CM,title:'선조',  name:'이연',  reign:'1567–1608',kw:'임진왜란',
@@ -671,7 +679,7 @@ async function toggleDetail(king){
   activeKing=king;
   wrap.style.display='block';
 
-  const gameFiles={1:'episode.html?ep=1', 2:'episode.html?ep=2', 3:'episode.html?ep=3', 4:'episode.html?ep=4', 5:'episode.html?ep=5', 6:'episode.html?ep=6', 7:'episode.html?ep=7', 8:'episode.html?ep=8', 10:'episode.html?ep=10', 14:'episode.html?ep=14', 22:'episode.html?ep=22'};
+  const gameFiles={1:'episode.html?ep=1', 2:'episode.html?ep=2', 3:'episode.html?ep=3', 4:'episode.html?ep=4', 5:'episode.html?ep=5', 6:'episode.html?ep=6', 7:'episode.html?ep=7', 8:'episode.html?ep=8', 9:'episode.html?ep=9', 10:'episode.html?ep=10', 11:'episode.html?ep=11', 14:'episode.html?ep=14', 22:'episode.html?ep=22'};
   const playable=!!gameFiles[king.ep];
   const tickets=userProfile?.rebirth_tickets||0;
 
@@ -689,7 +697,7 @@ async function toggleDetail(king){
     :'';
 
   const seriesOrder=`<div style="font-family:'Noto Sans KR',sans-serif;font-size:11px;color:var(--text-muted);margin-bottom:12px;line-height:2;">
-    공개된 편&nbsp;&nbsp;1화 태조 → 2화 정종 → 3화 태종 → 4화 세종 → 5화 문종 → 6화 단종 → 7화 세조 → 8화 예종 → 10화 연산군 → 14화 선조 → 22화 정조<br>
+    공개된 편&nbsp;&nbsp;1화 태조 → 2화 정종 → 3화 태종 → 4화 세종 → 5화 문종 → 6화 단종 → 7화 세조 → 8화 예종 → 9화 성종 → 10화 연산군 → 11화 중종 → 14화 선조 → 22화 정조<br>
     <span style="color:var(--gold);">전편 무료 — 로그인 없이 바로 플레이할 수 있어요.</span>
   </div>`;
 
