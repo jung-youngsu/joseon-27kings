@@ -299,6 +299,8 @@
           <div class="ch-label">${parseInline(s.choice.label || '')}</div>
           ${hasMark(s.choice) && s.choice.markBy ? `
           <div class="ch-markby"><span class="ch-dot"></span>${parseInline(s.choice.markBy)}</div>` : ''}
+          ${!hasMark(s.choice) && s.choice.markNone ? `
+          <div class="ch-markby"><span class="ch-dot erased"></span>${parseInline(s.choice.markNone)}</div>` : ''}
           <div class="ch-list" id="ch-list">
             ${s.choice.options.map((opt, i) => `
               <button class="ch${s.choice.mark === i ? ' marked' : ''}" data-idx="${i}">${
@@ -540,6 +542,7 @@
   // 어린 왕(단종)의 결재처럼, 고를 것이 이미 정해져 있는 씬.
   // choice.mark = 점이 찍힌 선택지 번호, choice.markBy = 누가 찍었나.
   // 다른 쪽을 고르거나 직접 써도 기록만 되고(state.wanted), 진행은 점을 따라야 한다.
+  // choice.markNone = 점이 없는 결재(명종편 4막). 빈 동그라미와 그 문구만 보여 주고, 고르는 것은 막지 않는다.
   function hasMark(choice) {
     return !!choice && Number.isInteger(choice.mark);
   }
