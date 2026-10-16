@@ -3,22 +3,41 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EP18 · 현종 — 예송의 시대</title>
-<!-- 게임 본체. 추후 작성. -->
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<title>당신이 이연이라면? — 물려받은 물음</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600;700&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+
+<!-- ① 톤 — warm-quiet -->
+<link rel="stylesheet" href="../../shared/themes/warm-quiet.css?v=202610161157">
+
+<!-- ② 공통 스타일 -->
+<link rel="stylesheet" href="../../shared/style.css?v=202610161157">
+
 </head>
 <body>
-<!-- TODO: 현종(이연) 게임 콘텐츠 -->
-<!-- 표준 메타데이터 -->
-<script type="application/json" id="meta">
-{
-  "ep": 18,
-  "slug": "hyeonjong",
-  "korName": "현종",
-  "personalName": "이연",
-  "reign": "1659-1674",
-  "era": "1641-1674",
-  "tagline": "예송의 시대"
-}
+
+<div id="game-root"></div>
+
+<script src="../../shared/glossary.js?v=202610161157"></script>
+<script src="../../shared/engine.js?v=202610161157"></script>
+
+<script>
+fetch('scenes.json', { cache: 'no-cache' })
+  .then(r => r.json())
+  .then(data => {
+    GameEngine.start(data);
+  })
+  .catch(err => {
+    document.getElementById('game-root').innerHTML = `
+      <div style="padding:40px;text-align:center;color:#c87060;font-family:'Noto Serif KR',serif;">
+        <div style="font-size:18px;margin-bottom:12px;">시나리오 파일을 불러올 수 없습니다.</div>
+        <div style="font-size:13px;opacity:0.6;">scenes.json: ${err.message}</div>
+      </div>
+    `;
+    console.error(err);
+  });
 </script>
+
 </body>
 </html>

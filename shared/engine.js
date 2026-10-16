@@ -40,6 +40,7 @@
     state.actsCompleted = [];
     state.lockedScenes = new Set();
     state.visitedScenes = new Set();
+    setupGlossary(scenesData.glossary);
     renderScene();
   }
 
@@ -56,6 +57,10 @@
       console.error('GameEngine: #game-root not found');
       return;
     }
+
+    // 낱말 풀이 링크는 씬마다 처음 나올 때만
+    glossSeen = new Set();
+    hideGloss();
 
     // 모든 씬은 .sc 클래스로
     root.innerHTML = '';
@@ -282,7 +287,7 @@
         const cls = d.role || 'npc-a';
         html += `
           <div class="dial ${cls}">
-            ${d.who ? `<div class="dial-who">${escapeHTML(d.who)}</div>` : ''}
+            ${d.who ? `<div class="dial-who">${glossWho(d.who)}</div>` : ''}
             <div class="dial-text">${parseInline(d.text)}</div>
           </div>
         `;
@@ -305,7 +310,7 @@
             ${s.choice.options.map((opt, i) => `
               <button class="ch${s.choice.mark === i ? ' marked' : ''}" data-idx="${i}">${
                 s.choice.mark === i ? '<span class="ch-dot" aria-label="노란 점"></span>' : ''
-              }${parseInline(opt.text)}</button>
+              }${parseInline(opt.text, true)}</button>
             `).join('')}
           </div>
           ${allowsFree(s.choice) ? `
@@ -605,7 +610,7 @@
               ${people.map((p, i) => p.absent
                 ? `<button class="ch ask ask-absent" disabled>${escapeHTML(p.who)}</button>`
                 : `<button class="ch ask" data-ask="${i}">${escapeHTML(p.who)}${
-                p.hint ? `<span class="ask-hint">${parseInline(p.hint)}</span>` : ''}</button>`).join('')}
+                p.hint ? `<span class="ask-hint">${parseInline(p.hint, true)}</span>` : ''}</button>`).join('')}
             </div>
             ${choice.ask.absentNote && people.some(p => p.absent) ? `<div class="ask-empty">${parseInline(choice.ask.absentNote)}</div>` : ''}` : `<div class="ask-empty">${parseInline(choice.ask.emptyNote || '물을 사람이 없습니다.')}</div>`}
             <div class="ask-answer" id="ask-answer"></div>
@@ -639,7 +644,7 @@
     const ans = sceneEl.querySelector('#ask-answer');
     if (ans) ans.innerHTML = `
       <div class="dial ${p.role || 'npc-a'}">
-        <div class="dial-who">${escapeHTML(p.who)}</div>
+        <div class="dial-who">${glossWho(p.who)}</div>
         <div class="dial-text">${parseInline(p.says || '')}</div>
       </div>`;
     sceneEl.querySelector('.ch-area')?.classList.remove('asking');
@@ -995,9 +1000,9 @@
   // ─── 인라인 마크업 파서 ──────────────────────────────────
   // [b]진하게[/b], [i]기울임[/i], [em]강조[/em],
   // 또는 *진하게* (마크다운 호환)
-  function parseInline(text) {
+  function parseInline(text, noGloss) {
     if (!text) return '';
-    return escapeHTML(text)
+    const html = escapeHTML(text)
       // 줄바꿈을 품은 태그도 처리 — (.+?)는 개행을 못 먹어서
       // 태그가 화면에 그대로 노출되던 문제가 있었다.
       .replace(/\[b\]([\s\S]+?)\[\/b\]/g,   '<strong>$1</strong>')
@@ -1007,6 +1012,91 @@
       .replace(/\*([^*\n]+?)\*/g,       '<em>$1</em>')
       .replace(/__(.+?)__/g,            '<em>$1</em>')
       .replace(/\n/g, '<br>');
+    return noGloss ? html : linkTerms(html);
+  }
+
+  // ─── 낱말 풀이 링크 ──────────────────────────────────────
+  // 사전: shared/glossary.js(window.GLOSSARY) + 편의 scenes.json "glossary"
+  // 어려운 낱말을 점선 밑줄로 바꾸고, 누르면 풀이 말풍선을 띄운다.
+  let glossDict = {};
+  let glossRe = null;
+  let glossSeen = new Set();
+  let glossPop = null;
+
+  function setupGlossary(extra) {
+    glossDict = Object.assign({}, window.GLOSSARY || {}, extra || {});
+    const terms = Object.keys(glossDict).filter(t => t && glossDict[t])
+      .sort((a, b) => b.length - a.length)
+      .map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    glossRe = terms.length ? new RegExp('(^|[^가-힣])(' + terms.join('|') + ')', 'g') : null;
+    if (!glossPop) bindGlossPop();
+  }
+
+  // 태그 밖의 글자에서만 찾는다. 앞이 한글이면(왕세자) 건너뛰고,
+  // 뒤가 하·해·했·할·한(대비하다)이면 건너뛴다.
+  // 바로 뒤에 괄호 풀이가 붙어 있으면 그 자리에서 풀린 것으로 친다.
+  function linkTerms(html) {
+    if (!glossRe) return html;
+    return html.split(/(<[^>]+>)/).map(part => {
+      if (!part || part[0] === '<') return part;
+      return part.replace(glossRe, (m, pre, term, offset, str) => {
+        const after = str.slice(offset + m.length);
+        if (/^[하해했할한]/.test(after)) return m;
+        if (glossSeen.has(term)) return m;
+        glossSeen.add(term);
+        if (/^\s*\(/.test(after)) return m;
+        return pre + `<span class="term" tabindex="0" role="button" data-term="${term}">${term}</span>`;
+      });
+    }).join('');
+  }
+
+  function glossWho(who) {
+    return linkTerms(escapeHTML(who));
+  }
+
+  function bindGlossPop() {
+    glossPop = document.createElement('div');
+    glossPop.className = 'gloss-pop';
+    glossPop.setAttribute('role', 'tooltip');
+    document.body.appendChild(glossPop);
+
+    document.addEventListener('click', e => {
+      const t = e.target.closest && e.target.closest('.term');
+      if (t) { e.stopPropagation(); showGloss(t); }
+      else if (!glossPop.contains(e.target)) hideGloss();
+    }, true);
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { hideGloss(); return; }
+      const t = document.activeElement;
+      if ((e.key === 'Enter' || e.key === ' ') && t && t.classList && t.classList.contains('term')) {
+        e.preventDefault();
+        showGloss(t);
+      }
+    });
+    window.addEventListener('scroll', hideGloss, { passive: true });
+    window.addEventListener('resize', hideGloss);
+  }
+
+  function showGloss(t) {
+    const term = t.dataset.term;
+    const def = glossDict[term];
+    if (!def) return;
+    if (glossPop.classList.contains('on') && glossPop.dataset.term === term) { hideGloss(); return; }
+    glossPop.innerHTML = `<b>${escapeHTML(term)}</b>${escapeHTML(def)}`;
+    glossPop.dataset.term = term;
+    glossPop.classList.add('on');
+    const r = t.getBoundingClientRect();
+    const pw = glossPop.offsetWidth, ph = glossPop.offsetHeight;
+    const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+    const left = Math.min(Math.max(12, r.left + r.width / 2 - pw / 2), vw - pw - 12);
+    let top = r.bottom + 8;
+    if (top + ph > vh - 8) top = Math.max(8, r.top - ph - 8);
+    glossPop.style.left = left + 'px';
+    glossPop.style.top = top + 'px';
+  }
+
+  function hideGloss() {
+    if (glossPop) { glossPop.classList.remove('on'); glossPop.dataset.term = ''; }
   }
 
   function escapeHTML(s) {

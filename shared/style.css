@@ -884,3 +884,47 @@ body {
 .btn-p.ghost { background: transparent; }
 .btn-p.solid { background: var(--accent2); color: var(--bg); border-color: var(--accent2); }
 .btn-p.solid:hover { background: var(--accent3); border-color: var(--accent3); }
+
+/* ─── 낱말 풀이 링크 (shared/glossary.js) ─────────────────── */
+.term {
+  text-decoration: underline dotted;
+  text-decoration-color: var(--accent3);
+  text-underline-offset: 4px;
+  text-decoration-thickness: 1.5px;
+  cursor: pointer;
+  border-radius: 2px;
+}
+.term:hover, .term:focus-visible {
+  background: color-mix(in srgb, var(--accent3) 16%, transparent);
+  outline: none;
+}
+.gloss-pop {
+  position: fixed;
+  z-index: 1000;
+  left: 0; top: 0;
+  max-width: min(300px, calc(100vw - 24px));
+  padding: 10px 14px;
+  background: var(--bg3);
+  border: 1px solid var(--border3);
+  border-radius: 8px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.6;
+  font-style: normal;
+  font-weight: 400;
+  text-align: left;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .15s;
+  pointer-events: none;
+}
+.gloss-pop.on { opacity: 1; visibility: visible; pointer-events: auto; }
+.gloss-pop b {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--accent3);
+  font-family: var(--font-serif);
+  font-weight: 600;
+}

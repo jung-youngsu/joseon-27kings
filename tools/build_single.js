@@ -10,7 +10,7 @@
    하는 일:
      1. <ep-dir>/scenes.json 읽음
      2. scenes.theme 필드로 shared/themes/<theme>.css 인라인
-     3. shared/style.css + shared/engine.js 인라인
+     3. shared/style.css + shared/glossary.js + shared/engine.js 인라인
      4. <ep-dir>/game.html (또는 -o로 지정한 경로)에 자족적 단일 HTML 저장
 ═══════════════════════════════════════════════════════════════ */
 
@@ -40,8 +40,10 @@ function main() {
   const themeCss = fs.readFileSync(path.join(sharedDir, 'themes', `${theme}.css`), 'utf8');
   const styleCss = fs.readFileSync(path.join(sharedDir, 'style.css'), 'utf8');
   const engineJs = fs.readFileSync(path.join(sharedDir, 'engine.js'), 'utf8');
+  const glossaryPath = path.join(sharedDir, 'glossary.js');
+  const glossaryJs = fs.existsSync(glossaryPath) ? fs.readFileSync(glossaryPath, 'utf8') : '';
 
-  const html = renderHtml({ scenes, themeCss, styleCss, engineJs, theme });
+  const html = renderHtml({ scenes, themeCss, styleCss, engineJs, glossaryJs, theme });
 
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
   fs.writeFileSync(outPath, html, 'utf8');
@@ -61,7 +63,7 @@ function findProjectRoot(start) {
   throw new Error(`Could not locate project root (looking for shared/engine.js) from ${start}`);
 }
 
-function renderHtml({ scenes, themeCss, styleCss, engineJs, theme }) {
+function renderHtml({ scenes, themeCss, styleCss, engineJs, glossaryJs, theme }) {
   const title = scenes.title || `조선 27왕 · EP${String(scenes.ep ?? '').padStart(2, '0')}`;
   // JSON을 안전하게 <script> 안에 인라인 — </ 시퀀스만 보호하면 충분
   const scenesInline = JSON.stringify(scenes).replace(/<\/(script)/gi, '<\\/$1');
@@ -89,6 +91,11 @@ ${styleCss}
 <body>
 
 <div id="game-root"></div>
+
+<!-- shared/glossary.js -->
+<script>
+${glossaryJs}
+</script>
 
 <!-- shared/engine.js -->
 <script>
