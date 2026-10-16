@@ -223,6 +223,8 @@ async function showProgressBanner(){
     {ep:13,title:'명종 이환',    file:'episode.html?ep=13'},
     {ep:14,title:'선조 이연',    file:'episode.html?ep=14'},
     {ep:15,title:'광해군 이혼',  file:'episode.html?ep=15'},
+    {ep:16,title:'인조 이종',    file:'episode.html?ep=16'},
+    {ep:17,title:'효종 이호',    file:'episode.html?ep=17'},
     {ep:22,title:'정조 이산',    file:'episode.html?ep=22'},
   ];
 
@@ -370,6 +372,8 @@ async function showLoggedIn(){
     {ep:13,title:'명종 이환',    theme:'발 뒤의 왕'},
     {ep:14,title:'선조 이연',    theme:'왕의 아들이 아니었던 왕'},
     {ep:15,title:'광해군 이혼',  theme:'두 가지를 물려받은 왕'},
+    {ep:16,title:'인조 이종',    theme:'명분에 묶인 왕'},
+    {ep:17,title:'효종 이호',    theme:'삼전도를 본 아들'},
     {ep:22,title:'정조 이산',    theme:'복수의 왕'},
   ];
 
@@ -452,8 +456,12 @@ const KINGS=[
   {row:15, x:CR,title:'광해군',name:'이혼',  reign:'1608–23',  kw:'중립 외교',deposed:true,
    series:true,ep:15,theme:'두 가지를 물려받은 왕',sub:'의심받은 세자',
    desc:'전쟁터를 다닌 세자는 백성의 짐을 알았고, 의심받던 세자는 끝내 형제를 두려워했다.<br>대동법을 열고, 명나라의 부름 앞에서 망설였고, 동생과 어머니를 내쳤다.<br>한 사람 안에서 두 가지가 함께 나왔다.'},
-  {row:16, x:CM,title:'인조',  name:'이종',  reign:'1623–49',  kw:'병자호란'},
-  {row:17, x:CM,title:'효종',  name:'이호',  reign:'1649–59',  kw:'북벌론'},
+  {row:16, x:CM,title:'인조',  name:'이종',  reign:'1623–49',  kw:'병자호란',
+   series:true,ep:16,theme:'명분에 묶인 왕',sub:'명분으로 선 왕',
+   desc:'명분으로 왕이 된 사람은, 그 명분을 쉽게 내려놓지 못했다.<br>공신을 의심하지 못했고, 청의 글을 물리쳤고, 끝내 삼전도에 섰다.<br>명분이 무너진 뒤에는 — 아들의 집안보다 자기 자리를 먼저 지켰다.'},
+  {row:17, x:CM,title:'효종',  name:'이호',  reign:'1649–59',  kw:'북벌론',
+   series:true,ep:17,theme:'삼전도를 본 아들',sub:'드러낼 수 없었던 꿈',
+   desc:'삼전도를 본 아들은 원수를 갚겠다고 마음먹었고, 그 마음을 드러낼 수 없었다.<br>청 앞에서는 고개를 숙이고, 백성의 원망 속에서도 군사를 길렀다.<br>늘 시간이 없다고 느낀 왕은 — 마지막 날에도 기다리지 않았다.'},
   {row:18, x:CM,title:'현종',  name:'이연',  reign:'1659–74',  kw:'예송 논쟁'},
   {row:19, x:CM,title:'숙종',  name:'이순',  reign:'1674–1720',kw:'환국 정치'},
   {row:20, x:CL,title:'경종',  name:'이윤',  reign:'1720–24',  kw:'단명 재위'},
@@ -691,7 +699,7 @@ async function toggleDetail(king){
   activeKing=king;
   wrap.style.display='block';
 
-  const gameFiles={1:'episode.html?ep=1', 2:'episode.html?ep=2', 3:'episode.html?ep=3', 4:'episode.html?ep=4', 5:'episode.html?ep=5', 6:'episode.html?ep=6', 7:'episode.html?ep=7', 8:'episode.html?ep=8', 9:'episode.html?ep=9', 10:'episode.html?ep=10', 11:'episode.html?ep=11', 12:'episode.html?ep=12', 13:'episode.html?ep=13', 14:'episode.html?ep=14', 15:'episode.html?ep=15', 22:'episode.html?ep=22'};
+  const gameFiles={1:'episode.html?ep=1', 2:'episode.html?ep=2', 3:'episode.html?ep=3', 4:'episode.html?ep=4', 5:'episode.html?ep=5', 6:'episode.html?ep=6', 7:'episode.html?ep=7', 8:'episode.html?ep=8', 9:'episode.html?ep=9', 10:'episode.html?ep=10', 11:'episode.html?ep=11', 12:'episode.html?ep=12', 13:'episode.html?ep=13', 14:'episode.html?ep=14', 15:'episode.html?ep=15', 16:'episode.html?ep=16', 17:'episode.html?ep=17', 22:'episode.html?ep=22'};
   const playable=!!gameFiles[king.ep];
   const tickets=userProfile?.rebirth_tickets||0;
 
@@ -709,7 +717,7 @@ async function toggleDetail(king){
     :'';
 
   const seriesOrder=`<div style="font-family:'Noto Sans KR',sans-serif;font-size:11px;color:var(--text-muted);margin-bottom:12px;line-height:2;">
-    공개된 편&nbsp;&nbsp;1화 태조 → 2화 정종 → 3화 태종 → 4화 세종 → 5화 문종 → 6화 단종 → 7화 세조 → 8화 예종 → 9화 성종 → 10화 연산군 → 11화 중종 → 12화 인종 → 13화 명종 → 14화 선조 → 15화 광해군 → 22화 정조<br>
+    공개된 편&nbsp;&nbsp;1화 태조 → 2화 정종 → 3화 태종 → 4화 세종 → 5화 문종 → 6화 단종 → 7화 세조 → 8화 예종 → 9화 성종 → 10화 연산군 → 11화 중종 → 12화 인종 → 13화 명종 → 14화 선조 → 15화 광해군 → 16화 인조 → 17화 효종 → 22화 정조<br>
     <span style="color:var(--gold);">전편 무료 — 로그인 없이 바로 플레이할 수 있어요.</span>
   </div>`;
 
