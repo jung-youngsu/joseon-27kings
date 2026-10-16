@@ -227,6 +227,7 @@ async function showProgressBanner(){
     {ep:17,title:'효종 이호',    file:'episode.html?ep=17'},
     {ep:18,title:'현종 이연',    file:'episode.html?ep=18'},
     {ep:19,title:'숙종 이순',    file:'episode.html?ep=19'},
+    {ep:20,title:'경종 이윤',    file:'episode.html?ep=20'},
     {ep:22,title:'정조 이산',    file:'episode.html?ep=22'},
   ];
 
@@ -378,6 +379,7 @@ async function showLoggedIn(){
     {ep:17,title:'효종 이호',    theme:'삼전도를 본 아들'},
     {ep:18,title:'현종 이연',    theme:'둘째 아들의 아들'},
     {ep:19,title:'숙종 이순',    theme:'열세 살의 왕'},
+    {ep:20,title:'경종 이윤',    theme:'어머니의 아들'},
     {ep:22,title:'정조 이산',    theme:'복수의 왕'},
   ];
 
@@ -472,7 +474,9 @@ const KINGS=[
   {row:19, x:CM,title:'숙종',  name:'이순',  reign:'1674–1720',kw:'환국 정치',
    series:true,ep:19,theme:'열세 살의 왕',sub:'칼자루를 쥔 왕',
    desc:'열세 살에 왕이 된 아이는 "칼자루를 거꾸로 쥐여 주지 않겠다"고 했다.<br>하루 만에 서울의 군대를 바꾸고, 세 번 조정을 뒤집었다.<br>그 칼은 섬을 지켰고 — 사람을 베기도 했다.'},
-  {row:20, x:CL,title:'경종',  name:'이윤',  reign:'1720–24',  kw:'단명 재위'},
+  {row:20, x:CL,title:'경종',  name:'이윤',  reign:'1720–24',  kw:'신임옥사',
+   series:true,ep:20,theme:'어머니의 아들',sub:'말을 아낀 왕',
+   desc:'열세 살, 어머니를 살려 달라는 말조차 하지 못한 아이가 왕이 되었다.<br>신하들은 늘 "너무 말이 없으시다"고 했다.<br>그가 드물게 입을 연 자리를 따라간다.'},
   {row:21, x:CM,title:'영조',  name:'이금',  reign:'1724–76',  kw:'탕평·52년'},
   {row:22, x:CM,title:'정조',  name:'이산',  reign:'1776–1800',kw:'수원 화성',
    series:true,ep:22,theme:'복수의 왕',sub:'힘이 생겼을 때 잊지 않았다',
@@ -707,7 +711,7 @@ async function toggleDetail(king){
   activeKing=king;
   wrap.style.display='block';
 
-  const gameFiles={1:'episode.html?ep=1', 2:'episode.html?ep=2', 3:'episode.html?ep=3', 4:'episode.html?ep=4', 5:'episode.html?ep=5', 6:'episode.html?ep=6', 7:'episode.html?ep=7', 8:'episode.html?ep=8', 9:'episode.html?ep=9', 10:'episode.html?ep=10', 11:'episode.html?ep=11', 12:'episode.html?ep=12', 13:'episode.html?ep=13', 14:'episode.html?ep=14', 15:'episode.html?ep=15', 16:'episode.html?ep=16', 17:'episode.html?ep=17', 18:'episode.html?ep=18', 19:'episode.html?ep=19', 22:'episode.html?ep=22'};
+  const gameFiles={1:'episode.html?ep=1', 2:'episode.html?ep=2', 3:'episode.html?ep=3', 4:'episode.html?ep=4', 5:'episode.html?ep=5', 6:'episode.html?ep=6', 7:'episode.html?ep=7', 8:'episode.html?ep=8', 9:'episode.html?ep=9', 10:'episode.html?ep=10', 11:'episode.html?ep=11', 12:'episode.html?ep=12', 13:'episode.html?ep=13', 14:'episode.html?ep=14', 15:'episode.html?ep=15', 16:'episode.html?ep=16', 17:'episode.html?ep=17', 18:'episode.html?ep=18', 19:'episode.html?ep=19', 20:'episode.html?ep=20', 22:'episode.html?ep=22'};
   const playable=!!gameFiles[king.ep];
   const tickets=userProfile?.rebirth_tickets||0;
 
@@ -725,7 +729,7 @@ async function toggleDetail(king){
     :'';
 
   const seriesOrder=`<div style="font-family:'Noto Sans KR',sans-serif;font-size:11px;color:var(--text-muted);margin-bottom:12px;line-height:2;">
-    공개된 편&nbsp;&nbsp;1화 태조 → 2화 정종 → 3화 태종 → 4화 세종 → 5화 문종 → 6화 단종 → 7화 세조 → 8화 예종 → 9화 성종 → 10화 연산군 → 11화 중종 → 12화 인종 → 13화 명종 → 14화 선조 → 15화 광해군 → 16화 인조 → 17화 효종 → 18화 현종 → 19화 숙종 → 22화 정조<br>
+    공개된 편&nbsp;&nbsp;1화 태조 → 2화 정종 → 3화 태종 → 4화 세종 → 5화 문종 → 6화 단종 → 7화 세조 → 8화 예종 → 9화 성종 → 10화 연산군 → 11화 중종 → 12화 인종 → 13화 명종 → 14화 선조 → 15화 광해군 → 16화 인조 → 17화 효종 → 18화 현종 → 19화 숙종 → 20화 경종 → 22화 정조<br>
     <span style="color:var(--gold);">전편 무료 — 로그인 없이 바로 플레이할 수 있어요.</span>
   </div>`;
 

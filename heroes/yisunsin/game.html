@@ -933,12 +933,263 @@ body {
 .btn-p.solid { background: var(--accent2); color: var(--bg); border-color: var(--accent2); }
 .btn-p.solid:hover { background: var(--accent3); border-color: var(--accent3); }
 
+/* ─── 낱말 풀이 링크 (shared/glossary.js) ─────────────────── */
+.term {
+  text-decoration: underline dotted;
+  text-decoration-color: var(--accent3);
+  text-underline-offset: 4px;
+  text-decoration-thickness: 1.5px;
+  cursor: pointer;
+  border-radius: 2px;
+}
+.term:hover, .term:focus-visible {
+  background: color-mix(in srgb, var(--accent3) 16%, transparent);
+  outline: none;
+}
+.gloss-pop {
+  position: fixed;
+  z-index: 1000;
+  left: 0; top: 0;
+  max-width: min(300px, calc(100vw - 24px));
+  padding: 10px 14px;
+  background: var(--bg3);
+  border: 1px solid var(--border3);
+  border-radius: 8px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.6;
+  font-style: normal;
+  font-weight: 400;
+  text-align: left;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .15s;
+  pointer-events: none;
+}
+.gloss-pop.on { opacity: 1; visibility: visible; pointer-events: auto; }
+.gloss-pop b {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--accent3);
+  font-family: var(--font-serif);
+  font-weight: 600;
+}
+
 </style>
 
 </head>
 <body>
 
 <div id="game-root"></div>
+
+<!-- shared/glossary.js -->
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   shared/glossary.js
+   조선 27왕 시리즈 — 낱말 풀이 사전
+
+   게임 본문에 이 낱말이 나오면 엔진이 점선 밑줄 링크로 바꾸고,
+   누르면 아래 풀이가 말풍선으로 뜬다.
+
+   - 한 화면(씬)에서 처음 나올 때만 링크가 된다.
+   - 바로 뒤에 괄호 풀이가 붙어 있으면 "세자(다음 왕이 될 왕자)" 링크로 만들지 않는다.
+   - 앞 글자가 한글이면(왕세자의 '세자') 링크로 만들지 않는다.
+   - 바로 뒤가 하·해·했·할·한이면(대비하다) 링크로 만들지 않는다.
+   - 편마다 scenes.json에 "glossary": { "낱말": "풀이" } 를 두면 더하거나 덮어쓴다.
+
+   뜻이 둘인 낱말(과거, 대신, 전하, 강화, 군, 왜 …)은 넣지 않는다.
+   풀이는 초중등 눈높이로, 한 줄로.
+═══════════════════════════════════════════════════════════════ */
+
+window.GLOSSARY = {
+  // ─── 왕실 ───
+  '세자': '다음 왕이 될 왕자',
+  '세자빈': '세자의 아내',
+  '저하': '세자를 높여 부르는 말',
+  '세손': '왕의 뒤를 이을 손자',
+  '원자': '왕의 맏아들. 아직 세자로 정해지기 전에 부르는 이름',
+  '원손': '왕의 맏손자',
+  '대군': '왕비가 낳은 왕자를 높여 부르는 이름',
+  '종친': '왕의 친척',
+  '후궁': '왕비가 아닌 왕의 부인',
+  '중전': '왕비를 부르는 말',
+  '대비': '앞선 왕의 왕비. 지금 왕의 어머니인 경우가 많다',
+  '왕대비': '앞선 왕의 왕비를 높여 부르는 말',
+  '대왕대비': '앞앞 왕의 왕비. 지금 왕의 할머니뻘',
+  '상왕': '살아 있는 채로 왕위를 물려준 뒤의 왕',
+  '태상왕': '상왕보다 한 대 위의, 물러난 왕',
+  '폐비': '왕비 자리에서 쫓겨난 사람',
+  '외척': '왕비나 왕의 어머니 쪽 친척',
+  '부원군': '왕비의 아버지나 큰 공을 세운 신하에게 주던 이름',
+  '숙부': '아버지의 동생. 작은아버지',
+  '노산군': '왕 자리에서 끌어내려진 단종을 낮춰 부른 이름',
+  '수렴청정': '어린 왕 대신 대비가 발을 드리우고 나랏일을 맡아 보던 일',
+  '즉위': '왕의 자리에 오름',
+  '묘호': '왕이 세상을 떠난 뒤 붙이는 이름(태조·세종처럼 ○조·○종)',
+  '책봉': '왕세자·왕비 같은 자리에 정식으로 올리는 일',
+  '고명': '중국 황제가 조선 왕이나 세자를 인정한다고 보낸 문서',
+  '반정': '잘못된 왕을 몰아내고 새 왕을 세운 일',
+
+  // ─── 궁궐·제사 ───
+  '종묘': '조선 왕과 왕비의 신주를 모신 사당',
+  '사당': '돌아가신 조상의 신주를 모셔 두고 제사 지내는 집',
+  '신주': '돌아가신 분의 이름을 적어 모시는 나무패',
+  '위패': '돌아가신 분의 이름을 적어 모시는 나무패',
+  '사직': '땅과 곡식의 신. 나라 그 자체를 뜻하기도 한다',
+  '제사': '돌아가신 조상이나 신에게 음식을 차려 올리는 의식',
+  '능': '왕이나 왕비의 무덤',
+  '왕릉': '왕이나 왕비의 무덤',
+  '빈소': '장례를 치르기 전에 돌아가신 분을 모셔 둔 곳',
+  '상복': '가족을 잃은 사람이 입는 거친 삼베옷',
+  '상중': '가족을 잃고 장례 예법을 지키는 기간',
+  '삼년상': '부모가 돌아가신 뒤 세 해 동안 슬픔을 지키는 예법',
+  '내관': '궁궐에서 왕과 왕실의 시중을 들던 사람',
+  '수라': '임금의 밥상',
+  '어의': '궁궐의 의사',
+  '옥새': '왕의 도장. 나라의 문서에 찍는다',
+  '전각': '궁궐 안의 큰 건물',
+  '도성': '서울을 둘러싼 성. 그 안의 서울',
+  '도읍': '나라의 서울',
+  '천도': '나라의 서울을 옮김',
+
+  // ─── 신하·벼슬 ───
+  '공신': '나라에 큰 공을 세웠다고 상과 벼슬을 받은 신하',
+  '재상': '나랏일을 이끄는 가장 높은 신하',
+  '정승': '가장 높은 세 신하(영의정·좌의정·우의정)',
+  '영의정': '신하 가운데 가장 높은 자리',
+  '좌의정': '영의정 다음가는 정승',
+  '우의정': '좌의정 다음가는 정승',
+  '좌정승': '조선 초에 정승을 부르던 이름. 뒤의 좌의정',
+  '판서': '6조 같은 관청의 으뜸 신하. 지금의 장관',
+  '승지': '왕의 명령과 보고를 오가게 하던 비서',
+  '도승지': '승지들의 우두머리. 왕의 비서실장',
+  '대사헌': '관리의 잘못을 따지던 사헌부의 우두머리',
+  '정언': '사간원에서 왕에게 바른말을 하던 젊은 관리',
+  '사관': '왕 곁에서 그날그날의 일을 적던 관리',
+  '원상': '어린 왕 곁에서 나랏일을 함께 맡아 보던 원로 대신',
+  '관찰사': '한 도를 다스리던 으뜸 관리',
+  '수령': '고을을 다스리던 관리(사또)',
+  '관원': '관청에서 일하는 관리',
+  '백관': '조정의 모든 관리',
+  '사대부': '글을 배우고 벼슬을 하던 선비 집안',
+  '양반': '벼슬을 하던 높은 신분의 집안',
+  '유생': '성균관이나 향교에서 공부하던 선비',
+  '신진사대부': '고려 말에 새로 떠오른 젊은 선비 관리들',
+  '노비': '남의 집이나 관청에 매여 일하던 가장 낮은 신분',
+  '천민': '가장 낮은 신분의 사람',
+  '호족': '그 지방에서 땅과 사람을 거느린 힘 있는 집안',
+
+  // ─── 관청 ───
+  '조정': '왕과 신하들이 나랏일을 의논하고 정하는 곳',
+  '의정부': '세 정승이 모여 나라의 큰일을 의논하던 으뜸 관청',
+  '6조': '나랏일을 여섯으로 나눠 맡은 관청(이조·호조·예조·병조·형조·공조)',
+  '이조': '관리를 뽑고 자리를 정하던 관청',
+  '호조': '나라의 돈과 곡식을 맡던 관청',
+  '예조': '나라의 예법·제사·외교를 맡던 관청',
+  '병조': '군사 일을 맡던 관청',
+  '형조': '법과 형벌을 맡던 관청',
+  '공조': '건물을 짓고 물건을 만드는 일을 맡던 관청',
+  '승정원': '왕의 명령과 신하의 보고를 오가게 하던 관청',
+  '의금부': '왕의 명으로 큰 죄인을 가두고 조사하던 관청',
+  '사헌부': '관리의 잘못을 따지던 관청',
+  '사간원': '왕에게 바른말을 하던 관청',
+  '홍문관': '왕과 함께 책을 읽고 바른말을 올리던 학자들의 관청',
+  '삼사': '바른말을 하던 세 관청(사헌부·사간원·홍문관)',
+  '대간': '왕과 관리의 잘못을 따지던 사헌부·사간원의 관리',
+  '집현전': '세종이 학자들을 모아 둔 연구 기관',
+  '예문관': '왕의 글을 짓던 관청',
+  '성균관': '나라에서 세운 가장 높은 학교',
+  '비변사': '전쟁과 나라의 큰일을 의논하던 관청',
+  '선혜청': '대동법으로 거둔 쌀을 맡아 보던 관청',
+  '관아': '고을의 관청',
+
+  // ─── 정치·제도 ───
+  '경연': '왕이 신하들과 함께 책을 읽고 나랏일을 의논하던 자리',
+  '조회': '신하들이 모여 왕께 인사하고 나랏일을 아뢰던 자리',
+  '결재': '왕이 올라온 일을 보고 허락해 정하는 것',
+  '상소': '신하나 선비가 왕에게 올리는 글',
+  '교서': '왕이 널리 알리려고 내린 글',
+  '언로': '신하와 백성이 왕에게 말을 올릴 수 있는 길',
+  '공론': '여러 사람이 함께 옳다고 하는 뜻',
+  '명분': '떳떳하게 내세울 수 있는 이유',
+  '실록': '왕마다 그 시대의 일을 날짜별로 적어 남긴 나라의 역사책',
+  '서인': '선조 때 나뉜 신하 무리의 하나',
+  '동인': '선조 때 나뉜 신하 무리의 하나',
+  '남인': '동인에서 갈라져 나온 신하 무리. 현종·숙종 때 서인과 크게 다투었다',
+  '환국': '왕이 조정을 이끄는 신하 무리를 한꺼번에 바꾸는 일',
+  '노론': '서인에서 갈라져 나온 신하 무리. 숙종 말부터 소론과 크게 다투었다',
+  '소론': '서인에서 갈라져 나온 신하 무리. 노론과 맞섰다',
+  '세제': '다음 왕이 될 왕의 동생',
+  '대리청정': '왕 대신 세자나 세제가 나랏일을 맡아 보는 일',
+  '붕당': '생각이 같은 신하들끼리 모인 무리',
+  '사림': '시골에서 성리학을 공부하다 조정에 나온 선비들',
+  '사병': '나라가 아니라 한 사람이 따로 거느린 군대',
+  '호패': '신분과 이름을 새겨 차고 다니던 패. 지금의 신분증',
+  '신문고': '억울한 백성이 쳐서 왕에게 알리게 한 북',
+  '공법': '세종 때 만든, 땅과 풍년·흉년에 따라 세금을 매기는 법',
+  '대동법': '여러 물건으로 내던 세금을 쌀로 한데 모아 내게 한 법',
+  '공물': '고을마다 그 지방 특산물을 나라에 바치던 세금',
+  '방납': '공물을 대신 바쳐 주고 백성에게 몇 배를 받아 내던 일',
+  '현량과': '추천받은 사람 가운데서 인재를 뽑던 시험',
+  '경국대전': '조선의 기본 법전',
+  '표신': '밤에 궁궐 문을 열게 하는 증표',
+
+  // ─── 죄와 벌 ───
+  '역적': '나라나 왕을 배신한 죄인',
+  '역모': '왕을 몰아내려는 꾀',
+  '귀양': '죄인을 먼 곳에 보내 그곳에서만 살게 하는 벌',
+  '유배': '죄인을 먼 곳에 보내 그곳에서만 살게 하는 벌',
+  '위리안치': '귀양 간 집 둘레에 가시나무 울타리를 쳐 가둬 두는 벌',
+  '사약': '왕이 죄인에게 내려 마시고 죽게 하던 독약',
+  '국문': '죄인을 엄하게 따져 묻는 것',
+  '옥사': '큰 죄를 두고 여러 사람을 잡아들여 벌하는 일',
+
+  // ─── 전쟁·외교 ───
+  '사신': '나라의 뜻을 전하러 다른 나라에 가는 관리',
+  '사대': '큰 나라(중국)를 섬기는 외교',
+  '천자': '중국 황제',
+  '제후': '황제를 섬기는 나라의 왕',
+  '명나라': '조선 전기의 중국 왕조',
+  '후금': '여진족이 세운 나라. 뒤에 청나라가 된다',
+  '여진': '만주 지역에 살던 민족. 뒤에 후금·청을 세운다',
+  '오랑캐': '중국 바깥의 민족을 낮춰 부르던 말',
+  '왜구': '바다를 건너와 노략질하던 일본 해적',
+  '요동': '지금의 중국 동북쪽 땅',
+  '위화도': '압록강 가운데의 섬',
+  '회군': '싸우러 가던 군대를 되돌림',
+  '선봉': '맨 앞에서 싸우는 부대',
+  '수군': '바다에서 싸우는 군사',
+  '피란': '난리를 피해 떠나는 일',
+  '의병': '나라가 위태로울 때 백성이 스스로 일으킨 군대',
+  '조총': '불을 붙여 쏘는 옛 총',
+  '임진왜란': '1592년 일본이 쳐들어온 전쟁',
+  '정유재란': '1597년 일본이 다시 쳐들어온 전쟁',
+  '정묘호란': '1627년 후금이 쳐들어온 전쟁',
+  '병자호란': '1636년 청나라가 쳐들어온 전쟁',
+  '남한산성': '서울 남쪽 산 위의 성. 병자호란 때 인조가 이곳으로 피했다',
+  '삼전도': '한강 나루. 인조가 청 황제에게 항복한 곳',
+  '심양': '청나라의 서울. 병자호란 뒤 세자들이 볼모로 잡혀 갔다',
+  '강화도': '서울 서쪽 바다의 큰 섬. 난리가 나면 왕실이 피하던 곳',
+  '북벌': '청나라를 치러 북쪽으로 가자는 계획',
+
+  // ─── 사건 ───
+  '계유정난': '1453년 수양대군이 김종서 등을 죽이고 권력을 잡은 일',
+  '무오사화': '1498년 연산군 때 선비들이 크게 죽거나 쫓겨난 일',
+  '갑자사화': '1504년 연산군이 어머니 일로 신하들을 크게 벌한 일',
+  '기묘사화': '1519년 조광조와 선비들이 쫓겨나고 죽은 일',
+  '을사사화': '1545년 명종 즉위 뒤 선비들이 크게 벌을 받은 일',
+
+  // ─── 그 밖 ───
+  '종기': '살이 곪아 부어오른 것',
+  '예법': '예의와 법도. 사람과 나라가 지켜야 할 바른 몸가짐',
+  '훈민정음': '세종이 만든 우리 글자. 지금의 한글',
+  '측우기': '비가 얼마나 왔는지 재던 그릇',
+  '적장자': '왕비가 낳은 맏아들'
+};
+
+</script>
 
 <!-- shared/engine.js -->
 <script>
@@ -984,6 +1235,7 @@ body {
     state.actsCompleted = [];
     state.lockedScenes = new Set();
     state.visitedScenes = new Set();
+    setupGlossary(scenesData.glossary);
     renderScene();
   }
 
@@ -1000,6 +1252,10 @@ body {
       console.error('GameEngine: #game-root not found');
       return;
     }
+
+    // 낱말 풀이 링크는 씬마다 처음 나올 때만
+    glossSeen = new Set();
+    hideGloss();
 
     // 모든 씬은 .sc 클래스로
     root.innerHTML = '';
@@ -1226,7 +1482,7 @@ body {
         const cls = d.role || 'npc-a';
         html += `
           <div class="dial ${cls}">
-            ${d.who ? `<div class="dial-who">${escapeHTML(d.who)}</div>` : ''}
+            ${d.who ? `<div class="dial-who">${glossWho(d.who)}</div>` : ''}
             <div class="dial-text">${parseInline(d.text)}</div>
           </div>
         `;
@@ -1249,7 +1505,7 @@ body {
             ${s.choice.options.map((opt, i) => `
               <button class="ch${s.choice.mark === i ? ' marked' : ''}" data-idx="${i}">${
                 s.choice.mark === i ? '<span class="ch-dot" aria-label="노란 점"></span>' : ''
-              }${parseInline(opt.text)}</button>
+              }${parseInline(opt.text, true)}</button>
             `).join('')}
           </div>
           ${allowsFree(s.choice) ? `
@@ -1549,7 +1805,7 @@ body {
               ${people.map((p, i) => p.absent
                 ? `<button class="ch ask ask-absent" disabled>${escapeHTML(p.who)}</button>`
                 : `<button class="ch ask" data-ask="${i}">${escapeHTML(p.who)}${
-                p.hint ? `<span class="ask-hint">${parseInline(p.hint)}</span>` : ''}</button>`).join('')}
+                p.hint ? `<span class="ask-hint">${parseInline(p.hint, true)}</span>` : ''}</button>`).join('')}
             </div>
             ${choice.ask.absentNote && people.some(p => p.absent) ? `<div class="ask-empty">${parseInline(choice.ask.absentNote)}</div>` : ''}` : `<div class="ask-empty">${parseInline(choice.ask.emptyNote || '물을 사람이 없습니다.')}</div>`}
             <div class="ask-answer" id="ask-answer"></div>
@@ -1583,7 +1839,7 @@ body {
     const ans = sceneEl.querySelector('#ask-answer');
     if (ans) ans.innerHTML = `
       <div class="dial ${p.role || 'npc-a'}">
-        <div class="dial-who">${escapeHTML(p.who)}</div>
+        <div class="dial-who">${glossWho(p.who)}</div>
         <div class="dial-text">${parseInline(p.says || '')}</div>
       </div>`;
     sceneEl.querySelector('.ch-area')?.classList.remove('asking');
@@ -1939,9 +2195,9 @@ body {
   // ─── 인라인 마크업 파서 ──────────────────────────────────
   // [b]진하게[/b], [i]기울임[/i], [em]강조[/em],
   // 또는 *진하게* (마크다운 호환)
-  function parseInline(text) {
+  function parseInline(text, noGloss) {
     if (!text) return '';
-    return escapeHTML(text)
+    const html = escapeHTML(text)
       // 줄바꿈을 품은 태그도 처리 — (.+?)는 개행을 못 먹어서
       // 태그가 화면에 그대로 노출되던 문제가 있었다.
       .replace(/\[b\]([\s\S]+?)\[\/b\]/g,   '<strong>$1</strong>')
@@ -1951,6 +2207,93 @@ body {
       .replace(/\*([^*\n]+?)\*/g,       '<em>$1</em>')
       .replace(/__(.+?)__/g,            '<em>$1</em>')
       .replace(/\n/g, '<br>');
+    return noGloss ? html : linkTerms(html);
+  }
+
+  // ─── 낱말 풀이 링크 ──────────────────────────────────────
+  // 사전: shared/glossary.js(window.GLOSSARY) + 편의 scenes.json "glossary"
+  // 어려운 낱말을 점선 밑줄로 바꾸고, 누르면 풀이 말풍선을 띄운다.
+  let glossDict = {};
+  let glossRe = null;
+  let glossSeen = new Set();
+  let glossPop = null;
+
+  function setupGlossary(extra) {
+    glossDict = Object.assign({}, window.GLOSSARY || {}, extra || {});
+    const terms = Object.keys(glossDict).filter(t => t && glossDict[t])
+      .sort((a, b) => b.length - a.length)
+      .map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    glossRe = terms.length ? new RegExp('(^|[^가-힣])(' + terms.join('|') + ')', 'g') : null;
+    if (!glossPop) bindGlossPop();
+  }
+
+  // 태그 밖의 글자에서만 찾는다. 앞이 한글이면(왕세자) 건너뛰고,
+  // 뒤가 하·해·했·할·한(대비하다)이면 건너뛴다.
+  // 한 글자 낱말(능)은 뒤에 조사가 오거나 한글이 끝날 때만 잇는다(능창군·능력은 건너뜀).
+  // 바로 뒤에 괄호 풀이가 붙어 있으면 그 자리에서 풀린 것으로 친다.
+  function linkTerms(html) {
+    if (!glossRe) return html;
+    return html.split(/(<[^>]+>)/).map(part => {
+      if (!part || part[0] === '<') return part;
+      return part.replace(glossRe, (m, pre, term, offset, str) => {
+        const after = str.slice(offset + m.length);
+        if (/^[하해했할한]/.test(after)) return m;
+        if (term.length === 1 && /^[가-힣]/.test(after) && !/^[은는이을를에의과와도만으로]/.test(after)) return m;
+        if (glossSeen.has(term)) return m;
+        glossSeen.add(term);
+        if (/^\s*\(/.test(after)) return m;
+        return pre + `<span class="term" tabindex="0" role="button" data-term="${term}">${term}</span>`;
+      });
+    }).join('');
+  }
+
+  function glossWho(who) {
+    return linkTerms(escapeHTML(who));
+  }
+
+  function bindGlossPop() {
+    glossPop = document.createElement('div');
+    glossPop.className = 'gloss-pop';
+    glossPop.setAttribute('role', 'tooltip');
+    document.body.appendChild(glossPop);
+
+    document.addEventListener('click', e => {
+      const t = e.target.closest && e.target.closest('.term');
+      if (t) { e.stopPropagation(); showGloss(t); }
+      else if (!glossPop.contains(e.target)) hideGloss();
+    }, true);
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { hideGloss(); return; }
+      const t = document.activeElement;
+      if ((e.key === 'Enter' || e.key === ' ') && t && t.classList && t.classList.contains('term')) {
+        e.preventDefault();
+        showGloss(t);
+      }
+    });
+    window.addEventListener('scroll', hideGloss, { passive: true });
+    window.addEventListener('resize', hideGloss);
+  }
+
+  function showGloss(t) {
+    const term = t.dataset.term;
+    const def = glossDict[term];
+    if (!def) return;
+    if (glossPop.classList.contains('on') && glossPop.dataset.term === term) { hideGloss(); return; }
+    glossPop.innerHTML = `<b>${escapeHTML(term)}</b>${escapeHTML(def)}`;
+    glossPop.dataset.term = term;
+    glossPop.classList.add('on');
+    const r = t.getBoundingClientRect();
+    const pw = glossPop.offsetWidth, ph = glossPop.offsetHeight;
+    const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+    const left = Math.min(Math.max(12, r.left + r.width / 2 - pw / 2), vw - pw - 12);
+    let top = r.bottom + 8;
+    if (top + ph > vh - 8) top = Math.max(8, r.top - ph - 8);
+    glossPop.style.left = left + 'px';
+    glossPop.style.top = top + 'px';
+  }
+
+  function hideGloss() {
+    if (glossPop) { glossPop.classList.remove('on'); glossPop.dataset.term = ''; }
   }
 
   function escapeHTML(s) {

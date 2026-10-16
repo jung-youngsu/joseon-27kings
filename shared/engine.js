@@ -1034,6 +1034,7 @@
 
   // 태그 밖의 글자에서만 찾는다. 앞이 한글이면(왕세자) 건너뛰고,
   // 뒤가 하·해·했·할·한(대비하다)이면 건너뛴다.
+  // 한 글자 낱말(능)은 뒤에 조사가 오거나 한글이 끝날 때만 잇는다(능창군·능력은 건너뜀).
   // 바로 뒤에 괄호 풀이가 붙어 있으면 그 자리에서 풀린 것으로 친다.
   function linkTerms(html) {
     if (!glossRe) return html;
@@ -1042,6 +1043,7 @@
       return part.replace(glossRe, (m, pre, term, offset, str) => {
         const after = str.slice(offset + m.length);
         if (/^[하해했할한]/.test(after)) return m;
+        if (term.length === 1 && /^[가-힣]/.test(after) && !/^[은는이을를에의과와도만으로]/.test(after)) return m;
         if (glossSeen.has(term)) return m;
         glossSeen.add(term);
         if (/^\s*\(/.test(after)) return m;
