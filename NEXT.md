@@ -45,8 +45,10 @@
 - [x] EP20 경종 공개 (2026-10-16) — 축 "말을 아낀 왕", 윤지술과 사친·세제 책봉·대리청정 두 번·신임옥사. [kings/ep20_gyeongjong/README.md](kings/ep20_gyeongjong/README.md)
 - [x] EP21 영조 공개 (2026-10-16) — 축 "떳떳해야 했던 왕", 정미환국→탕평·홍화문 균역·사도세자·세손 대리청정(지울 수 있는 점). [kings/ep21_yeongjo/README.md](kings/ep21_yeongjo/README.md)
 - [x] EP22 정조 새로 씀 (2026-10-17) — 축 "참는 것을 공부한 왕", 즉위 윤음·홍인한(먼저 묻기)·홍국영·화성 성터. 옛 원고의 오류는 [kings/ep22_jeongjo/README.md](kings/ep22_jeongjo/README.md)
-- [ ] EP14~EP22 이어서 브라우저 점검
-- [ ] 다음 편: EP23 순조 — 조사 노트 research/sunjo_research.md (사이트 대조 몇 건 남음)
+- [x] EP23 순조 공개 (2026-10-17) — 축 "기댈 사람을 찾은 왕", 증조할머니를 붙잡음·홍경래의 난·외삼촌 상소·효명세자 대리청정. [kings/ep23_sunjo/README.md](kings/ep23_sunjo/README.md)
+- [x] EP24 헌종 공개 (2026-10-17) — 축 "뜻을 다 펴지 못한 왕", "다 내 탓"·내영→총위영·프랑스 편지와 김대건·조병현. [kings/ep24_heonjong/README.md](kings/ep24_heonjong/README.md)
+- [ ] EP14~EP24 이어서 브라우저 점검
+- [ ] 다음 편: EP25 철종 — 조사 노트 research/cheoljong_research.md (1849년 열여덟, 실록 "十九歲"는 세는나이)
 - [ ] 정종편 1막 다시 쓰기 — 1388년 그 밤 방과·방우는 위화도가 아니라 우왕 곁(성주)에 있다가 아버지 군영으로 달아났다(태조실록 총서). 지금 1막은 방과를 위화도 막사 밖에 세운다 (deep은 바로잡음)
 - [ ] deep에 「그는 왜 그랬을까」 단락이 없는 편 — 세종·예종·성종·연산군·중종·인종 (문장 다듬기 때 드러남)
 - [ ] EP18 현종 README의 ≈ 실록 ID 13개 — sillok.history.go.kr가 돌아오면 제목 대조 — 선조의 "증명해야 했던 왕"과 광해군의 "의심받은 세자"가 짝으로 읽히는지
