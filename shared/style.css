@@ -887,10 +887,7 @@ body {
 
 /* ─── 낱말 풀이 링크 (shared/glossary.js) ─────────────────── */
 .term {
-  text-decoration: underline dotted;
-  text-decoration-color: var(--accent3);
-  text-underline-offset: 4px;
-  text-decoration-thickness: 1.5px;
+  font-weight: 700;
   cursor: pointer;
   border-radius: 2px;
 }

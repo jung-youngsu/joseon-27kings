@@ -1017,7 +1017,7 @@
 
   // ─── 낱말 풀이 링크 ──────────────────────────────────────
   // 사전: shared/glossary.js(window.GLOSSARY) + 편의 scenes.json "glossary"
-  // 어려운 낱말을 점선 밑줄로 바꾸고, 누르면 풀이 말풍선을 띄운다.
+  // 어려운 낱말을 굵은 글씨 링크로 바꾸고, 누르면 풀이 말풍선을 띄운다.
   let glossDict = {};
   let glossRe = null;
   let glossSeen = new Set();
