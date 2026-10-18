@@ -914,23 +914,50 @@ async function loadKing(ep) {
   };
 }
 
+// 고려편(goryeo.json) — ?goryeo=<대수> 로 들어온다. 폴더는 goryeo/epNN_slug.
+//   퀴즈 기록은 조선편과 겹치지 않게 quiz.json의 ep를 100+대수로 둔다.
+async function loadGoryeo(n) {
+  let king;
+  try {
+    const res = await fetch('goryeo.json', { cache: 'no-cache' });
+    king = (await res.json()).find(k => k.ep === n);
+  } catch (e) {
+    console.error('goryeo.json 읽기 실패', e);
+  }
+  if (!king) return null;
+  const epStr = n < 10 ? '0' + n : n;
+  return {
+    isGoryeo: true,
+    label: `고려 EP${epStr} · ${king.korName}`,
+    tagline: king.tagline || '',
+    korName: king.korName,
+    folder: `goryeo/ep${epStr}_${king.slug}`,
+    gateKey: 'goryeo_' + n,
+  };
+}
+
 async function loadEpisode() {
   const params = new URLSearchParams(window.location.search);
   const heroSlug = params.get('hero');
+  const goryeoN = params.get('goryeo') ? parseInt(params.get('goryeo')) : null;
   const ep = getEpFromURL();
 
-  const target = heroSlug ? await loadHero(heroSlug) : await loadKing(ep);
+  const target = heroSlug ? await loadHero(heroSlug)
+    : goryeoN ? await loadGoryeo(goryeoN)
+    : await loadKing(ep);
 
   if (!target) {
     document.getElementById('ep-num').textContent =
-      heroSlug ? 'HEROES' : 'EP' + (ep < 10 ? '0' + ep : ep);
+      heroSlug ? 'HEROES' : goryeoN ? '고려 EP' + goryeoN : 'EP' + (ep < 10 ? '0' + ep : ep);
     document.getElementById('ep-title').textContent = '에피소드 정보를 찾을 수 없습니다';
     return;
   }
 
-  // 다 보고 돌아갈 곳 — 왕은 가계도, 영웅은 인물 목록
+  // 다 보고 돌아갈 곳 — 왕은 가계도, 영웅은 인물 목록, 고려왕은 고려 목록
   HOME = target.isHero
     ? { href: 'heroes.html#cards', label: '역사를 바꾼 사람들로' }
+    : target.isGoryeo
+    ? { href: 'goryeo-kings.html', label: '고려의 왕 목록으로' }
     : { href: 'joseon-kings.html#tree-section', label: '왕의 가계도로' };
 
   // 헤더 갱신

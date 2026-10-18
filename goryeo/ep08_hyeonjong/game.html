@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<title>당신이 왕순이라면? — 곁에 남은 사람을 붙든 왕</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600;700&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+
+<!-- ① 톤 — warm-quiet -->
+<link rel="stylesheet" href="../../shared/themes/warm-quiet.css?v=202610171220">
+
+<!-- ② 공통 스타일 -->
+<link rel="stylesheet" href="../../shared/style.css?v=202610171220">
+
+</head>
+<body>
+
+<div id="game-root"></div>
+
+<script src="../../shared/glossary.js?v=202610171220"></script>
+<script src="../../shared/engine.js?v=202610171220"></script>
+
+<script>
+fetch('scenes.json', { cache: 'no-cache' })
+  .then(r => r.json())
+  .then(data => {
+    GameEngine.start(data);
+  })
+  .catch(err => {
+    document.getElementById('game-root').innerHTML = `
+      <div style="padding:40px;text-align:center;color:#c87060;font-family:'Noto Serif KR',serif;">
+        <div style="font-size:18px;margin-bottom:12px;">시나리오 파일을 불러올 수 없습니다.</div>
+        <div style="font-size:13px;opacity:0.6;">scenes.json: ${err.message}</div>
+      </div>
+    `;
+    console.error(err);
+  });
+</script>
+
+</body>
+</html>

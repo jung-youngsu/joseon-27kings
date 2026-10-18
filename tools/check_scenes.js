@@ -246,6 +246,7 @@ const args = process.argv.slice(2);
 const files = args.length ? args : [
   ...fs.readdirSync('kings').map(k => path.join('kings', k, 'scenes.json')),
   ...fs.readdirSync('heroes').map(h => path.join('heroes', h, 'scenes.json')),
+  ...(fs.existsSync('goryeo') ? fs.readdirSync('goryeo') : []).map(g => path.join('goryeo', g, 'scenes.json')),
 ].filter(f => fs.existsSync(f));
 
 let errs = 0, warns = 0;

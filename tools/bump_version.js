@@ -42,7 +42,8 @@ rewrite(path.join(root, 'episode.html'),
   s => s.replace(/const ASSET_V = '[^']*';/, `const ASSET_V = '${version}';`));
 
 const games = [];
-for (const group of ['kings', 'heroes']) {
+for (const group of ['kings', 'heroes', 'goryeo']) {
+  if (!fs.existsSync(path.join(root, group))) continue;
   for (const dir of fs.readdirSync(path.join(root, group))) {
     const f = path.join(root, group, dir, 'game.html');
     if (fs.existsSync(f)) games.push(f);
